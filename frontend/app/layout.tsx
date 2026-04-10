@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
 import Link from "next/link"; 
 import "./globals.css";
+import Sidebar from "../app/components/Sidebar"; 
 
 // Bold & Modern
 const poppins = Poppins({
@@ -34,52 +35,7 @@ export default function RootLayout({
       <body className={`${poppins.variable} ${inter.variable} h-full antialiased font-inter`}>
         <div className="flex min-h-screen">
           {/* Sidebar */}
-          <aside className="w-64 bg-[#0F172A] text-slate-300 p-6 hidden md:flex flex-col border-r border-slate-800">
-            <div className="flex items-center gap-3 mb-10 px-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20">S</div>
-              <h2 className="font-poppins font-bold text-xl tracking-tight text-white">SARAI <span className="text-blue-500 text-xs font-medium">v1.0</span></h2>
-            </div>
-
-            {/* Navigation */}
-            <nav className="flex-1 space-y-2">
-              <p className="text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-4 px-2">Main Menu</p>
-              
-              {[
-                { name: 'Dashboard', icon: '📊', href: '/', active: true },
-                { name: 'Data Sources', icon: '🔌', href: '/data-sources', active: false }, 
-                { name: 'Infrastructure', icon: '🌐', href: '/infrastructure', active: false },
-                { name: 'Database', icon: '💾', href: '/team', active: false },
-                { name: 'Security', icon: '🛡️', href: '#', active: false },
-                { name: 'Settings', icon: '⚙️', href: '#', active: false },
-              ].map((item) => (
-                <Link 
-                  key={item.name}
-                  href={item.href} 
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-all group ${
-                    item.active 
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
-                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg">{item.icon}</span>
-                    <span className="text-sm font-medium">{item.name}</span>
-                  </div>
-                  {item.active && <div className="w-1.5 h-1.5 rounded-full bg-blue-200 shadow-[0_0_8px_rgba(191,219,254,0.8)]"></div>}
-                </Link>
-              ))}
-            </nav>
-
-            <div className="mt-auto pt-6 border-t border-slate-800 px-2">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center text-xs border border-slate-600 uppercase font-bold text-white">R</div>
-                <div className="overflow-hidden">
-                  <p className="text-sm font-semibold text-white truncate">Rif Arbawi</p>
-                  <p className="text-xs text-slate-500 truncate">Frontend Dev</p>
-                </div>
-              </div>
-            </div>
-          </aside>
+          <Sidebar /> // Pindah ke /app/components/Sidebar.tsx
 
           {/* Main Area */}
           <div className="flex-1 flex flex-col">
