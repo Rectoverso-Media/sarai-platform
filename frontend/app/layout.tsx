@@ -35,7 +35,8 @@ export default function RootLayout({
       <body className={`${poppins.variable} ${inter.variable} h-full antialiased font-inter`}>
         <div className="flex min-h-screen">
           {/* Sidebar */}
-          <Sidebar /> // Pindah ke /app/components/Sidebar.tsx
+          <Sidebar /> 
+          {/* // Pindah ke /app/components/Sidebar.tsx */}
 
           {/* Main Area */}
           <div className="flex-1 flex flex-col">
