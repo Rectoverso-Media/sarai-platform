@@ -1,4 +1,4 @@
-import './globals.css'; // Sesuaikan path-nya dengan letak file globals.css kamu
+import './globals.css'; 
 import { Toaster } from 'react-hot-toast';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

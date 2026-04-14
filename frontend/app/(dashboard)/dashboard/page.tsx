@@ -46,7 +46,7 @@ export default function Home() {
       </div>
 
       {/* Infrastructure Health Monitor */}
-      {/* 1. Bagian CPU Usage */}
+      {/* Bagian CPU Usage */}
       <div className="flex justify-between text-[10px] mb-1">
         <span className="text-slate-400">CPU Usage</span>
         <span className="text-white">{stats.cpu}%</span>
@@ -58,7 +58,7 @@ export default function Home() {
         ></div>
       </div>
 
-      {/* 2. Bagian Memory */}
+      {/* Bagian Memory */}
       <div className="flex justify-between text-[10px] mb-1">
         <span className="text-slate-400">Memory</span>
         <span className="text-white">{(16 * stats.ram / 100).toFixed(1)}GB / 16GB</span>

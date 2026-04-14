@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  // Ini data dummy yang kemarin
+  // Ini data dummy
   const mockTeam = [
     { id: 1, name: 'Arif Bagus', email: 'arif@rectoverso.com', role: 'Administrator', status: 'Active', avatar: 'AB' },
     { id: 2, name: 'Yusuf Backend', email: 'yusuf@rectoverso.com', role: 'Developer', status: 'Active', avatar: 'YB' },

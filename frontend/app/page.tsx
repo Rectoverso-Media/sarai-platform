@@ -1,11 +1,10 @@
 import React from 'react';
 
-// Ini dia baris yang dicari sama Next.js! (Default Export)
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white font-inter">
       
-      {/* 1. NAVBAR (Khusus Publik) */}
+      {/* NAVBAR (Khusus Publik) */}
       <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -31,7 +30,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* 2. HERO SECTION */}
+      {/* HERO SECTION */}
       <section className="pt-32 pb-20 px-6 bg-gradient-to-br from-blue-50 via-white to-blue-50 min-h-[90vh] flex items-center">
         <div className="max-w-7xl mx-auto w-full grid md:grid-cols-2 gap-12 items-center">
           
@@ -66,9 +65,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ========================================= */}
-      {/* 3. FEATURES SECTION */}
-      {/* ========================================= */}
+      {/* FEATURES SECTION */}
       <section id="feature" className="py-24 bg-white px-6">
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
@@ -110,9 +107,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ========================================= */}
-      {/* 4. HOW IT WORKS SECTION */}
-      {/* ========================================= */}
+      {/* HOW IT WORKS SECTION */}
       <section className="py-24 bg-slate-50 px-6 border-y border-slate-100">
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
