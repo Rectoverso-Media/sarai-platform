@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import StatusBadge from '../../components/ui/StatusBadge';
+import StatusBadge from '../../../components/ui/StatusBadge';
 
 export default function InfrastructurePage() {
   // Dummy data sementara pengganti database Backend

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import PageHeader from '../../components/ui/PageHeader';
+import PageHeader from '../../../components/ui/PageHeader';
+import toast from 'react-hot-toast';
 
 interface TeamMember {
   id: number;
@@ -37,25 +38,39 @@ export default function TeamPage() {
 
   // 3. FUNGSI HANDLE SUBMIT FORM
   const handleAddMember = (e: React.FormEvent) => {
-    e.preventDefault(); // Mencegah halaman ke-refresh pas disubmit
-    
-    // Bikin member baru secara lokal (Nanti di Phase 2 ini diganti jadi fetch POST)
+    e.preventDefault();
+
+    // 2. VALIDASI SEDERHANA
+    if (!formData.name || !formData.email) {
+      toast.error("Nama dan Email wajib diisi, Rif! ❌");
+      return;
+    }
+
+    // Cek format email pakai regex simpel
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(formData.email)) {
+      toast.error("Format email-nya salah tuh, coba cek lagi 📧");
+      return;
+    }
+
+    // 3. PROSES SIMULASI (Sama kayak kemarin)
     const newMember: TeamMember = {
-      id: Date.now(), // Bikin ID acak sementara
+      id: Date.now(),
       name: formData.name,
       email: formData.email,
       role: formData.role,
-      status: 'Pending', // Default status untuk member baru
-      avatar: formData.name.substring(0, 2).toUpperCase(), // Ambil 2 huruf pertama
+      status: 'Pending',
+      avatar: formData.name.substring(0, 2).toUpperCase(),
     };
 
-    // Masukin ke daftar member yang ada di layar
     setMembers([newMember, ...members]);
     
-    // Tutup modal dan bersihkan form
+    // 4. MUNCULIN NOTIFIKASI SUKSES! 🎉
+    toast.success(`Berhasil mengundang ${formData.name}!`);
+
     setIsModalOpen(false);
     setFormData({ name: '', email: '', role: 'Developer' });
-  };
+    };
 
   return (
     <div className="space-y-6">
@@ -207,6 +222,8 @@ export default function TeamPage() {
           </div>
         </div>
       )}
+
+      
 
     </div>
   );

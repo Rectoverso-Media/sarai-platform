@@ -7,7 +7,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   const menuItems = [
-    { name: 'Dashboard', icon: '📊', href: '/' },
+    { name: 'Dashboard', icon: '📊', href: '/dashboard' },
     { name: 'Data Sources', icon: '🔌', href: '/data-sources' }, 
     { name: 'Infrastructure', icon: '🌐', href: '/infrastructure' },
     { name: 'Team', icon: '👥', href: '/team' },
