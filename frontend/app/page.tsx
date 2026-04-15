@@ -13,7 +13,7 @@ export default function LandingPage() {
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-            <a href="#about" className="hover:text-blue-600 transition-colors">About</a>
+            <a href="/about" className="hover:text-blue-600 transition-colors">About</a>
             <a href="#feature" className="hover:text-blue-600 transition-colors">Feature</a>
             <a href="#pricing" className="hover:text-blue-600 transition-colors">Pricing</a>
             <a href="#contact" className="hover:text-blue-600 transition-colors">Contact</a>
