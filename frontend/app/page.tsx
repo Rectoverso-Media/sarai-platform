@@ -151,6 +151,127 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* STATS SECTION */}
+      <section className="py-20 bg-blue-600 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-blue-500/50">
+            <div className="space-y-2">
+              <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight">99.9%</h3>
+              <p className="text-blue-200 font-medium">Uptime Guarantee</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight">50M+</h3>
+              <p className="text-blue-200 font-medium">Queries Processed</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight">&lt;10ms</h3>
+              <p className="text-blue-200 font-medium">Average Latency</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight">24/7</h3>
+              <p className="text-blue-200 font-medium">Expert Support</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* BRANDS (TRUSTED BY) SECTION */}
+      <section className="py-24 bg-white overflow-hidden px-6">
+        <div className="max-w-7xl mx-auto text-center mb-12">
+          <p className="text-sm font-semibold text-slate-400 uppercase tracking-widest">
+            Trusted by innovative companies worldwide
+          </p>
+        </div>
+        
+        {/* Container Utama (Masking) */}
+        <div className="relative flex overflow-x-hidden">
+          {/* Track Animasi */}
+          <div className="animate-marquee flex items-center gap-16 md:gap-24 py-4">
+            {/* --- DERET LOGO 1 --- */}
+            {[1, 2, 3, 4, 5, 6].map((item) => (
+              <div key={item} className="flex-shrink-0">
+                {/* Placeholder Gambar PNG */}
+                <div className="w-32 h-12 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                  <span className="text-xs font-bold text-slate-400">LOGO {item}</span>
+                </div>
+              </div>
+            ))}
+
+            {/* --- DERET LOGO 2 (DUPLIKAT UNTUK LOOPING) --- */}
+            {[1, 2, 3, 4, 5, 6].map((item) => (
+              <div key={`dup-${item}`} className="flex-shrink-0">
+                <div className="w-32 h-12 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                  <span className="text-xs font-bold text-slate-400">LOGO {item}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Efek Fade di Kiri & Kanan biar halus pas muncul/hilang */}
+          <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-white to-transparent z-10"></div>
+          <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-white to-transparent z-10"></div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-slate-50 border-t border-slate-200 pt-20 pb-10 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-16">
+            
+            {/* Brand Column */}
+            <div className="col-span-2 space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-slate-300 rounded-lg"></div>
+                <span className="text-xl font-bold text-slate-800 tracking-tight">SARAI</span>
+              </div>
+              <p className="text-slate-500 max-w-sm leading-relaxed">
+                Empowering businesses with intelligent data analytics and real-time infrastructure monitoring.
+              </p>
+            </div>
+
+            {/* Links Columns */}
+            <div>
+              <h4 className="font-bold text-slate-800 mb-6">Product</h4>
+              <ul className="space-y-4 text-slate-500">
+                <li><a href="#" className="hover:text-blue-600 transition-colors">Features</a></li>
+                <li><a href="#" className="hover:text-blue-600 transition-colors">Integrations</a></li>
+                <li><a href="#" className="hover:text-blue-600 transition-colors">Pricing</a></li>
+                <li><a href="#" className="hover:text-blue-600 transition-colors">Changelog</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-slate-800 mb-6">Company</h4>
+              <ul className="space-y-4 text-slate-500">
+                <li><a href="#" className="hover:text-blue-600 transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-blue-600 transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-blue-600 transition-colors">Blog</a></li>
+                <li><a href="#" className="hover:text-blue-600 transition-colors">Contact</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-slate-800 mb-6">Legal</h4>
+              <ul className="space-y-4 text-slate-500">
+                <li><a href="#" className="hover:text-blue-600 transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-blue-600 transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-blue-600 transition-colors">Cookie Policy</a></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="pt-8 border-t border-slate-200 text-center md:text-left text-slate-400 text-sm flex flex-col md:flex-row justify-between items-center gap-4">
+            <p>© 2026 SARAI Analytics. All rights reserved.</p>
+            <div className="flex gap-4">
+              <a href="#" className="hover:text-slate-600 transition-colors">Twitter</a>
+              <a href="#" className="hover:text-slate-600 transition-colors">GitHub</a>
+              <a href="#" className="hover:text-slate-600 transition-colors">LinkedIn</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
     </div>
   );
 }
