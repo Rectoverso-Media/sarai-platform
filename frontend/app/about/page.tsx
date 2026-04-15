@@ -1,35 +1,14 @@
 import React from 'react';
 import { Button } from '../../components/ui/button';
+import Navbar from '../../components/layout/Navbar';
+import Footer from '../../components/layout/Footer';
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white font-inter">
       
       {/* NAVBAR (Sama dengan Homepage) */}
-      <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-200 rounded-xl"></div>
-            <span className="text-2xl font-bold text-slate-800 tracking-tight">SARAI</span>
-          </div>
-
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-            <a href="/" className="hover:text-blue-600 transition-colors">Home</a>
-            <a href="/about" className="text-blue-600 font-bold">About</a>
-            <a href="/feature" className="hover:text-blue-600 transition-colors">Feature</a>
-            <a href="/pricing" className="hover:text-blue-600 transition-colors">Pricing</a>
-          </nav>
-
-          <div className="flex items-center gap-4">
-            <a href="/login" className="px-6 py-2.5 text-sm font-medium text-white bg-slate-500 hover:bg-slate-600 rounded-full transition-colors">
-              Login
-            </a>
-            <button className="px-6 py-2.5 text-sm font-medium text-slate-700 border border-slate-300 hover:bg-slate-50 rounded-full transition-colors">
-              Try Demo
-            </button>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* HERO SECTION ABOUT */}
       <section className="pt-32 pb-20 px-6 bg-white">
@@ -133,56 +112,7 @@ export default function AboutPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-[#597393] text-white pt-20 pb-10 px-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header Footer */}
-          <h3 className="text-center text-2xl font-bold mb-16">Contact</h3>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
-            {/* Brand Box Placeholder */}
-            <div className="col-span-2 md:col-span-1 flex justify-center md:justify-start">
-              <div className="w-32 h-32 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20"></div>
-            </div>
-
-            {/* Links Columns */}
-            <div>
-              <h4 className="font-bold mb-6 text-white">Follow Us</h4>
-              <ul className="space-y-4 text-slate-200 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors flex items-center gap-2">📷 Instagram</a></li>
-                <li><a href="#" className="hover:text-white transition-colors flex items-center gap-2">📘 Facebook</a></li>
-                <li><a href="#" className="hover:text-white transition-colors flex items-center gap-2">💼 LinkedIn</a></li>
-                <li><a href="#" className="hover:text-white transition-colors flex items-center gap-2">▶️ Youtube</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold mb-6 text-white">Resources</h4>
-              <ul className="space-y-4 text-slate-200 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Integration</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Tutorials</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold mb-6 text-white">Help & Legal</h4>
-              <ul className="space-y-4 text-slate-200 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Cookie Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">AI Terms</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Personal Information</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="pt-8 border-t border-white/20 text-center text-slate-300 text-xs">
-            <p>© SARAI</p>
-          </div>
-        </div>
-      </footer>
+      <Footer/>
 
     </div>
   );

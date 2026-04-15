@@ -1,36 +1,21 @@
 import React from 'react';
+import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
+import Image from 'next/image';
 
 export default function LandingPage() {
   return (
+    
+
     <div className="min-h-screen bg-white font-inter">
       
       {/* NAVBAR (Khusus Publik) */}
-      <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-200 rounded-xl"></div>
-            <span className="text-2xl font-bold text-slate-800 tracking-tight">SARAI</span>
-          </div>
+      <Navbar/>
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-            <a href="/about" className="hover:text-blue-600 transition-colors">About</a>
-            <a href="#feature" className="hover:text-blue-600 transition-colors">Feature</a>
-            <a href="#pricing" className="hover:text-blue-600 transition-colors">Pricing</a>
-            <a href="#contact" className="hover:text-blue-600 transition-colors">Contact</a>
-          </nav>
-
-          <div className="flex items-center gap-4">
-            <button className="px-6 py-2.5 text-sm font-medium text-white bg-slate-800 hover:bg-slate-900 rounded-full transition-colors">
-              Login
-            </button>
-            <button className="px-6 py-2.5 text-sm font-medium text-slate-700 border border-slate-300 hover:bg-slate-50 rounded-full transition-colors">
-              Try Demo
-            </button>
-          </div>
-        </div>
-      </header>
 
       {/* HERO SECTION */}
+
+      
       <section className="pt-32 pb-20 px-6 bg-gradient-to-br from-blue-50 via-white to-blue-50 min-h-[90vh] flex items-center">
         <div className="max-w-7xl mx-auto w-full grid md:grid-cols-2 gap-12 items-center">
           
@@ -56,8 +41,12 @@ export default function LandingPage() {
           <div className="relative">
             <div className="absolute inset-0 bg-blue-400 blur-[80px] opacity-20 rounded-full"></div>
             <div className="relative w-full aspect-[4/3] bg-white border border-slate-100 rounded-2xl shadow-2xl flex items-center justify-center p-4">
-              <div className="w-full h-full bg-slate-100 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400">
-                [ Placeholder Dashboard Mockup.png ]
+              <div className="w-full h-full rounded-xl overflow-hidden shadow-2xl border border-slate-200 bg-slate-50">
+                <img 
+                  src="/background/Background2.png" 
+                  alt="SARAI Dashboard Mockup" 
+                  className="w-full h-auto object-cover"
+                />
               </div>
             </div>
           </div>
@@ -213,64 +202,51 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="bg-slate-50 border-t border-slate-200 pt-20 pb-10 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-16">
-            
-            {/* Brand Column */}
-            <div className="col-span-2 space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-slate-300 rounded-lg"></div>
-                <span className="text-xl font-bold text-slate-800 tracking-tight">SARAI</span>
-              </div>
-              <p className="text-slate-500 max-w-sm leading-relaxed">
-                Empowering businesses with intelligent data analytics and real-time infrastructure monitoring.
-              </p>
-            </div>
 
-            {/* Links Columns */}
-            <div>
-              <h4 className="font-bold text-slate-800 mb-6">Product</h4>
-              <ul className="space-y-4 text-slate-500">
-                <li><a href="#" className="hover:text-blue-600 transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-blue-600 transition-colors">Integrations</a></li>
-                <li><a href="#" className="hover:text-blue-600 transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-blue-600 transition-colors">Changelog</a></li>
-              </ul>
+      {/* CALL TO ACTION (CTA) SECTION */}
+      <section 
+        className="relative w-full min-h-[500px] md:min-h-[600px] py-20 flex flex-col justify-center bg-cover bg-bottom bg-no-repeat"
+        style={{ 
+          backgroundImage: "url('/background/Background1.png')"
+        }}
+      >
+        
+        {/* CONTENT CONTAINER */}
+        <div className="container mx-auto px-4 relative z-10 flex flex-col items-center text-center max-w-4xl animate-in slide-in-from-bottom-10 duration-700">
+          
+          {/* Eyebrow Text + Icon */}
+          <div className="inline-flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 text-sm shadow-sm">
+              📊 
             </div>
-
-            <div>
-              <h4 className="font-bold text-slate-800 mb-6">Company</h4>
-              <ul className="space-y-4 text-slate-500">
-                <li><a href="#" className="hover:text-blue-600 transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-blue-600 transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-blue-600 transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-blue-600 transition-colors">Contact</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-slate-800 mb-6">Legal</h4>
-              <ul className="space-y-4 text-slate-500">
-                <li><a href="#" className="hover:text-blue-600 transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-blue-600 transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-blue-600 transition-colors">Cookie Policy</a></li>
-              </ul>
-            </div>
+            <span className="text-[#597393] font-extrabold text-xl md:text-2xl tracking-wide">
+              Let's try SARAI now!
+            </span>
           </div>
 
-          {/* Copyright */}
-          <div className="pt-8 border-t border-slate-200 text-center md:text-left text-slate-400 text-sm flex flex-col md:flex-row justify-between items-center gap-4">
-            <p>© 2026 SARAI Analytics. All rights reserved.</p>
-            <div className="flex gap-4">
-              <a href="#" className="hover:text-slate-600 transition-colors">Twitter</a>
-              <a href="#" className="hover:text-slate-600 transition-colors">GitHub</a>
-              <a href="#" className="hover:text-slate-600 transition-colors">LinkedIn</a>
-            </div>
-          </div>
+          {/* Main Heading */}
+          <h2 className="text-4xl md:text-5xl font-extrabold text-[#3a526d] mb-8 leading-tight">
+            Start Making Smarter Decisions Today
+          </h2>
+
+          {/* Subheading */}
+          <p className="text-slate-600 text-lg md:text-xl mb-12 leading-relaxed max-w-2xl">
+            Start using SARAI to turn data into insights that help improve your business performance
+          </p>
+
+          {/* Get Started Button */}
+          <a href="/register">
+            <button className="px-12 py-5 text-lg font-bold text-white bg-[#597393] hover:bg-[#4a627e] rounded-full shadow-xl shadow-slate-400/30 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+              Get Started
+            </button>
+          </a>
+
         </div>
-      </footer>
+      </section>
+      {/* ========================================= */}
+
+      {/* FOOTER */}
+      <Footer/>
 
     </div>
   );

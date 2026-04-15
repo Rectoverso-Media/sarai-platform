@@ -1,36 +1,15 @@
 import React from 'react';
+import Navbar from '../../components/layout/Navbar';
+import Footer from '../../components/layout/Footer';
 
 export default function FeaturePage() {
   return (
     <div className="min-h-screen bg-slate-50/50 font-inter">
       
       {/* NAVBAR */}
-      <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-200 rounded-xl"></div>
-            <span className="text-2xl font-bold text-slate-800 tracking-tight">SARAI</span>
-          </div>
+      <Navbar />
 
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-            <a href="/" className="hover:text-blue-600 transition-colors">Home</a>
-            <a href="/about" className="hover:text-blue-600 transition-colors">About</a>
-            <a href="/feature" className="text-blue-600 font-bold">Feature</a>
-            <a href="/pricing" className="hover:text-blue-600 transition-colors">Pricing</a>
-          </nav>
-
-          <div className="flex items-center gap-4">
-            <a href="/login" className="px-6 py-2.5 text-sm font-medium text-white bg-[#597393] hover:bg-[#4a627e] rounded-full transition-colors">
-              Login
-            </a>
-            <button className="px-6 py-2.5 text-sm font-medium text-slate-700 border border-slate-300 hover:bg-slate-50 rounded-full transition-colors">
-              Try Demo
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* 2. HERO HEADER SECTION */}
+      {/* HERO HEADER SECTION */}
       <section className="pt-40 pb-20 px-6 bg-gradient-to-b from-blue-50/50 to-transparent text-center">
         <div className="max-w-3xl mx-auto space-y-6">
           <h1 className="text-4xl md:text-5xl font-bold text-[#597393] leading-tight">
@@ -42,7 +21,7 @@ export default function FeaturePage() {
         </div>
       </section>
 
-      {/* 3. INTRO SECTION */}
+      {/* INTRO SECTION */}
       <section className="py-12 px-6 text-center">
         <div className="max-w-4xl mx-auto space-y-6">
           <h2 className="text-3xl font-bold text-[#597393]">
@@ -54,7 +33,7 @@ export default function FeaturePage() {
         </div>
       </section>
 
-      {/* 4. MAIN FEATURES (ZIG-ZAG LAYOUT) */}
+      {/* MAIN FEATURES (ZIG-ZAG LAYOUT) */}
       <section className="py-20 px-6 overflow-hidden">
         <div className="max-w-6xl mx-auto space-y-32">
           
@@ -127,7 +106,7 @@ export default function FeaturePage() {
         </div>
       </section>
 
-      {/* 5. BENTO GRID: MORE POWERFUL CAPABILITIES */}
+      {/* BENTO GRID: MORE POWERFUL CAPABILITIES */}
       <section className="py-24 px-6 bg-white">
         <div className="max-w-6xl mx-auto space-y-16">
           <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -176,7 +155,7 @@ export default function FeaturePage() {
         </div>
       </section>
 
-      {/* 6. PILLS SECTION: BUSINESS GROWTH */}
+      {/* PILLS SECTION: BUSINESS GROWTH */}
       <section className="py-24 px-6 bg-slate-50">
         <div className="max-w-4xl mx-auto space-y-16">
           <div className="text-center space-y-4">
@@ -207,48 +186,8 @@ export default function FeaturePage() {
         </div>
       </section>
 
-      {/* 7. FOOTER */}
-      <footer className="bg-[#597393] text-white pt-20 pb-10 px-6">
-        <div className="max-w-7xl mx-auto">
-          <h3 className="text-center text-2xl font-bold mb-16">Contact</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
-            <div className="col-span-2 md:col-span-1 flex justify-center md:justify-start">
-              <div className="w-32 h-32 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20"></div>
-            </div>
-            <div>
-              <h4 className="font-bold mb-6 text-white">Follow Us</h4>
-              <ul className="space-y-4 text-slate-200 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Instagram</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Facebook</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">LinkedIn</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Youtube</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-6 text-white">Resources</h4>
-              <ul className="space-y-4 text-slate-200 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Integration</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Tutorials</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-6 text-white">Help & Legal</h4>
-              <ul className="space-y-4 text-slate-200 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Cookie Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">AI Terms</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="pt-8 border-t border-white/20 text-center text-slate-300 text-xs">
-            <p>© SARAI</p>
-          </div>
-        </div>
-      </footer>
+      {/* FOOTER */}
+      <Footer />
 
     </div>
   );

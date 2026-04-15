@@ -79,7 +79,7 @@ export default function ForgotPasswordPage() {
         //     </Card>
         //   </div>
 
-
+// ---------------------------------------------------------------------------------------------------
         <div className="space-y-6 animate-in fade-in duration-500">
           
           {/* Ilustrasi UI/UX (Ditaruh di atas biar kotaknya tetap rapi) */}
