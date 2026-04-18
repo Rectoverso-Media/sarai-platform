@@ -2,6 +2,8 @@ import React from 'react';
 import { Button } from '../../components/ui/button';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
+import Image from 'next/image';
+
 
 export default function AboutPage() {
   return (
@@ -22,8 +24,13 @@ export default function AboutPage() {
             </p>
           </div>
           {/* Placeholder untuk Ilustrasi */}
-          <div className="relative w-full aspect-video bg-blue-50 rounded-[3rem] border border-blue-100 flex items-center justify-center">
-            <span className="text-blue-300 font-medium">[ Illustration: Woman at Desk ]</span>
+          <div className="relative w-full aspect-video flex items-center justify-center">
+            <img 
+                src="/illustrations/Animation6.png" 
+                alt="Success Animation" 
+                className="w-full h-full object-cover"
+              />
+            {/* <span className="text-blue-300 font-medium">[ Illustration: Woman at Desk ]</span> */}
           </div>
         </div>
       </section>
@@ -36,6 +43,11 @@ export default function AboutPage() {
             {/* Foto CEO */}
             <div className="md:absolute left-[-2rem] top-1/2 md:-translate-y-1/2 w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-white overflow-hidden bg-slate-300 shadow-lg flex-shrink-0">
                {/* Ntar tag <img src="/ceo.jpg" alt="CEO" /> nanti di sini */}
+                <img 
+                  src="/icons/Profile.png" 
+                  alt="Success Animation" 
+                  className="w-full h-full object-cover"
+                />
             </div>
             
             <div className="text-white space-y-4 text-center md:text-left">
@@ -88,7 +100,12 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-2 gap-16 items-center">
             {/* Placeholder untuk Ilustrasi Kiri */}
             <div className="w-full aspect-square max-w-md mx-auto bg-blue-50 rounded-full border border-blue-100 flex items-center justify-center">
-               <span className="text-blue-300 font-medium">[ Illustration: Woman & Lightbulb ]</span>
+               <img 
+                src="/illustrations/Animation5.png" 
+                alt="Success Animation" 
+                className="w-full h-full object-cover"
+              />
+               {/* <span className="text-blue-300 font-medium">[ Illustration: Woman & Lightbulb ]</span> */}
             </div>
 
             {/* Grid 4 Fitur Kanan */}

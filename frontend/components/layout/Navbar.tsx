@@ -23,25 +23,25 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
           <a 
             href="/" 
-            className={`transition-colors ${isActive('/') ? 'text-blue-600 font-bold' : 'text-slate-600 hover:text-blue-600'}`}
+            className={`transition-colors ${isActive('/') ? 'text-[#597393] font-bold' : 'text-slate-600 hover:text-[#597393]'}`}
           >
             Home
           </a>
           <a 
             href="/about" 
-            className={`transition-colors ${isActive('/about') ? 'text-blue-600 font-bold' : 'text-slate-600 hover:text-blue-600'}`}
+            className={`transition-colors ${isActive('/about') ? 'text-[#597393] font-bold' : 'text-slate-600 hover:text-[#597393]'}`}
           >
             About
           </a>
           <a 
             href="/feature" 
-            className={`transition-colors ${isActive('/feature') ? 'text-blue-600 font-bold' : 'text-slate-600 hover:text-blue-600'}`}
+            className={`transition-colors ${isActive('/feature') ? 'text-[#597393] font-bold' : 'text-slate-600 hover:text-[#597393]'}`}
           >
             Feature
           </a>
           <a 
             href="/pricing" 
-            className="text-slate-600 hover:text-blue-600 transition-colors"
+            className="text-slate-600 hover:text-[#597393] transition-colors"
           >
             Pricing
           </a>
