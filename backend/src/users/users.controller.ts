@@ -6,12 +6,12 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  getUsers() {
+  findAll() {
     return this.usersService.findAll();
   }
 
   @Post()
-  addUser(@Body() body: { name: string; email: string }) {
+  create(@Body() body: { name: string; email: string; password: string }) {
     return this.usersService.create(body);
   }
 }
