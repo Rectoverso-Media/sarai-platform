@@ -1,10 +1,71 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
 import Card from '../../../components/ui/Card'; 
 import { Button } from '../../../components/ui/button'; 
+import Link from 'next/link'; // Pakai Link biar SPA
+import toast from 'react-hot-toast'; // Buat notifikasi keren
 
 export default function RegisterPage() {
+  // "wadah" buat nyimpen ketikan user
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
+
+  // state buat animasi loading
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fungsi buat nangkep setiap ketikan di input
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value
+    });
+  };
+
+  // Fungsi yang jalan pas tombol "Sign Up" diklik
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); // Biar halaman nggak ngerefresh
+    
+    // Validasi kecil-kecilan
+    if (!formData.name || !formData.email || !formData.password) {
+      toast.error('All coloumn must be filled!');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Nembak API backend
+      const response = await fetch('http://localhost:3001/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData), // Data diubah jadi JSON sebelum dikirim
+      });
+
+      const data = await response.json();
+
+      if (response.ok || response.status === 201) {
+        toast.success('Account has been created! Go to login page');
+        // Kosongin form lagi kalau sukses
+        setFormData({ name: '', email: '', password: '' });
+      } else {
+        // Kalau email udah dipakai atau ada error dari backend
+        toast.error(data.message || 'Failed to create');
+      }
+    } catch (error) {
+      toast.error('Disconnected from backend server!');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    // efek kaca (bg-white/95) dan bayangan
     <Card className="w-full p-8 md:p-10 shadow-2xl shadow-blue-600/10 border border-slate-100 rounded-2xl bg-white/95 backdrop-blur-sm">
       <div className="space-y-8 text-center">
         
@@ -12,31 +73,58 @@ export default function RegisterPage() {
           <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Create Account</h2>
           <p className="text-slate-500 text-sm">
             Already have an account?{' '}
-            <a href="/login" className="text-blue-600 font-bold hover:underline transition-all">
+            <Link href="/login" className="text-blue-600 font-bold hover:underline transition-all">
               Login here
-            </a>
+            </Link>
           </p>
         </div>
 
-        <form className="space-y-5 text-left">
+        {/* 👇 Tambahin onSubmit di form */}
+        <form onSubmit={handleSubmit} className="space-y-5 text-left">
           <div className="space-y-2">
             <label htmlFor="name" className="text-sm font-semibold text-slate-700">Full Name</label>
-            <input id="name" type="text" placeholder="Enter your full name" className="block w-full px-4 py-3 border border-slate-200 rounded-xl text-sm transition-all bg-slate-50/50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+            <input 
+              id="name" 
+              type="text" 
+              value={formData.name} // Di-bind ke wadah state
+              onChange={handleChange} // Dipantau perubahannya
+              placeholder="Enter your full name" 
+              className="block w-full px-4 py-3 border border-slate-200 rounded-xl text-sm transition-all bg-slate-50/50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" 
+            />
           </div>
 
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-semibold text-slate-700">Email Address</label>
-            <input id="email" type="email" placeholder="name@company.com" className="block w-full px-4 py-3 border border-slate-200 rounded-xl text-sm transition-all bg-slate-50/50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+            <input 
+              id="email" 
+              type="email" 
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="name@company.com" 
+              className="block w-full px-4 py-3 border border-slate-200 rounded-xl text-sm transition-all bg-slate-50/50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" 
+            />
           </div>
 
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-semibold text-slate-700">Password</label>
-            <input id="password" type="password" placeholder="Create a password" className="block w-full px-4 py-3 border border-slate-200 rounded-xl text-sm transition-all bg-slate-50/50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+            <input 
+              id="password" 
+              type="password" 
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Create a password" 
+              className="block w-full px-4 py-3 border border-slate-200 rounded-xl text-sm transition-all bg-slate-50/50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" 
+            />
           </div>
 
           <div className="pt-4">
-            <Button className="w-full py-4 text-base font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-600/20 transition-all">
-              Sign Up
+            {/* 👇 Tombol dikasih disable dan animasi loading */}
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+              className="w-full py-4 text-base font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed rounded-xl shadow-lg shadow-blue-600/20 transition-all"
+            >
+              {isLoading ? 'Creating Account...' : 'Sign Up'}
             </Button>
           </div>
         </form>
