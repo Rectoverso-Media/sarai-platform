@@ -143,8 +143,8 @@ export default function LandingPage() {
         style={{ 
           // Cocok dikasih gambar node map / jaring-jaring teknologi
           backgroundImage: "url('/background/bg-tech-placeholder.png')",
-          backgroundColor: "rgba(239,241,245)", // Warna blue-600 transparansi 90%
-          backgroundBlendMode: "multiply" // Bikin efek gambarnya nge-blend elegan sama warna biru
+          backgroundColor: "rgba(239,241,245)", 
+          backgroundBlendMode: "multiply" 
         }}
       >
         <div className="max-w-7xl mx-auto relative z-10">
@@ -180,16 +180,12 @@ export default function LandingPage() {
           <div className="animate-marquee flex items-center gap-16 md:gap-24 py-4">
             {[1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6].map((item, idx) => (
               <div key={idx} className="flex-shrink-0">
-                {/* 👇 Background kotak abu-abunya saya hapus biar logo transparan (PNG) kelihatan lebih nyatu dan elegan */}
                 <div className="w-32 h-12 flex items-center justify-center hover:grayscale-0 hover:opacity-100 transition-all duration-300 cursor-pointer">
-                  
-                  {/* 👇 Ini cara pasang gambarnya */}
                   <img 
                     src={`/logos/Logo-${item}.png`} 
                     alt={`Trusted Company ${item}`} 
                     className="max-w-full max-h-full object-contain"
                   />
-
                 </div>
               </div>
             ))}
@@ -201,7 +197,7 @@ export default function LandingPage() {
 
       {/* CTA SECTION (Fleksibel dengan Aspect)    */}
       <section 
-        // Di-upgrade pakai aspect rasio biar super mulus!
+        // upgrade pakai aspect rasio biar super mulus
         className="relative w-full aspect-[4/3] md:aspect-[21/9] flex flex-col items-center justify-center bg-cover bg-bottom bg-no-repeat"
         style={{ backgroundImage: "url('/background/Background1.png')" }}
       >

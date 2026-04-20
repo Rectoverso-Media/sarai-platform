@@ -1,36 +1,34 @@
 import React from 'react';
-import { Button } from '../../components/ui/button';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
-import Image from 'next/image';
-
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white font-inter">
       
-      {/* NAVBAR (Sama dengan Homepage) */}
+      {/* NAVBAR */}
       <Navbar />
 
       {/* HERO SECTION ABOUT */}
       <section className="pt-32 pb-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-800">
+            <h1 className="text-4xl md:text-5xl font-bold text-[#4A627E]">
               About SARAI
             </h1>
             <p className="text-slate-500 leading-relaxed text-lg">
               SARAI is an AI marketing platform that helps businesses turn data into meaningful insights. Powered by artificial intelligence, SARAI is designed to simplify data analysis and support faster, more accurate decision making.
             </p>
           </div>
-          {/* Placeholder untuk Ilustrasi */}
-          <div className="relative w-full aspect-video flex items-center justify-center">
+          
+          {/* Ilustrasi Hero: Pakai aspect-[4/3] di HP dan aspect-video di PC biar proporsinya selalu pas */}
+          <div className="relative w-full aspect-[4/3] md:aspect-video flex items-center justify-center">
             <img 
                 src="/illustrations/Animation6.png" 
-                alt="Success Animation" 
-                className="w-full h-full object-cover"
+                alt="SARAI Dashboard Animation" 
+                // object-contain memastikan gambar ilustrasi 100% utuh nggak kepotong
+                className="w-full h-full object-contain drop-shadow-2xl hover:-translate-y-2 transition-transform duration-500"
               />
-            {/* <span className="text-blue-300 font-medium">[ Illustration: Woman at Desk ]</span> */}
           </div>
         </div>
       </section>
@@ -42,21 +40,20 @@ export default function AboutPage() {
             
             {/* Foto CEO */}
             <div className="md:absolute left-[-2rem] top-1/2 md:-translate-y-1/2 w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-white overflow-hidden bg-slate-300 shadow-lg flex-shrink-0">
-               {/* Ntar tag <img src="/ceo.jpg" alt="CEO" /> nanti di sini */}
                 <img 
                   src="/icons/Profile.png" 
-                  alt="Success Animation" 
+                  alt="Jessica Grant - CEO" 
                   className="w-full h-full object-cover"
                 />
             </div>
             
             <div className="text-white space-y-4 text-center md:text-left">
-              <p className="text-xl md:text-2xl font-medium leading-relaxed">
+              <p className="text-xl md:text-2xl font-medium leading-relaxed italic">
                 "At SARAI, we believe in transforming complex data into clear, actionable insights."
               </p>
               <div>
-                <p className="font-bold">Jessica Grant</p>
-                <p className="text-sm opacity-80">Founder & CEO</p>
+                <p className="font-bold text-lg">Jessica Grant</p>
+                <p className="text-sm text-blue-100">Founder & CEO</p>
               </div>
             </div>
           </div>
@@ -64,7 +61,7 @@ export default function AboutPage() {
       </section>
 
       {/* STORY & MISSION SECTION */}
-      <section className="py-24 bg-slate-50 px-6">
+      <section className="py-24 bg-slate-50 px-6 border-y border-slate-100">
         <div className="max-w-6xl mx-auto space-y-24">
           
           {/* Our Story */}
@@ -72,14 +69,14 @@ export default function AboutPage() {
             <p className="text-slate-600 leading-relaxed text-lg order-2 md:order-1">
               SARAI was developed as a solution to help businesses understand data more easily. In today's information rich digital age, many companies struggle to turn data into useful insights. That's why SARAI leverages AI technology to simplify the analysis process and support smarter decision making.
             </p>
-            <h2 className="text-4xl md:text-5xl font-bold text-[#597393] order-1 md:order-2 text-left md:text-right">
+            <h2 className="text-4xl md:text-5xl font-bold text-[#4A627E] order-1 md:order-2 text-left md:text-right">
               Our Story
             </h2>
           </div>
 
           {/* Our Mission */}
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <h2 className="text-4xl md:text-5xl font-bold text-[#597393]">
+            <h2 className="text-4xl md:text-5xl font-bold text-[#4A627E]">
               Our Mission
             </h2>
             <p className="text-slate-600 leading-relaxed text-lg">
@@ -93,37 +90,48 @@ export default function AboutPage() {
       {/* WHY CHOOSE SARAI SECTION */}
       <section className="py-24 px-6 bg-white">
         <div className="max-w-6xl mx-auto space-y-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#597393] text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-[#4A627E] text-center">
             Why Choose SARAI
           </h2>
 
           <div className="grid md:grid-cols-2 gap-16 items-center">
-            {/* Placeholder untuk Ilustrasi Kiri */}
-            <div className="w-full aspect-square max-w-md mx-auto bg-blue-50 rounded-full border border-blue-100 flex items-center justify-center">
+            
+            {/* Ilustrasi Kiri: Dikasih padding (p-8) biar gambarnya nggak nabrak garis lingkaran pinggirnya */}
+            <div className="w-full aspect-square max-w-md mx-auto bg-blue-50/50 rounded-full border border-blue-100 flex items-center justify-center p-8 md:p-12">
                <img 
                 src="/illustrations/Animation5.png" 
-                alt="Success Animation" 
-                className="w-full h-full object-cover"
+                alt="Why Choose SARAI" 
+                className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
               />
-               {/* <span className="text-blue-300 font-medium">[ Illustration: Woman & Lightbulb ]</span> */}
             </div>
 
             {/* Grid 4 Fitur Kanan */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {[
-                { title: 'Fast & Efficient', icon: '⏱️' },
-                { title: 'Accurate Insights', icon: '🎯' },
-                { title: 'Easy to Use', icon: '👆' },
-                { title: 'Scalable for Business', icon: '🏢' },
+                // 👇 Ganti emojinya pakai path gambar PNG kamu
+                { title: 'Fast & Efficient', icon: '/icons/Icon 5.png' },
+                { title: 'Accurate Insights', icon: '/icons/Icon 6.png' },
+                { title: 'Easy to Use', icon: '/icons/Icon 7.png' },
+                { title: 'Scalable for Business', icon: '/icons/Icon 8.png' },
               ].map((feature, idx) => (
-                <div key={idx} className="p-6 border border-slate-200 rounded-2xl flex items-center gap-4 hover:shadow-md transition-shadow bg-white">
-                  <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-xl flex-shrink-0">
-                    {feature.icon}
+                <div key={idx} className="p-6 border border-slate-200 rounded-2xl flex items-center gap-4 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 bg-white cursor-pointer">
+                  
+                  {/* 👇 text-xl dihapus, saya tambahin p-2.5 biar ada jarak aman antara gambar icon dan garis pinggir lingkarannya */}
+                  <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 shadow-sm border border-blue-100 p-2.5">
+                    
+                    {/* 👇 Emoji diganti jadi tag img */}
+                    <img 
+                      src={feature.icon} 
+                      alt={feature.title} 
+                      className="w-full h-full object-contain" 
+                    />
+
                   </div>
-                  <span className="font-bold text-[#597393]">{feature.title}</span>
+                  <span className="font-bold text-[#4A627E]">{feature.title}</span>
                 </div>
               ))}
             </div>
+            
           </div>
         </div>
       </section>
