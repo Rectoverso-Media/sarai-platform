@@ -13,3 +13,13 @@ model User {
   email     String  @unique
   password  String 
 }
+
+model DataSource {
+  id          String   @id @default(uuid())
+  name        String
+  type        String
+  host        String?
+  connectorId String?  // Khusus buat ID dari Airbyte nanti
+  status      String   @default("Connected")
+  createdAt   DateTime @default(now())
+}
