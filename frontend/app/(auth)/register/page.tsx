@@ -79,15 +79,15 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {/* 👇 Tambahin onSubmit di form */}
+        {/* Tambahin onSubmit di form */}
         <form onSubmit={handleSubmit} className="space-y-5 text-left">
           <div className="space-y-2">
             <label htmlFor="name" className="text-sm font-semibold text-slate-700">Full Name</label>
             <input 
               id="name" 
               type="text" 
-              value={formData.name} // Di-bind ke wadah state
-              onChange={handleChange} // Dipantau perubahannya
+              value={formData.name} 
+              onChange={handleChange} 
               placeholder="Enter your full name" 
               className="block w-full px-4 py-3 border border-slate-200 rounded-xl text-sm transition-all bg-slate-50/50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" 
             />
@@ -118,7 +118,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="pt-4">
-            {/* 👇 Tombol dikasih disable dan animasi loading */}
+            {/* Tombol dikasih disable dan animasi loading */}
             <Button 
               type="submit" 
               disabled={isLoading}

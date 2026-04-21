@@ -10,8 +10,15 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  // Pintu buat Register (http://localhost:3001/users)
   @Post()
   create(@Body() body: { name: string; email: string; password: string }) {
     return this.usersService.create(body);
+  }
+
+  // Pintu baru buat Login (http://localhost:3001/users/login)
+  @Post('login')
+  login(@Body() body: { email: string; password: string }) {
+    return this.usersService.login(body);
   }
 }
