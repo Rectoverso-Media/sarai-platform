@@ -11,7 +11,6 @@ export default function DashboardLayout({
       <Sidebar /> 
 
       <div className="flex-1 flex flex-col bg-slate-50">
-        {/* 👇 Header dipasang di sini. Otomatis muncul di semua halaman Dashboard! */}
         <Header />
 
         {/* Konten tiap halaman (Data Sources, Team, dll) masuk ke sini */}
