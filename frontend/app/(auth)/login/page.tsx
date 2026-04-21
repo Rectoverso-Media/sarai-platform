@@ -31,7 +31,7 @@ export default function LoginPage() {
     e.preventDefault();
     
     if (!formData.email || !formData.password) {
-      toast.error('Email dan password wajib diisi!');
+      toast.error('Email or password must filled!');
       return;
     }
 
@@ -50,19 +50,22 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok || response.status === 201 || response.status === 200) {
-        toast.success(data.message || 'Login Berhasil! 🚀');
+        toast.success(data.message || 'Login is ok!');
         
-        // Simpan data user di localStorage
+        // Simpan data user di localStorage (Brankas Browser)
         localStorage.setItem('userData', JSON.stringify(data.data));
+
+        //  Cookie (KTP buat Satpam Server)
+        document.cookie = "isLoggedIn=true; path=/";
 
         // Pindah ke halaman dashboard
         router.push('/dashboard'); 
       } else {
         // Kalau email nggak ada atau password salah (Error 401 dari backend)
-        toast.error(data.message || 'Email atau password salah!');
+        toast.error(data.message || 'Email or password is wrong!');
       }
     } catch (error) {
-      toast.error('Gagal terhubung ke server backend!');
+      toast.error('Unable to connect to server!');
       console.error(error);
     } finally {
       setIsLoading(false);

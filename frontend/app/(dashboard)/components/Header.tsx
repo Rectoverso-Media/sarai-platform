@@ -26,7 +26,12 @@ export default function Header() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('userData');
+    localStorage.removeItem('userData'); 
+    
+    // Hapus Cookie dengan cara bikin dia expired
+    document.cookie = "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"; 
+    
+    // Tendang ke Login
     router.push('/login');
   };
 
