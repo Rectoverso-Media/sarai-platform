@@ -45,3 +45,12 @@ model TeamMember {
   avatar    String?  // URL foto profil (optional)
   createdAt DateTime @default(now())
 }
+
+model SecurityLog {
+  id        String   @id @default(uuid())
+  action    String   // Contoh: "USER_LOGIN", "NODE_DEPLOYED", "DATA_DELETED"
+  actor     String   // Siapa pelakunya, misal: "Admin" atau "System"
+  details   String?  // Info tambahan: "Menghapus Database Dummy"
+  ipAddress String   @default("127.0.0.1")
+  createdAt DateTime @default(now())
+}
