@@ -38,14 +38,19 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // Nembak API backend
-      const response = await fetch('http://localhost:3001/users', {
+      // Nembak ke API keamanan yang baru
+      const response = await fetch('http://localhost:3001/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData), // Data diubah jadi JSON sebelum dikirim
-      });
+        body: JSON.stringify({
+          name: formData.name, 
+          email: formData.email,
+          password: formData.password,
+          role: 'Admin' // biar otomatis dapet role Admin
+        }),
+});
 
       const data = await response.json();
 

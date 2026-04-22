@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Kontainer Database PostgreSQL
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: sarai-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: sarai_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - sarai-network
+
+  # Kontainer Backend NestJS
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sarai-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgresql://admin:password123@postgres-db:5432/sarai_db?schema=public
+      - JWT_SECRET=SARAI_RAHASIA_SUPER_AMAN_123!
+    depends_on:
+      - postgres-db
+    networks:
+      - sarai-network
+
+  # Kontainer Frontend Next.js
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sarai-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - sarai-network
+
+volumes:
+  pgdata: # Biar data DB gak hilang pas container dimatikan
+
+networks:
+  sarai-network:
+    driver: bridge
