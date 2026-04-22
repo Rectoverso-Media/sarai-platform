@@ -31,15 +31,15 @@ export default function LoginPage() {
     e.preventDefault();
     
     if (!formData.email || !formData.password) {
-      toast.error('Email or password must filled!');
+      toast.error('Email or password must be filled!');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Nembak API Login yang baru di backend!
-      const response = await fetch('http://localhost:3001/users/login', {
+      // Nembak ke API /auth/login yang bener
+      const response = await fetch('http://localhost:3001/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,19 +49,23 @@ export default function LoginPage() {
 
       const data = await response.json();
 
-      if (response.ok || response.status === 201 || response.status === 200) {
-        toast.success(data.message || 'Login is ok!');
+      if (response.ok) {
+        toast.success(data.message || 'Login successful!');
         
-        // Simpan data user di localStorage (Brankas Browser)
-        localStorage.setItem('userData', JSON.stringify(data.data));
+        // Simpan Token KTP Digital
+        localStorage.setItem('access_token', data.access_token);
 
-        //  Cookie (KTP buat Satpam Server)
+        // Simpan data user (backend kita ngasih nama variabelnya "user", bukan "data")
+        localStorage.setItem('userData', JSON.stringify(data.user));
+
+        // Cookie (KTP buat Satpam Server)
         document.cookie = "isLoggedIn=true; path=/";
 
         // Pindah ke halaman dashboard
-        router.push('/dashboard'); 
+        // router.push('/dashboard'); 
+        window.location.href = '/dashboard';
       } else {
-        // Kalau email nggak ada atau password salah (Error 401 dari backend)
+        // Kalau email nggak ada atau password salah (Error 401/400 dari backend)
         toast.error(data.message || 'Email or password is wrong!');
       }
     } catch (error) {

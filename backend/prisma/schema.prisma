@@ -40,9 +40,10 @@ model TeamMember {
   id        String   @id @default(uuid())
   name      String
   email     String   @unique
+  password  String?  // <-- Tambahin ini (pake tanda tanya biar member lama gak error)
   role      String   // Owner, Admin, Developer, Viewer
   status    String   @default("Active")
-  avatar    String?  // URL foto profil (optional)
+  avatar    String?
   createdAt DateTime @default(now())
 }
 
