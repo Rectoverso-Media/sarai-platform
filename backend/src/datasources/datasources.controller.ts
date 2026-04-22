@@ -1,5 +1,9 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Param } from '@nestjs/common';
 import { DatasourcesService } from './datasources.service';
+// import { Controller, Get, Post, Body, Delete, Param } from '@nestjs/common';
+
+
+
 
 @Controller('datasources')
 export class DatasourcesController {
@@ -13,5 +17,10 @@ export class DatasourcesController {
   @Post()
   create(@Body() body: any) {
     return this.datasourcesService.create(body);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.datasourcesService.remove(id);
   }
 }

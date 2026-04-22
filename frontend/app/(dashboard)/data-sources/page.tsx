@@ -4,12 +4,10 @@ import Link from 'next/link';
 
 export default function DataSourcesPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // State buat nampung data asli dari database
   const [dataSources, setDataSources] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fungsi buat ngambil data dari Backend NestJS
+  // Fungsi Fetch Data 
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -24,11 +22,33 @@ export default function DataSourcesPage() {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
-  // Logika Filter Search (sekarang pakai data asli)
+  // Logika Hapus Data
+  const handleDelete = async (id: string) => {
+    // Munculkan konfirmasi bawaan browser biar nggak kepencet ga sengaja
+    const isConfirmed = window.confirm("Yakin ingin menghapus Data Source ini? Koneksi data akan terputus.");
+    
+    if (isConfirmed) {
+      try {
+        const response = await fetch(`http://localhost:3001/datasources/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          // Update tabel di UI secara instan tanpa perlu reload halaman
+          setDataSources((prevData) => prevData.filter((source) => source.id !== id));
+          alert("Data berhasil dihapus! 🗑️");
+        } else {
+          alert("Gagal menghapus data dari server.");
+        }
+      } catch (error) {
+        console.error("Error deleting data:", error);
+      }
+    }
+  };
+
   const filteredSources = dataSources.filter(source => 
     source.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     source.type.toLowerCase().includes(searchTerm.toLowerCase())
@@ -36,8 +56,6 @@ export default function DataSourcesPage() {
 
   return (
     <div className="p-8 h-full flex flex-col space-y-8">
-      
-      {/* Header Halaman & Tombol Add */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h1 className="text-3xl font-poppins font-bold text-slate-800">Data Sources</h1>
@@ -45,17 +63,12 @@ export default function DataSourcesPage() {
             Kelola koneksi database dan integrasi API yang terhubung ke engine SARAI.
           </p>
         </div>
-        
-        {/* Tombolnya ngarah ke form Add Data Source */}
         <Link href="/data-sources/add" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2 text-sm">
           <span className="text-lg leading-none">+</span> Add Data Source
         </Link>
       </div>
 
-      {/* Area Tabel */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
-        
-        {/* Toolbar */}
         <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <div className="relative w-full max-w-xs group">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">🔍</span>
@@ -72,7 +85,6 @@ export default function DataSourcesPage() {
           </div>
         </div>
 
-        {/* Tabel */}
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-widest font-bold">
@@ -86,7 +98,6 @@ export default function DataSourcesPage() {
               </tr>
             </thead>
             <tbody className="text-sm text-slate-600 divide-y divide-slate-100">
-              
               {isLoading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-slate-500 font-bold">
@@ -97,7 +108,7 @@ export default function DataSourcesPage() {
                 filteredSources.map((source) => (
                   <tr key={source.id} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="px-6 py-4 font-mono text-xs text-slate-400">
-                      {source.id.substring(0, 8)} {/* Potong UUID biar ga kepanjangan */}
+                      {source.id.substring(0, 8)}
                     </td>
                     <td className="px-6 py-4 font-bold text-slate-800">{source.name}</td>
                     <td className="px-6 py-4">
@@ -114,9 +125,16 @@ export default function DataSourcesPage() {
                         {source.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <button className="text-slate-400 hover:text-blue-600 font-medium text-sm opacity-0 group-hover:opacity-100">
+                    <td className="px-6 py-4 text-right flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="text-slate-400 hover:text-blue-600 font-medium text-sm transition-colors">
                         Edit
+                      </button>
+                      {/* 👇 Tombol Delete Baru */}
+                      <button 
+                        onClick={() => handleDelete(source.id)}
+                        className="text-slate-400 hover:text-red-600 font-medium text-sm transition-colors"
+                      >
+                        Delete
                       </button>
                     </td>
                   </tr>
@@ -133,7 +151,6 @@ export default function DataSourcesPage() {
             </tbody>
           </table>
         </div>
-
       </div>
     </div>
   );

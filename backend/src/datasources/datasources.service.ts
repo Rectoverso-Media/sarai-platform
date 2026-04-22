@@ -22,4 +22,10 @@ export class DatasourcesService {
       },
     });
   }
+  // fungsi untuk menghapus data berdasarkan ID
+  async remove(id: string) {
+    return this.prisma.dataSource.delete({
+      where: { id },
+    });
+  }
 }

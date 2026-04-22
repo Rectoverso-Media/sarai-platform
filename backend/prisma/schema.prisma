@@ -23,3 +23,25 @@ model DataSource {
   status      String   @default("Connected")
   createdAt   DateTime @default(now())
 }
+
+
+model InfrastructureNode {
+  id        String   @id @default(uuid())
+  name      String   // misal: "Core Engine Alpha"
+  type      String   // misal: "GPU Node", "CPU Node"
+  status    String   @default("Online") // Online, Warning, Critical, Offline
+  uptime    String   @default("0d 0h")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  role      String   // Owner, Admin, Developer, Viewer
+  status    String   @default("Active")
+  avatar    String?  // URL foto profil (optional)
+  createdAt DateTime @default(now())
+}
