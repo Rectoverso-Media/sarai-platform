@@ -7,9 +7,10 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { TeamModule } from './team/team.module';
 import { SecurityModule } from './security/security.module';
 import { AuthModule } from './auth/auth.module';
+import { AirbyteModule } from './airbyte/airbyte.module';
 
 @Module({
-  imports: [UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, SecurityModule, AuthModule],
+  imports: [UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, SecurityModule, AuthModule, AirbyteModule],
   controllers: [AppController],
   providers: [AppService],
 })

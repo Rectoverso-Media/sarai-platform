@@ -14,6 +14,7 @@ export default function AddDataSourcePage() {
   // State untuk nampung inputan form
   const [name, setName] = useState('');
   const [host, setHost] = useState('');
+  // Nanti nilai ini akan kita mapping ke SourceDefinitionId asli dari Airbyte
   const [connectorId, setConnectorId] = useState('Salesforce (v0.1.2)');
 
   const categories = [
@@ -22,24 +23,29 @@ export default function AddDataSourcePage() {
     { id: 'api', name: 'REST API / Webhook', icon: '🌐', desc: 'Connect via custom API endpoints.' },
   ];
 
-  // buat ngirim data ke Backend
+  // Fungsi pintar buat ngirim data ke Backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return; // Cegah double click
     setIsLoading(true);
 
-    // Nentuin tipe data yang disimpen ke database sesuai pilihan
     let finalType = 'Database';
-    if (sourceType === 'airbyte') finalType = 'Airbyte Connection';
-    if (sourceType === 'api') finalType = 'REST API';
+    let apiUrl = 'http://localhost:3001/datasources'; 
+
+    if (sourceType === 'airbyte') {
+      finalType = 'Airbyte Connection';
+      apiUrl = 'http://localhost:3001/airbyte/sources'; 
+    } else if (sourceType === 'api') {
+      finalType = 'REST API';
+    }
 
     try {
-      const response = await fetch('http://localhost:3001/datasources', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name,
           type: finalType,
-          // Kalau milih Airbyte, host dikosongin, connectorId diisi. Kalau nggak, sebaliknya.
           host: sourceType === 'airbyte' ? null : host,
           connectorId: sourceType === 'airbyte' ? connectorId : null
         }),
@@ -47,13 +53,15 @@ export default function AddDataSourcePage() {
 
       if (response.ok) {
         alert('Data Source berhasil ditambahkan! 🎉');
-        router.push('/data-sources');
+        // KEMBALIKAN KE URL YANG BENAR
+        router.push('/data-sources'); 
+        return; // WAJIB ADA: Biar kodingan berhenti dan nggak lari ke mana-mana
       } else {
         alert('Gagal menambahkan data source.');
       }
     } catch (error) {
       console.error("Error saving data:", error);
-      alert('Gagal terhubung ke server backend!');
+      alert('Terjadi kesalahan pada sistem navigasi atau server!');
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +71,7 @@ export default function AddDataSourcePage() {
     <div className="p-8 max-w-4xl mx-auto h-full flex flex-col">
       {/* Breadcrumbs */}
       <nav className="flex text-sm text-slate-400 mb-8 font-medium">
-        <Link href="/data-sources" className="hover:text-blue-600 transition-colors">Data Sources</Link>
+        <Link href="/dashboard/data-sources" className="hover:text-blue-600 transition-colors">Data Sources</Link>
         <span className="mx-2">/</span>
         <span className="text-slate-800">Add New Source</span>
       </nav>
@@ -99,7 +107,7 @@ export default function AddDataSourcePage() {
             <h2 className="text-2xl font-bold text-slate-800">
               {sourceType === 'airbyte' ? 'Configure Airbyte Integration' : 'Database Connection'}
             </h2>
-            <button onClick={() => setStep(1)} className="text-sm text-slate-400 hover:text-slate-600 font-bold">← Change Type</button>
+            <button type="button" onClick={() => setStep(1)} className="text-sm text-slate-400 hover:text-slate-600 font-bold">← Change Type</button>
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>

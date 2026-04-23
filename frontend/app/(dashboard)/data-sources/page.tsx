@@ -7,17 +7,28 @@ export default function DataSourcesPage() {
   const [dataSources, setDataSources] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fungsi Fetch Data 
+  // Fungsi Fetch Data dari Airbyte Backend
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:3001/datasources');
+        // Nembak ke jalur API Airbyte yang baru kita bikin
+        const response = await fetch('http://localhost:3001/airbyte/sources');
         if (response.ok) {
-          const data = await response.json();
-          setDataSources(data);
+          const result = await response.json();
+          
+          // Format ulang data dari Airbyte biar cocok sama tabel UI kamu
+          const formattedData = (result.data || []).map((source: any) => ({
+            id: source.sourceId,
+            name: source.name,
+            type: source.sourceName, // Airbyte nyebut tipe konektor (misal: Facebook Ads) sebagai sourceName
+            host: "Airbyte Cloud",
+            status: "Connected"
+          }));
+          
+          setDataSources(formattedData);
         }
       } catch (error) {
-        console.error("Gagal mengambil data:", error);
+        console.error("Gagal mengambil data Airbyte:", error);
       } finally {
         setIsLoading(false);
       }
@@ -25,21 +36,20 @@ export default function DataSourcesPage() {
     fetchData();
   }, []);
 
-  // Logika Hapus Data
+  // Logika Hapus Data (Disiapkan untuk API Airbyte)
   const handleDelete = async (id: string) => {
-    // Munculkan konfirmasi bawaan browser biar nggak kepencet ga sengaja
     const isConfirmed = window.confirm("Yakin ingin menghapus Data Source ini? Koneksi data akan terputus.");
     
     if (isConfirmed) {
       try {
-        const response = await fetch(`http://localhost:3001/datasources/${id}`, {
+        // Nanti bikin endpoint DELETE ini di NestJS
+        const response = await fetch(`http://localhost:3001/airbyte/sources/${id}`, {
           method: 'DELETE',
         });
 
         if (response.ok) {
-          // Update tabel di UI secara instan tanpa perlu reload halaman
           setDataSources((prevData) => prevData.filter((source) => source.id !== id));
-          alert("Data berhasil dihapus! 🗑️");
+          alert("Data berhasil dihapus dari Airbyte! 🗑️");
         } else {
           alert("Gagal menghapus data dari server.");
         }
@@ -101,7 +111,7 @@ export default function DataSourcesPage() {
               {isLoading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-slate-500 font-bold">
-                    ⏳ Memuat data dari server...
+                    ⏳ Memuat data dari Airbyte...
                   </td>
                 </tr>
               ) : filteredSources.length > 0 ? (
@@ -116,7 +126,7 @@ export default function DataSourcesPage() {
                         {source.type}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-500">{source.host || source.connectorId}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-slate-500">{source.host}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center w-max gap-1.5
                         ${source.status === 'Connected' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}
@@ -126,10 +136,9 @@ export default function DataSourcesPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="text-slate-400 hover:text-blue-600 font-medium text-sm transition-colors">
-                        Edit
-                      </button>
-                      {/* 👇 Tombol Delete Baru */}
+                      <Link href={`/data-sources/${source.id}`} className="text-slate-400 hover:text-blue-600 font-medium text-sm transition-colors">
+                        View Details
+                      </Link>
                       <button 
                         onClick={() => handleDelete(source.id)}
                         className="text-slate-400 hover:text-red-600 font-medium text-sm transition-colors"
@@ -143,8 +152,8 @@ export default function DataSourcesPage() {
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
                     <div className="text-4xl mb-3">📭</div>
-                    <p className="font-semibold text-slate-700">Belum ada Data Source</p>
-                    <p className="text-sm mt-1">Klik tombol Add Data Source di kanan atas untuk menambahkan.</p>
+                    <p className="font-semibold text-slate-700">Belum ada Data Source terhubung</p>
+                    <p className="text-sm mt-1">Klik tombol Add Data Source di kanan atas untuk mulai menarik data.</p>
                   </td>
                 </tr>
               )}
