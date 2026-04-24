@@ -94,4 +94,31 @@ export class QueriesService {
       throw new HttpException('Gagal mengeksekusi query', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  // 5. FUNGSI MENYIMPAN JADWAL OTOMATIS (CRON JOB)
+  async setSchedule(queryId: string, data: { cronExpression: string; isActive: boolean }) {
+    try {
+      // pakai "upsert": kalau jadwal belum ada, dia create, kalau udah ada, dia Update.
+      const schedule = await this.prisma.querySchedule.upsert({
+        where: { queryId: queryId },
+        update: {
+          cronExpression: data.cronExpression,
+          isActive: data.isActive,
+        },
+        create: {
+          queryId: queryId,
+          cronExpression: data.cronExpression,
+          isActive: data.isActive,
+        },
+      });
+
+      return { 
+        message: 'Jadwal otomatis berhasil disimpan! ⏰', 
+        data: schedule 
+      };
+    } catch (error) {
+      console.error('Error setSchedule:', error);
+      throw new HttpException('Gagal menyimpan jadwal otomatis', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }

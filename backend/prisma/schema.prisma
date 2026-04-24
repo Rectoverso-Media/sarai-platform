@@ -15,13 +15,23 @@ model User {
 }
 
 model DataSource {
-  id          String   @id @default(uuid())
-  name        String
-  type        String
-  host        String?
-  connectorId String?  // Khusus buat ID dari Airbyte nanti
-  status      String   @default("Connected")
-  createdAt   DateTime @default(now())
+  id              String   @id @default(uuid())
+  name            String   // Nama koneksi (Contoh: "Facebook Ads SARAI")
+  sourceType      String   // Tipe konektor (Contoh: "airbyte", "database", "api")
+  connectorName   String?  // Nama konektor asli (Contoh: "Salesforce (v0.1.2)")
+  
+  // Data integrasi Airbyte
+  airbyteSourceId String?  @unique // ID asli dari server Airbyte
+  airbyteHost     String?  // Host kalau pakai database langsung
+  
+  // Sistem Trial 14 Hari
+  status          String   @default("Connected") // Connected, Error, Expired
+  trialStartsAt   DateTime @default(now())
+  trialEndsAt     DateTime
+  isTrialActive   Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 

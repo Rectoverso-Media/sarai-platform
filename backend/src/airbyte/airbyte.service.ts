@@ -5,9 +5,6 @@ import { firstValueFrom } from 'rxjs';
 @Injectable()
 export class AirbyteService {
   private readonly airbyteApiUrl = 'https://api.airbyte.com/v1';
-  
-  // GUDANG SEMENTARANYA (Untuk nyimpen data simulasi)
-  private mockDataStore: any[] = [];
 
   constructor(private readonly httpService: HttpService) {}
 
@@ -55,7 +52,7 @@ export class AirbyteService {
       
       // GABUNGKAN DATA ASLI AIRBYTE DENGAN DATA SIMULASI KITA
       const realSources = response.data.data || [];
-      const combinedSources = [...realSources, ...this.mockDataStore];
+      const combinedSources = [...realSources]; 
 
       return {
         message: 'Berhasil mengambil daftar sumber data',
@@ -93,7 +90,7 @@ export class AirbyteService {
         sourceName: data.type || data.connectorId 
       };
       
-      this.mockDataStore.push(mockSource);
+      // this.mockDataStore.push(mockSource);
 
       return { 
         message: 'Simulasi berhasil disimpan!',
@@ -105,7 +102,7 @@ export class AirbyteService {
   async deleteSource(sourceId: string) {
     // KALAU YANG DIHAPUS ADALAH DATA SIMULASI, HAPUS DARI GUDANG SEMENTARA
     if (sourceId.startsWith('mock-id-')) {
-      this.mockDataStore = this.mockDataStore.filter(source => source.sourceId !== sourceId);
+      // this.mockDataStore = this.mockDataStore.filter(source => source.sourceId !== sourceId);
       return { message: 'Berhasil menghapus source simulasi!' };
     }
 

@@ -24,4 +24,12 @@ export class QueriesController {
   execute(@Param('id') id: string) {
     return this.queriesService.executeQuery(id);
   }
+
+  @Post(':id/schedule')
+  setSchedule(
+    @Param('id') id: string, 
+    @Body() body: { cronExpression: string; isActive: boolean }
+  ) {
+    return this.queriesService.setSchedule(id, body);
+  }
 }

@@ -7,28 +7,27 @@ export default function DataSourcesPage() {
   const [dataSources, setDataSources] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fungsi Fetch Data dari Airbyte Backend
+  // Fungsi Fetch Data dari Database (Prisma)
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Nembak ke jalur API Airbyte yang baru kita bikin
-        const response = await fetch('http://localhost:3001/airbyte/sources');
+        const response = await fetch('http://localhost:3001/datasources');
         if (response.ok) {
           const result = await response.json();
           
-          // Format ulang data dari Airbyte biar cocok sama tabel UI kamu
+          // Mapping data sesuai kolom di Prisma Schema
           const formattedData = (result.data || []).map((source: any) => ({
-            id: source.sourceId,
+            id: source.id,                           // FIX: Di database namanya id
             name: source.name,
-            type: source.sourceName, // Airbyte nyebut tipe konektor (misal: Facebook Ads) sebagai sourceName
-            host: "Airbyte Cloud",
-            status: "Connected"
+            type: source.connectorName || source.sourceType, // Tampilkan nama konektor kalau ada, kalau nggak tipe sumbernya
+            host: source.airbyteHost || "Airbyte Connection",
+            status: source.status                    // FIX: Ambil status asli dari database (Connected/Trial)
           }));
           
           setDataSources(formattedData);
         }
       } catch (error) {
-        console.error("Gagal mengambil data Airbyte:", error);
+        console.error("Gagal mengambil data dari database:", error);
       } finally {
         setIsLoading(false);
       }
@@ -43,7 +42,7 @@ export default function DataSourcesPage() {
     if (isConfirmed) {
       try {
         // Nanti bikin endpoint DELETE ini di NestJS
-        const response = await fetch(`http://localhost:3001/airbyte/sources/${id}`, {
+        const response = await fetch(`http://localhost:3001/datasources/${id}`, {
           method: 'DELETE',
         });
 

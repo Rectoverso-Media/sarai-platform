@@ -1,26 +1,22 @@
-import { Controller, Get, Post, Body, Delete, Param } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
 import { DatasourcesService } from './datasources.service';
-// import { Controller, Get, Post, Body, Delete, Param } from '@nestjs/common';
 
-
-
-
-@Controller('datasources')
+@Controller('datasources') // Pastikan ini sesuai dengan URL target kamu
 export class DatasourcesController {
   constructor(private readonly datasourcesService: DatasourcesService) {}
 
-  @Get()
-  findAll() {
-    return this.datasourcesService.findAll();
-  }
-
   @Post()
   create(@Body() body: any) {
-    return this.datasourcesService.create(body);
+    return this.datasourcesService.createDataSource(body);
+  }
+
+  @Get()
+  findAll() {
+    return this.datasourcesService.getAllDataSources();
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.datasourcesService.remove(id);
+    return this.datasourcesService.deleteDataSource(id);
   }
 }

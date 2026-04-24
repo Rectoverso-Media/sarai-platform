@@ -30,11 +30,11 @@ export default function AddDataSourcePage() {
     setIsLoading(true);
 
     let finalType = 'Database';
-    let apiUrl = 'http://localhost:3001/datasources'; 
+    // FIX: Sekarang HANYA ADA 1 JALUR URL UNTUK SEMUA TIPE (Satpam Prisma kita)
+    const apiUrl = 'http://localhost:3001/datasources'; 
 
     if (sourceType === 'airbyte') {
       finalType = 'Airbyte Connection';
-      apiUrl = 'http://localhost:3001/airbyte/sources'; 
     } else if (sourceType === 'api') {
       finalType = 'REST API';
     }
@@ -53,9 +53,8 @@ export default function AddDataSourcePage() {
 
       if (response.ok) {
         alert('Data Source berhasil ditambahkan! 🎉');
-        // KEMBALIKAN KE URL YANG BENAR
+        // KEMBALIKAN KE URL TABEL KAMU
         router.push('/data-sources'); 
-        return; // WAJIB ADA: Biar kodingan berhenti dan nggak lari ke mana-mana
       } else {
         alert('Gagal menambahkan data source.');
       }

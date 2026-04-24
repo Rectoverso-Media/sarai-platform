@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ScheduleModule } from '@nestjs/schedule';
 import { UsersModule } from './users/users.module';
 import { DatasourcesModule } from './datasources/datasources.module';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
@@ -11,7 +12,9 @@ import { AirbyteModule } from './airbyte/airbyte.module';
 import { QueriesModule } from './queries/queries.module';
 
 @Module({
-  imports: [UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, SecurityModule, AuthModule, AirbyteModule, QueriesModule],
+  imports: [UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, 
+            SecurityModule, AuthModule, AirbyteModule, QueriesModule, ScheduleModule.forRoot(), 
+            AirbyteModule, QueriesModule,],
   controllers: [AppController],
   providers: [AppService],
 })
