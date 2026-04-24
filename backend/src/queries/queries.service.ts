@@ -1,0 +1,97 @@
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+
+@Injectable()
+export class QueriesService {
+  // panggil Prisma langsung di sini biar gampang
+  private prisma = new PrismaClient();
+
+  // 1. FUNGSI SIMPAN QUERY BARU
+  async createQuery(data: { name: string; description?: string; rawSql?: string; builderData?: any }) {
+    try {
+      const newQuery = await this.prisma.query.create({
+        data: {
+          name: data.name,
+          description: data.description,
+          rawSql: data.rawSql,
+          builderData: data.builderData ? data.builderData : null,
+        },
+      });
+      return { message: 'Query berhasil disimpan!', data: newQuery };
+    } catch (error) {
+      console.error('Error createQuery:', error);
+      throw new HttpException('Gagal menyimpan query', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // 2. FUNGSI AMBIL SEMUA DAFTAR QUERY
+  async getAllQueries() {
+    try {
+      const queries = await this.prisma.query.findMany({
+        orderBy: { createdAt: 'desc' }, // Urutkan dari yang paling baru
+      });
+      return { message: 'Berhasil mengambil daftar query', data: queries };
+    } catch (error) {
+      throw new HttpException('Gagal mengambil data', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // 3. FUNGSI HAPUS QUERY
+  async deleteQuery(id: string) {
+    try {
+      await this.prisma.query.delete({
+        where: { id: id },
+      });
+      return { message: 'Query berhasil dihapus!' };
+    } catch (error) {
+      throw new HttpException('Gagal menghapus query (Mungkin ID tidak ditemukan)', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  // 4. FUNGSI MENJALANKAN QUERY & MENCATAT LOG (EXECUTION)
+  async executeQuery(id: string) {
+    try {
+      // 1. Cari query-nya di database
+      const query = await this.prisma.query.findUnique({
+        where: { id: id },
+      });
+
+      if (!query) {
+        throw new HttpException('Query tidak ditemukan', HttpStatus.NOT_FOUND);
+      }
+
+      // 2. Simulasi proses eksekusi ke Data Warehouse
+      const start = Date.now();
+      // Pura-puranya server lagi mikir keras nge-proses SQL selama 500 - 1500 milidetik
+      await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 1000) + 500)); 
+      const durationMs = Date.now() - start;
+
+      // Simulasi jumlah baris data yang didapat (10 - 500 baris)
+      const rowsReturned = Math.floor(Math.random() * 490) + 10;
+
+      // 3. Catat ke tabel QueryExecution (CCTV kita)
+      const executionLog = await this.prisma.queryExecution.create({
+        data: {
+          queryId: id,
+          status: 'SUCCESS', // Dalam real-case, ini bisa 'FAILED' kalau syntax SQL-nya salah
+          durationMs: durationMs,
+          rowsReturned: rowsReturned,
+        },
+      });
+
+      // 4. Kembalikan log eksekusi beserta sampel datanya ke Frontend
+      return {
+        message: 'Query berhasil dieksekusi!',
+        executionLog: executionLog,
+        previewData: [
+          { id: 1, campaign_name: 'Promo Lebaran', spend: 1500000, clicks: 350 },
+          { id: 2, campaign_name: 'Flash Sale 4.4', spend: 850000, clicks: 210 },
+          { id: 3, campaign_name: 'Retargeting Ads', spend: 400000, clicks: 95 },
+        ]
+      };
+    } catch (error) {
+      console.error('Error executeQuery:', error);
+      throw new HttpException('Gagal mengeksekusi query', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+}

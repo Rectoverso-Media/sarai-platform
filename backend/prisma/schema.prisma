@@ -40,7 +40,7 @@ model TeamMember {
   id        String   @id @default(uuid())
   name      String
   email     String   @unique
-  password  String?  // <-- Tambahin ini (pake tanda tanya biar member lama gak error)
+  password  String?  
   role      String   // Owner, Admin, Developer, Viewer
   status    String   @default("Active")
   avatar    String?
@@ -54,4 +54,47 @@ model SecurityLog {
   details   String?  // Info tambahan: "Menghapus Database Dummy"
   ipAddress String   @default("127.0.0.1")
   createdAt DateTime @default(now())
+}
+
+model Query {
+  id          String   @id @default(uuid())
+  name        String   // Contoh: "Rekap Ads Harian"
+  description String?  // Deskripsi opsional
+  rawSql      String?  // Untuk nyimpen kode SQL murni
+  builderData Json?    // Untuk nyimpen konfigurasi Visual Builder (Drag & Drop)
+  
+  // Relasi ke tabel log dan jadwal
+  executions  QueryExecution[]
+  schedules   QuerySchedule[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model QueryExecution {
+  id           String   @id @default(uuid())
+  queryId      String
+  query        Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  
+  status       String   // Status: "SUCCESS", "FAILED", "RUNNING"
+  durationMs   Int?     // Lama eksekusi dalam milidetik (buat ngukur performa)
+  rowsReturned Int?     // Jumlah baris data yang berhasil ditarik
+  errorMessage String?  // Pesan error kalau query-nya gagal
+  
+  executedAt   DateTime @default(now())
+}
+
+model QuerySchedule {
+  id             String   @id @default(uuid())
+  queryId        String   @unique // 1 Query biasanya cuma punya 1 Jadwal utama
+  query          Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  
+  cronExpression String   // Format jadwal (Contoh: "0 0 * * *" untuk tiap tengah malam)
+  isActive       Boolean  @default(true) // Tombol on/off jadwal
+  
+  lastRunAt      DateTime?
+  nextRunAt      DateTime?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
