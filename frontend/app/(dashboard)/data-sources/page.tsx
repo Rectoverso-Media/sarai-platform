@@ -6,6 +6,11 @@ export default function DataSourcesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dataSources, setDataSources] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportTarget, setExportTarget] = useState<any>(null);
+  const [sheetId, setSheetId] = useState('');
+  const [sheetTabName, setSheetTabName] = useState('Sheet1');
+  const [isExporting, setIsExporting] = useState(false);
 
   // Fungsi Fetch Data dari Database (Prisma)
   useEffect(() => {
@@ -62,6 +67,54 @@ export default function DataSourcesPage() {
     source.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     source.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // FUNGSI BUKA MODAL
+  const openExportModal = (source: any) => {
+    setExportTarget(source);
+    setSheetId(''); // Kosongkan input
+    setSheetTabName('Sheet1');
+    setIsExportModalOpen(true);
+  };
+
+  // FUNGSI EKSEKUSI EXPORT KE BACKEND
+  const handleExportToSheets = async () => {
+    if (!exportTarget || !sheetId) return;
+    setIsExporting(true);
+
+    try {
+      // 1. Simpan konfigurasi transfer ke Backend
+      const createRes = await fetch('http://localhost:3001/data-transfers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `Export ${exportTarget.name}`,
+          sourceId: exportTarget.id,
+          spreadsheetId: sheetId,
+          sheetName: sheetTabName,
+          writeMode: 'append'
+        }),
+      });
+      
+      const config = await createRes.json();
+
+      // 2. Panggil fungsi "Run" pakai ID konfigurasi yang baru dibuat
+      const runRes = await fetch(`http://localhost:3001/data-transfers/${config.id}/run`, {
+        method: 'POST'
+      });
+
+      if (runRes.ok) {
+        alert('✅ Data berhasil diexport ke Google Sheets secara ajaib! 🪄');
+        setIsExportModalOpen(false);
+      } else {
+        alert('❌ Gagal export data. Cek ID Spreadsheet atau izin Share.');
+      }
+    } catch (error) {
+      console.error("Error exporting:", error);
+      alert('Terjadi kesalahan koneksi ke server.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="p-8 h-full flex flex-col space-y-8">
@@ -140,9 +193,13 @@ export default function DataSourcesPage() {
                       </Link>
                       <button 
                         onClick={() => handleDelete(source.id)}
-                        className="text-slate-400 hover:text-red-600 font-medium text-sm transition-colors"
-                      >
+                        className="text-slate-400 hover:text-red-600 font-medium text-sm transition-colors">
                         Delete
+                      </button>
+                      <button 
+                        onClick={() => openExportModal(source)}
+                        className="text-emerald-600 hover:text-emerald-700 font-bold text-sm bg-emerald-50 px-3 py-1 rounded-md transition-colors mr-2 border border-emerald-200">
+                        📤 Export to Sheets
                       </button>
                     </td>
                   </tr>
@@ -160,6 +217,65 @@ export default function DataSourcesPage() {
           </table>
         </div>
       </div>
+
+      {/* MODAL EXPORT GOOGLE SHEETS */}
+      {isExportModalOpen && exportTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 bg-emerald-50/30">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <span className="text-emerald-600">📊</span> Export to Google Sheets
+              </h2>
+              <p className="text-sm text-slate-500 mt-1">
+                Kirim data <span className="font-bold text-emerald-600">{exportTarget.name}</span> langsung ke dokumen Anda.
+              </p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2">Spreadsheet ID</label>
+                <input 
+                  type="text" 
+                  value={sheetId}
+                  onChange={(e) => setSheetId(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                  placeholder="Contoh: 1aBcD_efGhI_JkLmNoP..."
+                />
+                <p className="text-[11px] text-slate-400 mt-1">Dapatkan ID ini dari URL Google Sheets Anda. Jangan lupa jadikan Service Account sebagai Editor.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2">Sheet / Tab Name</label>
+                <input 
+                  type="text" 
+                  value={sheetTabName}
+                  onChange={(e) => setSheetTabName(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                  placeholder="Sheet1"
+                />
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 flex gap-3 bg-slate-50/50">
+              <button 
+                onClick={() => setIsExportModalOpen(false)}
+                type="button"
+                className="flex-1 py-2.5 font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                Batal
+              </button>
+              
+              <button 
+                onClick={handleExportToSheets}
+                disabled={isExporting || !sheetId}
+                type="button"
+                className="flex-1 py-2.5 flex justify-center items-center gap-2 font-bold text-white bg-emerald-600 rounded-xl shadow-lg hover:bg-emerald-700 disabled:bg-emerald-300 transition-colors">
+                {isExporting ? '⏳ Mengirim...' : '🚀 Jalankan Export'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

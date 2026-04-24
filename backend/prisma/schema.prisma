@@ -32,6 +32,8 @@ model DataSource {
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  transfers       DataTransfer[]
 }
 
 
@@ -107,4 +109,29 @@ model QuerySchedule {
   
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+
+model DataTransfer {
+  id              String   @id @default(uuid())
+  name            String   // Contoh: "Export Harian Facebook Ads"
+  
+  // Relasi: Data apa yang mau diexport? (Bisa ambil dari DataSource langsung atau Query)
+  sourceId        String   
+  source          DataSource @relation(fields: [sourceId], references: [id])
+  
+  // Target Export (Google Sheets)
+  targetType      String   @default("Google Sheets")
+  spreadsheetId   String   // ID unik yang ada di URL Google Sheets
+  sheetName       String   // Nama Tab (Contoh: "Sheet1" atau "Q1 Report")
+  
+  // Mode Penulisan (append = tambah ke bawah, replace = hapus & tulis ulang)
+  writeMode       String   @default("append") 
+  
+  // Penjadwalan
+  cronExpression  String?  // Kalau mau dikirim otomatis
+  lastExportAt    DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

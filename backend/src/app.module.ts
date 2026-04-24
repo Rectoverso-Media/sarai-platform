@@ -10,11 +10,12 @@ import { SecurityModule } from './security/security.module';
 import { AuthModule } from './auth/auth.module';
 import { AirbyteModule } from './airbyte/airbyte.module';
 import { QueriesModule } from './queries/queries.module';
+import { DataTransfersModule } from './data-transfers/data-transfers.module';
 
 @Module({
   imports: [UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, 
             SecurityModule, AuthModule, AirbyteModule, QueriesModule, ScheduleModule.forRoot(), 
-            AirbyteModule, QueriesModule,],
+            AirbyteModule, QueriesModule, DataTransfersModule,],
   controllers: [AppController],
   providers: [AppService],
 })
