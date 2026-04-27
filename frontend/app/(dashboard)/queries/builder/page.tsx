@@ -14,6 +14,9 @@ export default function QueryBuilderPage() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [queryResult, setQueryResult] = useState<any>(null);
   const [pollingStatus, setPollingStatus] = useState('');
+  const [tableName, setTableName] = useState('User');
+  const [availableColumns, setAvailableColumns] = useState<{name: string, type: string}[]>([]);
+  const [isFetchingSchema, setIsFetchingSchema] = useState(false);
 
   // State untuk Tab Mode (Visual vs Raw SQL)
   const [activeMode, setActiveMode] = useState<'visual' | 'sql'>('sql');
@@ -65,17 +68,17 @@ export default function QueryBuilderPage() {
   };
 
 
-  // ==========================================
+
   // STATE & LOGIKA UNTUK VISUAL BUILDER
-  // ==========================================
-  const availableColumns = [
-    { name: 'date', type: 'dimension' },
-    { name: 'campaign_name', type: 'dimension' },
-    { name: 'platform', type: 'dimension' },
-    { name: 'clicks', type: 'metric' },
-    { name: 'impressions', type: 'metric' },
-    { name: 'spend', type: 'metric' },
-  ];
+
+  // const availableColumns = [
+  //   { name: 'date', type: 'dimension' },
+  //   { name: 'campaign_name', type: 'dimension' },
+  //   { name: 'platform', type: 'dimension' },
+  //   { name: 'clicks', type: 'metric' },
+  //   { name: 'impressions', type: 'metric' },
+  //   { name: 'spend', type: 'metric' },
+  // ];
 
   const [selectedDimensions, setSelectedDimensions] = useState<string[]>([]);
   const [selectedMetrics, setSelectedMetrics] = useState<{col: string, agg: string}[]>([]);
@@ -96,7 +99,7 @@ export default function QueryBuilderPage() {
     if (selects.length === 0) sql += '  *\n';
     else sql += selects.join(',\n') + '\n';
 
-    sql += 'FROM\n  synced_data_table\n';
+    sql += `FROM\n  "${tableName}"\n`;
 
     if (selectedDimensions.length > 0 && selectedMetrics.length > 0) {
       sql += `GROUP BY\n  ${selectedDimensions.join(', ')}`;
@@ -149,6 +152,31 @@ export default function QueryBuilderPage() {
     }
   };
 
+  // Fungsi untuk menarik kolom dari Backend
+  const loadSchema = async () => {
+    if (!tableName) return;
+    setIsFetchingSchema(true);
+    try {
+      const res = await fetch(`http://localhost:3001/queries/schema/${tableName}`);
+      const data = await res.json();
+      
+      if (Array.isArray(data) && data.length > 0) {
+        setAvailableColumns(data);
+        // Reset pilihan sebelumnya biar nggak error pas ganti tabel
+        setSelectedDimensions([]);
+        setSelectedMetrics([]);
+      } else {
+        alert(`Tabel "${tableName}" tidak ditemukan atau kosong!`);
+        setAvailableColumns([]);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Gagal mengambil struktur tabel.");
+    } finally {
+      setIsFetchingSchema(false);
+    }
+  };
+
   return (
     <div className="p-8 h-full flex flex-col space-y-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -178,38 +206,54 @@ export default function QueryBuilderPage() {
         </div>
       </div>
       {/* TAMPILAN HASIL QUERY */}
-        {queryResult && (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden mt-6 animate-in slide-in-from-bottom-4">
-            <div className="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex justify-between items-center">
-              <h3 className="font-bold text-emerald-800 flex items-center gap-2">
-                <span>✅</span> Eksekusi Berhasil
-              </h3>
-              <span className="text-xs font-mono text-emerald-600 bg-white px-3 py-1 rounded-full border border-emerald-200">
-                {queryResult.rows.length} rows returned
-              </span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-bold">
-                    {queryResult.columns.map((col: string) => (
-                      <th key={col} className="px-6 py-4">{col}</th>
+      {queryResult && queryResult.status === 'success' && (
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden mt-6 animate-in slide-in-from-bottom-4">
+          <div className="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex justify-between items-center">
+            <h3 className="font-bold text-emerald-800 flex items-center gap-2">
+              <span>✅</span> Eksekusi Berhasil
+            </h3>
+            <span className="text-xs font-mono text-emerald-600 bg-white px-3 py-1 rounded-full border border-emerald-200">
+              {queryResult.rows?.length || 0} rows returned
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-bold">
+                  {queryResult.columns?.map((col: string) => (
+                    <th key={col} className="px-6 py-4">{col}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="text-sm text-slate-700 divide-y divide-slate-100">
+                {queryResult.rows?.map((row: any[], rowIndex: number) => (
+                  <tr key={rowIndex} className="hover:bg-slate-50/80 transition-colors">
+                    {row.map((cell: any, cellIndex: number) => (
+                      <td key={cellIndex} className="px-6 py-4">{String(cell)}</td>
                     ))}
                   </tr>
-                </thead>
-                <tbody className="text-sm text-slate-700 divide-y divide-slate-100">
-                  {queryResult.rows.map((row: any[], rowIndex: number) => (
-                    <tr key={rowIndex} className="hover:bg-slate-50/80 transition-colors">
-                      {row.map((cell: any, cellIndex: number) => (
-                        <td key={cellIndex} className="px-6 py-4">{cell}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
+      )}
+
+      {/* TAMPILAN ERROR JIKA QUERY GAGAL */}
+      {queryResult && queryResult.status === 'failed' && (
+        <div className="bg-red-50 rounded-2xl border border-red-200 overflow-hidden mt-6 animate-in zoom-in-95">
+           <div className="bg-red-100 px-6 py-4 border-b border-red-200">
+            <h3 className="font-bold text-red-800 flex items-center gap-2">
+              <span>❌</span> Eksekusi Gagal
+            </h3>
+          </div>
+          <div className="p-6">
+            <p className="text-sm text-red-700 font-mono whitespace-pre-wrap">
+              {queryResult.error}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Main Layout: Split Screen */}
       <div className="flex flex-col lg:flex-row gap-6 flex-1">
@@ -330,6 +374,28 @@ export default function QueryBuilderPage() {
                   rows={3}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 outline-none resize-none"
                 />
+              </div>
+
+              {/* Tambahkan ini di atas bagian Data Source Target */}
+              <div className="pt-4 border-t border-slate-100">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Target Table</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={tableName}
+                    onChange={(e) => setTableName(e.target.value)}
+                    placeholder="Contoh: User"
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  />
+                  <button 
+                    onClick={loadSchema}
+                    disabled={isFetchingSchema}
+                    type="button"
+                    className="px-4 py-2 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-700 transition-colors disabled:opacity-50"
+                  >
+                    {isFetchingSchema ? '⏳' : 'Load'}
+                  </button>
+                </div>
               </div>
 
               <div className="pt-4 border-t border-slate-100">

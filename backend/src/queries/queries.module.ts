@@ -5,8 +5,12 @@ import { QueriesController } from './queries.controller';
 import { QueryProcessor } from './queries.processor';
 import { QueriesScheduler } from './queries.scheduler';
 
+import { PrismaModule } from '../prisma/prisma.module'; 
+
 @Module({
   imports: [
+    PrismaModule, 
+    
     BullModule.registerQueue({
       name: 'query-execution',
     }),

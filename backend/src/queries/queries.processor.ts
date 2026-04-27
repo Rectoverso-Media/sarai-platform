@@ -1,28 +1,61 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
+// 👇 Sesuaikan path import PrismaService dengan struktur folder kamu
+import { PrismaService } from '../prisma/prisma.service'; 
 
 @Processor('query-execution')
 export class QueryProcessor extends WorkerHost {
   
+  // 1. Masukkan Prisma ke dalam otak si Pekerja
+  constructor(private readonly prisma: PrismaService) {
+    super();
+  }
+
   async process(job: Job<any, any, string>): Promise<any> {
-    console.log(`🚀 Sedang memproses query untuk job ID: ${job.id}`);
+    console.log(`🚀 Sedang memproses query ke Database untuk job ID: ${job.id}`);
+    
+    // Ini teks SQL asli yang dikirim dari web SARAI
     const { rawSql, queryId } = job.data;
 
-    // 1. SIMULASI PROSES BERAT (Misal narik data jutaan baris)
-    // Nanti di sini ganti pakai db.query(rawSql) beneran
-    await new Promise(resolve => setTimeout(resolve, 5000)); 
+    try {
+      // 2. EKSEKUSI KE POSTGRESQL
+      // $queryRawUnsafe menyuruh Prisma mengeksekusi string SQL mentah persis apa adanya
+      const rawResult: any[] = await this.prisma.$queryRawUnsafe(rawSql);
 
-    console.log(`✅ Query selesai dikerjakan: ${queryId}`);
-    
-    return {
-      status: 'success',
-      columns: ['id', 'campaign', 'clicks', 'spend'],
-      rows: [
-        [1, 'Promo Lebaran', 1200, 5000000],
-        [2, 'Flash Sale', 850, 2500000],
-        [3, 'Retargeting IG', 320, 1000000]
-      ],
-      executedAt: new Date().toISOString(),
-    };
+      console.log(`✅ Query asli selesai ditarik dari PostgreSQL: ${queryId}`);
+
+      // 3. RAPAIKAN FORMAT HASILNYA
+      // Prisma memberikan hasil seperti ini: [{ id: 1, nama: "Budi" }, { id: 2, nama: "Siti" }]
+      // Tapi Frontend kita butuh format terpisah antara columns dan rows. Kita ubah di sini:
+      
+      let columns: string[] = [];
+      let rows: any[] = [];
+
+      if (rawResult && rawResult.length > 0) {
+        // Ambil nama-nama kolom dari data baris pertama
+        columns = Object.keys(rawResult[0]); 
+        
+        // Ambil isi datanya saja untuk setiap baris
+        rows = rawResult.map(row => Object.values(row)); 
+      }
+
+      // 4. KEMBALIKAN HASIL KE FRONTEND
+      return {
+        status: 'success',
+        columns: columns,
+        rows: rows,
+        executedAt: new Date().toISOString(),
+      };
+
+    } catch (error) {
+      // Kita cek apakah error benar-benar sebuah object Error bawaan Node.js/Prisma
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      console.error(`❌ Gagal mengeksekusi query:`, errorMessage);
+      return {
+        status: 'failed',
+        error: `Gagal mengeksekusi SQL. Detail: ${errorMessage}`,
+      };
+    }
   }
 }

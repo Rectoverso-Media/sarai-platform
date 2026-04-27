@@ -2,14 +2,16 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class QueriesService {
   constructor(
-    @InjectQueue('query-execution') private queryQueue: Queue // Inject antrean tadi
+    @InjectQueue('query-execution') private queryQueue: Queue,
+    private prisma: PrismaService
   ) {}
   // panggil Prisma langsung di sini biar gampang
-  private prisma = new PrismaClient();
+  // private prisma = new PrismaClient();
 
   // 1. FUNGSI SIMPAN QUERY BARU
   async createQuery(data: { name: string; description?: string; rawSql?: string; builderData?: any }) {
@@ -153,6 +155,25 @@ export class QueriesService {
       state,
       result: state === 'completed' ? result : null,
     };
+  }
+
+  async getTableColumns(tableName: string) {
+    // Query rahasia PostgreSQL untuk melihat daftar kolom di sebuah tabel
+    const columns: any[] = await this.prisma.$queryRawUnsafe(`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_schema = 'public' AND table_name = $1;
+    `, tableName);
+
+    // Kita ubah formatnya biar Frontend gampang bacanya
+    // Kalau tipe datanya angka, kita anggap 'metric' (bisa di-SUM). Sisanya 'dimension'.
+    return columns.map(col => {
+      const isNumber = ['integer', 'numeric', 'bigint', 'double precision', 'real'].includes(col.data_type);
+      return {
+        name: col.column_name,
+        type: isNumber ? 'metric' : 'dimension'
+      };
+    });
   }
 
 }

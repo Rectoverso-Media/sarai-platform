@@ -42,4 +42,9 @@ export class QueriesController {
   async checkJobStatus(@Param('jobId') jobId: string) {
     return this.queriesService.getJobStatus(jobId);
   }
+
+  @Get('schema/:tableName')
+  async getTableSchema(@Param('tableName') tableName: string) {
+    return this.queriesService.getTableColumns(tableName);
+  }
 }
