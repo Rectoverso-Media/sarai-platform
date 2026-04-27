@@ -268,8 +268,8 @@ export default function DataSourcesPage() {
                 onClick={handleExportToSheets}
                 disabled={isExporting || !sheetId}
                 type="button"
-                className="flex-1 py-2.5 flex justify-center items-center gap-2 font-bold text-white bg-emerald-600 rounded-xl shadow-lg hover:bg-emerald-700 disabled:bg-emerald-300 transition-colors">
-                {isExporting ? '⏳ Mengirim...' : '🚀 Jalankan Export'}
+                className="flex-1 py-2.5 flex justify-center items-center gap-2 font-bold text-black bg-emerald-600 rounded-xl shadow-lg hover:bg-emerald-700 disabled:bg-emerald-300 transition-colors">
+                {isExporting ? '⏳ Mengirim...' : 'Run Export'}
               </button>
             </div>
           </div>

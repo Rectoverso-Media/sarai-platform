@@ -1,8 +1,13 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class QueriesService {
+  constructor(
+    @InjectQueue('query-execution') private queryQueue: Queue // Inject antrean tadi
+  ) {}
   // panggil Prisma langsung di sini biar gampang
   private prisma = new PrismaClient();
 
@@ -121,4 +126,33 @@ export class QueriesService {
       throw new HttpException('Gagal menyimpan jadwal otomatis', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  async triggerQueryExecution(queryId: string, rawSql: string) {
+    // Masukkan ke antrean Upstash
+    const job = await this.queryQueue.add('execute', {
+      queryId,
+      rawSql,
+    });
+
+    return {
+      message: 'Query telah masuk antrean!',
+      jobId: job.id,
+    };
+  }
+
+  async getJobStatus(jobId: string) {
+    const job = await this.queryQueue.getJob(jobId);
+    if (!job) {
+      return { state: 'not_found' };
+    }
+    
+    const state = await job.getState(); // Bisa: 'waiting', 'active', 'completed', 'failed'
+    const result = job.returnvalue; // Berisi data columns & rows yang kita return dari processor
+
+    return {
+      state,
+      result: state === 'completed' ? result : null,
+    };
+  }
+
 }

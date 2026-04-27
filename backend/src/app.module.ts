@@ -11,11 +11,22 @@ import { AuthModule } from './auth/auth.module';
 import { AirbyteModule } from './airbyte/airbyte.module';
 import { QueriesModule } from './queries/queries.module';
 import { DataTransfersModule } from './data-transfers/data-transfers.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, 
             SecurityModule, AuthModule, AirbyteModule, QueriesModule, ScheduleModule.forRoot(), 
-            AirbyteModule, QueriesModule, DataTransfersModule,],
+            AirbyteModule, QueriesModule, DataTransfersModule,
+          // 1. Setup Koneksi Utama ke Redis Upstash
+            BullModule.forRoot({
+              connection: {
+                host: 'refined-chigger-107480.upstash.io',
+                port: 6379, // Biasanya 6379 atau cek di dashboard Upstash
+                username: 'default',
+                password: 'gQAAAAAAAaPYAAIgcDEwZDI0MTg0ODFkNDI0MjRlYWZjZTkyMzUyZTlmNDcxNQ',
+                tls: {}, // WAJIB ADA buat Upstash karena mereka pakai SSL
+              },
+            }),],
   controllers: [AppController],
   providers: [AppService],
 })

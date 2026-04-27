@@ -10,6 +10,8 @@ const menuItems = [
   { name: 'Data Sources', icon: '📂', path: '/data-sources' },
   { name: 'Infrastructure', icon: '🏗️', path: '/infrastructure' },
   { name: 'Team Management', icon: '👥', path: '/team' },
+  { name: 'Queries', icon: '🪄', path: '/queries' },
+  // { name: 'Builder', icon: '🔨', path: '/queries/builder' },
   { name: 'Security & Logs', icon: '🛡️', path: '/security' },
   { name: 'Settings', icon: '⚙️', path: '/settings' },
 ];

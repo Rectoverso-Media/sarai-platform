@@ -32,4 +32,14 @@ export class QueriesController {
   ) {
     return this.queriesService.setSchedule(id, body);
   }
+
+  @Post('test-queue')
+  async testQueue(@Body() body: { queryId: string, rawSql: string }) {
+    return this.queriesService.triggerQueryExecution(body.queryId, body.rawSql);
+  }
+
+  @Get('job-status/:jobId')
+  async checkJobStatus(@Param('jobId') jobId: string) {
+    return this.queriesService.getJobStatus(jobId);
+  }
 }
