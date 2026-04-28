@@ -265,7 +265,7 @@ export default function QueriesListPage() {
                 onClick={handleSaveSchedule}
                 disabled={isSavingSchedule}
                 className="flex-1 py-2.5 flex justify-center items-center gap-2 font-bold text-white bg-blue-600 rounded-xl shadow-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors">
-                {isSavingSchedule ? '⏳ Menyimpan...' : '💾 Save Schedule'}
+                {isSavingSchedule ? '⏳ Saving...' : '💾 Save Schedule'}
               </button>
             </div>
           </div>

@@ -9,7 +9,7 @@ export class QueriesScheduler {
   // inject QueriesService biar robot bisa masukin tugas ke antrean BullMQ
   constructor(private readonly queriesService: QueriesService) {}
 
-  // ⏰ @Cron adalah jam wekernya. 
+  // @Cron adalah jam wekernya. 
   // Untuk testing, set EVERY_MINUTE (tiap 1 menit jalan).
   // Nanti di dunia nyata, bisa diganti jadi EVERY_DAY_AT_MIDNIGHT, dll.
   @Cron(CronExpression.EVERY_MINUTE)
