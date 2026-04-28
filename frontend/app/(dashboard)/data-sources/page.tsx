@@ -78,39 +78,46 @@ export default function DataSourcesPage() {
 
   // FUNGSI EKSEKUSI EXPORT KE BACKEND
   const handleExportToSheets = async () => {
-    if (!exportTarget || !sheetId) return;
+    if (!sheetId || !sheetTabName) {
+      alert("Harap isi Spreadsheet ID dan Nama Tab!");
+      return;
+    }
+    
     setIsExporting(true);
-
+    
     try {
-      // 1. Simpan konfigurasi transfer ke Backend
-      const createRes = await fetch('http://localhost:3001/data-transfers', {
+      // Simulasi mengambil data yang mau diekspor (Nantinya ini bisa dari hasil query builder)
+      const columnsToExport = ["ID", "Nama Data Source", "Status"];
+      const rowsToExport = [
+        [1, exportTarget?.name || "Airbyte Source", "Active"],
+        [2, "Data Dummy 2", "Pending"]
+      ];
+
+      // Memanggil API NestJS yang baru kita buat
+      const response = await fetch('http://localhost:3001/queries/export/sheets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          name: `Export ${exportTarget.name}`,
-          sourceId: exportTarget.id,
-          spreadsheetId: sheetId,
-          sheetName: sheetTabName,
-          writeMode: 'append'
+          sheetId: sheetId,
+          tabName: sheetTabName,
+          columns: columnsToExport,
+          rows: rowsToExport,
         }),
       });
-      
-      const config = await createRes.json();
 
-      // 2. Panggil fungsi "Run" pakai ID konfigurasi yang baru dibuat
-      const runRes = await fetch(`http://localhost:3001/data-transfers/${config.id}/run`, {
-        method: 'POST'
-      });
+      const result = await response.json();
 
-      if (runRes.ok) {
-        alert('✅ Data berhasil diexport ke Google Sheets secara ajaib! 🪄');
+      if (response.ok) {
+        alert("🎉 YAY! " + result.message);
         setIsExportModalOpen(false);
       } else {
-        alert('❌ Gagal export data. Cek ID Spreadsheet atau izin Share.');
+        alert("❌ Gagal: " + (result.message || "Terjadi kesalahan di server."));
       }
     } catch (error) {
-      console.error("Error exporting:", error);
-      alert('Terjadi kesalahan koneksi ke server.');
+      console.error(error);
+      alert("❌ Gagal menghubungi server backend.");
     } finally {
       setIsExporting(false);
     }
@@ -269,7 +276,7 @@ export default function DataSourcesPage() {
                 disabled={isExporting || !sheetId}
                 type="button"
                 className="flex-1 py-2.5 flex justify-center items-center gap-2 font-bold text-black bg-emerald-600 rounded-xl shadow-lg hover:bg-emerald-700 disabled:bg-emerald-300 transition-colors">
-                {isExporting ? '⏳ Mengirim...' : 'Run Export'}
+                {isExporting ? '⏳ Sending...' : 'Run Export'}
               </button>
             </div>
           </div>

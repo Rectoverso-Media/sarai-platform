@@ -1,9 +1,10 @@
 import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
 import { QueriesService } from './queries.service';
+import { GoogleSheetsService } from './google-sheets.service';
 
 @Controller('queries')
 export class QueriesController {
-  constructor(private readonly queriesService: QueriesService) {}
+  constructor(private readonly queriesService: QueriesService, private readonly googleSheetsService: GoogleSheetsService) {}
 
   @Post()
   create(@Body() body: any) {
@@ -46,5 +47,18 @@ export class QueriesController {
   @Get('schema/:tableName')
   async getTableSchema(@Param('tableName') tableName: string) {
     return this.queriesService.getTableColumns(tableName);
+  }
+
+  @Post('export/sheets')
+  async exportToSheets(
+    @Body() body: { sheetId: string; tabName: string; columns: string[]; rows: any[] }
+  ) {
+    // Controller menerima data dari Frontend, lalu menyuruh Service kurir untuk bekerja
+    return this.googleSheetsService.exportData(
+      body.sheetId,
+      body.tabName,
+      body.columns,
+      body.rows
+    );
   }
 }

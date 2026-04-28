@@ -18,6 +18,10 @@ export default function QueryBuilderPage() {
   const [availableColumns, setAvailableColumns] = useState<{name: string, type: string}[]>([]);
   const [isFetchingSchema, setIsFetchingSchema] = useState(false);
 
+  // State untuk Export ke Sheets
+  const [sheetId, setSheetId] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+
   // State untuk Tab Mode (Visual vs Raw SQL)
   const [activeMode, setActiveMode] = useState<'visual' | 'sql'>('sql');
 
@@ -177,6 +181,53 @@ export default function QueryBuilderPage() {
     }
   };
 
+  const handleExportRealData = async () => {
+    // 👇 SABUK PENGAMAN FRONTEND 👇
+    if (!queryResult || queryResult.status !== 'success') {
+      alert("Jalankan query dulu sampai datanya muncul!");
+      return;
+    }
+    
+    // Cegah ekspor kalau datanya kosong
+    if (!queryResult.columns || queryResult.columns.length === 0) {
+      alert("Tabel hasil query kosong! Tidak ada data yang bisa diekspor.");
+      return;
+    }
+
+    if (!sheetId) {
+      alert("Masukkan ID Google Sheets dulu!");
+      return;
+    }
+
+    setIsExporting(true);
+
+    setIsExporting(true);
+    try {
+      const response = await fetch('http://localhost:3001/queries/export/sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sheetId: sheetId,
+          tabName: `Export_${tableName}`, // Nama tab otomatis pakai nama tabel target
+          columns: queryResult.columns,   // MENGGUNAKAN KOLOM ASLI DARI DATABASE
+          rows: queryResult.rows,         // MENGGUNAKAN DATA BARIS ASLI DARI DATABASE
+        }),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        alert("🎉 YAY! Data Asli berhasil diekspor: " + result.message);
+      } else {
+        alert("❌ Gagal: " + result.message);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("❌ Gagal menghubungi server.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="p-8 h-full flex flex-col space-y-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -205,37 +256,64 @@ export default function QueryBuilderPage() {
           </button>
         </div>
       </div>
-      {/* TAMPILAN HASIL QUERY */}
+
+      {/* TAMPILAN HASIL QUERY & EXPORT KE SHEETS */}
       {queryResult && queryResult.status === 'success' && (
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden mt-6 animate-in slide-in-from-bottom-4">
-          <div className="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex justify-between items-center">
-            <h3 className="font-bold text-emerald-800 flex items-center gap-2">
-              <span>✅</span> Eksekusi Berhasil
-            </h3>
-            <span className="text-xs font-mono text-emerald-600 bg-white px-3 py-1 rounded-full border border-emerald-200">
-              {queryResult.rows?.length || 0} rows returned
-            </span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-bold">
-                  {queryResult.columns?.map((col: string) => (
-                    <th key={col} className="px-6 py-4">{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="text-sm text-slate-700 divide-y divide-slate-100">
-                {queryResult.rows?.map((row: any[], rowIndex: number) => (
-                  <tr key={rowIndex} className="hover:bg-slate-50/80 transition-colors">
-                    {row.map((cell: any, cellIndex: number) => (
-                      <td key={cellIndex} className="px-6 py-4">{String(cell)}</td>
+        <div className="space-y-4 mt-6">
+          
+          {/* 1. TABEL HASIL QUERY (Ini kodingan asli kamu) */}
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-4">
+            <div className="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex justify-between items-center">
+              <h3 className="font-bold text-emerald-800 flex items-center gap-2">
+                <span>✅</span> Eksekusi Berhasil
+              </h3>
+              <span className="text-xs font-mono text-emerald-600 bg-white px-3 py-1 rounded-full border border-emerald-200">
+                {queryResult.rows?.length || 0} rows returned
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-bold">
+                    {queryResult.columns?.map((col: string) => (
+                      <th key={col} className="px-6 py-4">{col}</th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="text-sm text-slate-700 divide-y divide-slate-100">
+                  {queryResult.rows?.map((row: any[], rowIndex: number) => (
+                    <tr key={rowIndex} className="hover:bg-slate-50/80 transition-colors">
+                      {row.map((cell: any, cellIndex: number) => (
+                        <td key={cellIndex} className="px-6 py-4">{String(cell)}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          {/* 2. KOTAK EXPORT GOOGLE SHEETS (Ini tambahan barunya) */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-end animate-in fade-in">
+            <div className="flex-1 w-full">
+              <label className="block text-xs font-bold text-slate-500 mb-2">Export Data Ini ke Google Sheets (Masukkan Spreadsheet ID)</label>
+              <input 
+                type="text" 
+                value={sheetId}
+                onChange={(e) => setSheetId(e.target.value)}
+                placeholder="Contoh: 1aBcD_efGhI_JkLmNoP..."
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none"
+              />
+            </div>
+            <button 
+              onClick={handleExportRealData}
+              disabled={isExporting || !sheetId}
+              className="py-2.5 px-6 font-bold text-white bg-emerald-600 rounded-xl shadow-md hover:bg-emerald-700 disabled:bg-emerald-300 transition-colors whitespace-nowrap"
+            >
+              {isExporting ? '⏳ Mengirim...' : '🚀 Kirim ke Sheets'}
+            </button>
+          </div>
+
         </div>
       )}
 
