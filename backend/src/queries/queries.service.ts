@@ -76,7 +76,7 @@ export class QueriesService {
       // Simulasi jumlah baris data yang didapat (10 - 500 baris)
       const rowsReturned = Math.floor(Math.random() * 490) + 10;
 
-      // 3. Catat ke tabel QueryExecution (CCTV kita)
+      // 3. Catat ke tabel QueryExecution (CCTV)
       const executionLog = await this.prisma.queryExecution.create({
         data: {
           queryId: id,
@@ -149,7 +149,7 @@ export class QueriesService {
     }
     
     const state = await job.getState(); // Bisa: 'waiting', 'active', 'completed', 'failed'
-    const result = job.returnvalue; // Berisi data columns & rows yang kita return dari processor
+    const result = job.returnvalue; // Berisi data columns & rows yang return dari processor
 
     return {
       state,
@@ -165,8 +165,8 @@ export class QueriesService {
       WHERE table_schema = 'public' AND table_name = $1;
     `, tableName);
 
-    // Kita ubah formatnya biar Frontend gampang bacanya
-    // Kalau tipe datanya angka, kita anggap 'metric' (bisa di-SUM). Sisanya 'dimension'.
+    // ubah formatnya biar Frontend gampang bacanya
+    // Kalau tipe datanya angka, anggap 'metric' (bisa di-SUM). Sisanya 'dimension'.
     return columns.map(col => {
       const isNumber = ['integer', 'numeric', 'bigint', 'double precision', 'real'].includes(col.data_type);
       return {
@@ -175,5 +175,65 @@ export class QueriesService {
       };
     });
   }
+
+  async getDataSourceDistribution() {
+    
+    // ambil semua data sources
+    const allSources = await this.prisma.dataSource.findMany();
+    
+    // hitung jumlah per tipe
+    const distribution = allSources.reduce((acc, source) => {
+      const type = source.sourceType || 'Unknown';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Ubah formatnya jadi array yang disukai Recharts: [{ name: 'Postgres', value: 5 }, ...]
+    return Object.keys(distribution).map(key => ({
+      name: key,
+      value: distribution[key]
+    }));
+
+  }
+
+  // Fungsi untuk mensimulasikan trafik data 7 hari terakhir
+  getTrafficData() {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    
+    const result: { day: string; value: number }[] = [];
+    
+    // Looping 7 hari ke belakang
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i); 
+      
+      result.push({
+        day: days[d.getDay()], 
+        value: Math.floor(Math.random() * 70) + 20 
+      });
+    }
+    
+    return result;
+  }
+
+  // Fungsi untuk mensimulasikan performa query hari ini
+  getPerformanceData() {
+    const times = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+    
+    const result: { time: string; avgTime: number }[] = [];
+    
+    times.forEach(time => {
+      result.push({
+        time: time,
+        // Generate angka random antara 50ms - 300ms untuk simulasi kecepatan database
+        avgTime: Math.floor(Math.random() * 250) + 50 
+      });
+    });
+    
+    return result;
+  }
+  
+
+  
 
 }

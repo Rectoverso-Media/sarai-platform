@@ -61,4 +61,21 @@ export class QueriesController {
       body.rows
     );
   }
+
+  // Tambahkan route ini di QueriesController
+  @Get('stats/distribution')
+  async getDistribution() {
+    return this.queriesService.getDataSourceDistribution();
+  }
+
+  @Get('stats/traffic')
+  getTraffic() {
+    return this.queriesService.getTrafficData();
+  }
+
+  @Get('stats/performance')
+  getPerformance() {
+    return this.queriesService.getPerformanceData();
+  }
+
 }
