@@ -7,6 +7,7 @@ import { QueriesScheduler } from './queries.scheduler';
 // import { GoogleSheetsService } from '../integrations/google-sheets/google-sheets.service';
 
 import { PrismaModule } from '../prisma/prisma.module'; 
+import { GoogleSheetsModule } from '../integrations/google-sheets/google-sheets.module';
 
 @Module({
   imports: [
@@ -15,8 +16,9 @@ import { PrismaModule } from '../prisma/prisma.module';
     BullModule.registerQueue({
       name: 'query-execution',
     }),
+    GoogleSheetsModule,
   ],
   controllers: [QueriesController],
-  providers: [QueriesService, QueryProcessor, QueriesScheduler],
+  providers: [QueriesService, QueryProcessor, QueriesScheduler, GoogleSheetsModule],
 })
 export class QueriesModule {}
