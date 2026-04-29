@@ -14,6 +14,7 @@ import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip } from 'recharts';
 
 export default function CustomDashboardBuilder() {
   const { width, containerRef, mounted } = useContainerWidth();
+  const [trafficData, setTrafficData] = useState<any[]>([]);
 
   // Ambil layout dari DB saat halaman dimuat
   useEffect(() => {
@@ -33,6 +34,23 @@ export default function CustomDashboardBuilder() {
       }
     };
     loadDashboardFromDB();
+  }, []);
+
+  // Ambil data untuk mengisi widget grafik
+  useEffect(() => {
+    const fetchWidgetData = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/dashboard/stats/traffic');
+        if (res.ok) {
+          const data = await res.json();
+          setTrafficData(data); // Simpan ke state
+        }
+      } catch (error) {
+        console.error('Gagal memuat data widget:', error);
+      }
+    };
+    
+    fetchWidgetData();
   }, []);
 
   // 1. STATE UNTUK DAFTAR WIDGET (Data apa yang dirender)
@@ -107,16 +125,19 @@ export default function CustomDashboardBuilder() {
     }
     
     if (widget.type === 'bar') {
-      const dummyData = [{ name: 'A', v: 40 }, { name: 'B', v: 30 }, { name: 'C', v: 60 }];
       return (
         <div className="flex flex-col h-full w-full">
           <span className="text-slate-600 font-bold text-sm mb-2">{widget.title}</span>
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dummyData}>
-                <XAxis dataKey="name" hide />
-                <Tooltip />
-                <Bar dataKey="v" fill="#3b82f6" radius={[4,4,0,0]} />
+              {/* Gunakan trafficData di sini */}
+              <BarChart data={trafficData.length > 0 ? trafficData : [{ day: 'Loading', value: 0 }]}>
+                {/* Tampilkan nama harinya di sumbu X biar jelas */}
+                <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar dataKey="value" fill="#3b82f6" radius={[4,4,0,0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
