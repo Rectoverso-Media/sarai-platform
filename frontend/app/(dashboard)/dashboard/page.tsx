@@ -32,9 +32,9 @@ export default function MainDashboard() {
         const [dsRes, nodesRes, distRes, trafficRes, perfRes] = await Promise.all([
           fetch('http://localhost:3001/datasources'),
           fetch('http://localhost:3001/infrastructure'),
-          fetch('http://localhost:3001/queries/stats/distribution'),
-          fetch('http://localhost:3001/queries/stats/traffic'),
-          fetch('http://localhost:3001/queries/stats/performance')
+          fetch('http://localhost:3001/dashboard/stats/distribution'),
+          fetch('http://localhost:3001/dashboard/stats/traffic'),
+          fetch('http://localhost:3001/dashboard/stats/performance')
         ]);
 
         if (dsRes.ok && nodesRes.ok && distRes.ok && trafficRes.ok) {

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
-import * as credentials from '../../google-credentials.json'; 
+import * as credentials from '../../../google-credentials.json'; 
 
 @Injectable()
 export class GoogleSheetsService {

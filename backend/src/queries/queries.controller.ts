@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
 import { QueriesService } from './queries.service';
-import { GoogleSheetsService } from './google-sheets.service';
+import { GoogleSheetsService } from '../integrations/google-sheets/google-sheets.service';
 
 @Controller('queries')
 export class QueriesController {
@@ -62,28 +62,4 @@ export class QueriesController {
     );
   }
 
-  @Get('stats/distribution')
-  async getDistribution() {
-    return this.queriesService.getDataSourceDistribution();
-  }
-
-  @Get('stats/traffic')
-  getTraffic() {
-    return this.queriesService.getTrafficData();
-  }
-
-  @Get('stats/performance')
-  getPerformance() {
-    return this.queriesService.getPerformanceData();
-  }
-
-  @Post('dashboard/save')
-  saveLayout(@Body() body: { widgets: any; layout: any }) {
-    return this.queriesService.saveDashboardLayout(body.widgets, body.layout);
-  }
-
-  @Get('dashboard/load')
-  loadLayout() {
-    return this.queriesService.getDashboardLayout();
-  }
 }

@@ -19,7 +19,7 @@ export default function CustomDashboardBuilder() {
   useEffect(() => {
     const loadDashboardFromDB = async () => {
       try {
-        const res = await fetch('http://localhost:3001/queries/dashboard/load');
+        const res = await fetch('http://localhost:3001/dashboard/dashboard/load');
         if (res.ok) {
           const data = await res.json();
           // Kalau ada data dari DB, timpa state awal dengan data dari DB
@@ -82,7 +82,7 @@ export default function CustomDashboardBuilder() {
   // Fungsi untuk menembak API Save
   const saveDashboardToDB = async () => {
     try {
-      const res = await fetch('http://localhost:3001/queries/dashboard/save', {
+      const res = await fetch('http://localhost:3001/dashboard/dashboard/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ widgets, layout }) // Kirim 2 state ini ke backend
@@ -153,7 +153,7 @@ export default function CustomDashboardBuilder() {
           </button>
           <div className="w-px bg-slate-200 mx-2"></div>
           <button 
-            onClick={saveDashboardToDB} // 👈 Panggil fungsi ini
+            onClick={saveDashboardToDB} 
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-bold text-sm shadow-md transition-colors">
             💾 Save
           </button>

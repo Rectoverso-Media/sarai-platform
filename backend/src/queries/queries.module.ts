@@ -4,7 +4,7 @@ import { QueriesService } from './queries.service';
 import { QueriesController } from './queries.controller';
 import { QueryProcessor } from './queries.processor';
 import { QueriesScheduler } from './queries.scheduler';
-import { GoogleSheetsService } from './google-sheets.service';
+// import { GoogleSheetsService } from '../integrations/google-sheets/google-sheets.service';
 
 import { PrismaModule } from '../prisma/prisma.module'; 
 
@@ -17,6 +17,6 @@ import { PrismaModule } from '../prisma/prisma.module';
     }),
   ],
   controllers: [QueriesController],
-  providers: [QueriesService, QueryProcessor, QueriesScheduler, GoogleSheetsService],
+  providers: [QueriesService, QueryProcessor, QueriesScheduler],
 })
 export class QueriesModule {}

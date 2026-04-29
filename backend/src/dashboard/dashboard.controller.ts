@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 
-@Controller('dashboard') // 👈 Semua URL sekarang berawalan /dashboard
+@Controller('dashboard')
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 

@@ -1,6 +1,5 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-// 👇 Sesuaikan path import PrismaService dengan struktur folder kamu
 import { PrismaService } from '../prisma/prisma.service'; 
 
 @Processor('query-execution')
@@ -26,7 +25,7 @@ export class QueryProcessor extends WorkerHost {
 
       // 3. RAPAIKAN FORMAT HASILNYA
       // Prisma memberikan hasil seperti ini: [{ id: 1, nama: "Budi" }, { id: 2, nama: "Siti" }]
-      // Tapi Frontend kita butuh format terpisah antara columns dan rows. Kita ubah di sini:
+      // Tapi Frontend butuh format terpisah antara columns dan rows. ubah di sini:
       
       let columns: string[] = [];
       let rows: any[] = [];
@@ -48,7 +47,7 @@ export class QueryProcessor extends WorkerHost {
       };
 
     } catch (error) {
-      // Kita cek apakah error benar-benar sebuah object Error bawaan Node.js/Prisma
+      // cek apakah error benar-benar sebuah object Error bawaan Node.js/Prisma
       const errorMessage = error instanceof Error ? error.message : String(error);
       
       console.error(`❌ Gagal mengeksekusi query:`, errorMessage);
