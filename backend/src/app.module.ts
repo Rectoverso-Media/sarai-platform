@@ -12,6 +12,7 @@ import { AirbyteModule } from './airbyte/airbyte.module';
 import { QueriesModule } from './queries/queries.module';
 import { DataTransfersModule } from './data-transfers/data-transfers.module';
 import { BullModule } from '@nestjs/bullmq';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, 
@@ -26,7 +27,8 @@ import { BullModule } from '@nestjs/bullmq';
                 password: 'gQAAAAAAAaPYAAIgcDEwZDI0MTg0ODFkNDI0MjRlYWZjZTkyMzUyZTlmNDcxNQ',
                 tls: {}, // WAJIB ADA buat Upstash karena mereka pakai SSL
               },
-            }),],
+            }),
+          DashboardModule,],
   controllers: [AppController],
   providers: [AppService],
 })

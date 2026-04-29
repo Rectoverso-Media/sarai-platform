@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -6,8 +6,10 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class QueriesService {
+  private readonly logger = new Logger(QueriesService.name);
   constructor(
-    @InjectQueue('query-execution') private queryQueue: Queue,
+    @InjectQueue('query-execution') 
+    private queryQueue: Queue,
     private prisma: PrismaService
   ) {}
   // panggil Prisma langsung di sini biar gampang
@@ -231,6 +233,20 @@ export class QueriesService {
     });
     
     return result;
+  }
+
+  async saveDashboardLayout(widgets: any, layout: any) {
+    return this.prisma.dashboard.upsert({
+      where: { id: 'default-dashboard' },
+      update: { widgets, layout },
+      create: { id: 'default-dashboard', name: 'Main Dashboard', widgets, layout }
+    });
+  }
+
+  async getDashboardLayout() {
+    return this.prisma.dashboard.findUnique({
+      where: { id: 'default-dashboard' }
+    });
   }
   
 

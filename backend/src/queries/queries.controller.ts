@@ -62,7 +62,6 @@ export class QueriesController {
     );
   }
 
-  // Tambahkan route ini di QueriesController
   @Get('stats/distribution')
   async getDistribution() {
     return this.queriesService.getDataSourceDistribution();
@@ -78,4 +77,13 @@ export class QueriesController {
     return this.queriesService.getPerformanceData();
   }
 
+  @Post('dashboard/save')
+  saveLayout(@Body() body: { widgets: any; layout: any }) {
+    return this.queriesService.saveDashboardLayout(body.widgets, body.layout);
+  }
+
+  @Get('dashboard/load')
+  loadLayout() {
+    return this.queriesService.getDashboardLayout();
+  }
 }

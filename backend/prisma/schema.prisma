@@ -135,3 +135,13 @@ model DataTransfer {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+// Model untuk menyimpan layout Custom Dashboard
+model Dashboard {
+  id        String   @id @default(uuid())
+  name      String   @default("My Custom Dashboard")
+  widgets   Json     // Menyimpan array daftar widget
+  layout    Json     // Menyimpan array posisi (x,y,w,h)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
