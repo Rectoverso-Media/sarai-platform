@@ -26,7 +26,7 @@ export default function TeamPage() {
   const handleAddMember = async () => {
     const name = prompt("Nama Anggota:");
     const email = prompt("Email:");
-    const role = prompt("Role (Owner/Admin/Developer/Viewer):", "Viewer");
+    const role = prompt("Role (OWNER/ADMIN/EDITOR/VIEWER):", "VIEWER");
     
     if (name && email && role) {
       try {
