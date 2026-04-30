@@ -7,16 +7,22 @@ import { Responsive, useContainerWidth } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
-// Kita import sedikit Recharts untuk demonstrasi chart di dalam grid
-import { BarChart, Bar, ResponsiveContainer, XAxis, Tooltip } from 'recharts';
+import { 
+  BarChart, Bar, ResponsiveContainer, XAxis, Tooltip,
+  PieChart, Pie, Cell, Legend,
+  LineChart, Line, YAxis, CartesianGrid
+} from 'recharts';
 
+const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
 
 
 export default function CustomDashboardBuilder() {
   const { width, containerRef, mounted } = useContainerWidth();
   const [trafficData, setTrafficData] = useState<any[]>([]);
+  const [distributionData, setDistributionData] = useState<any[]>([]);
+  const [performanceData, setPerformanceData] = useState<any[]>([]);
 
-  // Ambil layout dari DB saat halaman dimuat
+  // Ambil layout dari DB 
   useEffect(() => {
     const loadDashboardFromDB = async () => {
       try {
@@ -53,6 +59,28 @@ export default function CustomDashboardBuilder() {
     fetchWidgetData();
   }, []);
 
+  useEffect(() => {
+    const fetchWidgetData = async () => {
+      try {
+        // Tarik 3 API sekaligus pakai Promise.all biar ngebut
+        const [trafficRes, distRes, perfRes] = await Promise.all([
+          fetch('http://localhost:3001/dashboard/stats/traffic'),
+          fetch('http://localhost:3001/dashboard/stats/distribution'),
+          fetch('http://localhost:3001/dashboard/stats/performance')
+        ]);
+
+        if (trafficRes.ok) setTrafficData(await trafficRes.json());
+        if (distRes.ok) setDistributionData(await distRes.json());
+        if (perfRes.ok) setPerformanceData(await perfRes.json());
+        
+      } catch (error) {
+        console.error('Gagal memuat data widget:', error);
+      }
+    };
+    
+    fetchWidgetData();
+  }, []);
+
   // 1. STATE UNTUK DAFTAR WIDGET (Data apa yang dirender)
   const [widgets, setWidgets] = useState([
     { id: 'kpi-1', type: 'kpi', title: 'Total Data Sources', value: '12' },
@@ -67,24 +95,18 @@ export default function CustomDashboardBuilder() {
 
   // Fungsi Tambah Widget Baru
   const addWidget = (type: string) => {
-    const newId = `${type}-${Date.now()}`; // Bikin ID unik
+    const newId = `${type}-${Date.now()}`;
     
-    // Tambah ke daftar widget
-    setWidgets([...widgets, { 
-      id: newId, 
-      type: type, 
-      title: type === 'kpi' ? 'New Metric' : 'New Chart',
-      value: type === 'kpi' ? '0' : undefined
-    }]);
+    let title = 'New Widget';
+    let w = 4, h = 4;
 
-    // Tambah ke layout (otomatis ditaruh di bawah dengan y: Infinity)
-    setLayout([...layout, { 
-      i: newId, 
-      x: 0, 
-      y: Infinity, 
-      w: type === 'kpi' ? 3 : 6, // Kalau KPI kecil, kalau Chart agak lebar
-      h: type === 'kpi' ? 2 : 4 
-    }]);
+    if (type === 'kpi') { title = 'New Metric'; w = 3; h = 2; }
+    else if (type === 'bar') { title = 'Traffic Overview'; w = 6; h = 4; }
+    else if (type === 'line') { title = 'Query Performance'; w = 6; h = 4; } // Ukuran Line Chart
+    else if (type === 'pie') { title = 'Source Distribution'; w = 4; h = 4; } // Ukuran Pie Chart
+
+    setWidgets([...widgets, { id: newId, type: type, title: title }]);
+    setLayout([...layout, { i: newId, x: 0, y: 99, w: w, h: h }]);
   };
 
   // Fungsi Hapus Widget
@@ -100,17 +122,35 @@ export default function CustomDashboardBuilder() {
   // Fungsi untuk menembak API Save
   const saveDashboardToDB = async () => {
     try {
-      const res = await fetch('http://localhost:3001/dashboard/dashboard/save', {
+      // Pastikan tidak ada nilai null/Infinity yang bocor sebelum dikirim ke DB
+      const cleanLayout = layout.map(l => ({
+        ...l,
+        y: (l.y === null || l.y === undefined) ? 99 : l.y
+      }));
+
+      const res = await fetch('http://localhost:3001/dashboard/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ widgets, layout }) // Kirim 2 state ini ke backend
+        body: JSON.stringify({ widgets, layout: cleanLayout })
       });
+
       if (res.ok) {
         alert('🎉 Layout berhasil disimpan ke Database!');
+      } else {
+        const errText = await res.text();
+        alert(`❌ Gagal menyimpan! Backend bilang: ${errText}`);
       }
     } catch (error) {
-      alert('❌ Gagal menyimpan layout.');
+      alert(`❌ Error koneksi ke server: ${error}`);
     }
+  };
+
+  // Fungsi untuk Copy Link Share
+  const handleShare = () => {
+    // bikin halaman '/shared' setelah ini
+    const shareUrl = `${window.location.origin}/shared`; 
+    navigator.clipboard.writeText(shareUrl);
+    alert('🔗 Link Dashboard Publik berhasil disalin ke Clipboard! Coba paste di tab baru.');
   };
 
   // Fungsi untuk me-render isi widget berdasarkan tipenya
@@ -130,7 +170,7 @@ export default function CustomDashboardBuilder() {
           <span className="text-slate-600 font-bold text-sm mb-2">{widget.title}</span>
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
-              {/* Gunakan trafficData di sini */}
+              {/* Gunakan trafficData */}
               <BarChart data={trafficData.length > 0 ? trafficData : [{ day: 'Loading', value: 0 }]}>
                 {/* Tampilkan nama harinya di sumbu X biar jelas */}
                 <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
@@ -139,6 +179,46 @@ export default function CustomDashboardBuilder() {
                 />
                 <Bar dataKey="value" fill="#3b82f6" radius={[4,4,0,0]} />
               </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      );
+    }
+
+    if (widget.type === 'line') {
+      return (
+        <div className="flex flex-col h-full w-full">
+          <span className="text-slate-600 font-bold text-sm mb-2">{widget.title}</span>
+          <div className="flex-1 w-full min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={performanceData.length > 0 ? performanceData : [{ time: '00:00', avgTime: 0 }]}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                <Line type="monotone" dataKey="avgTime" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      );
+    }
+
+    if (widget.type === 'pie') {
+      return (
+        <div className="flex flex-col h-full w-full">
+          <span className="text-slate-600 font-bold text-sm mb-2">{widget.title}</span>
+          <div className="flex-1 w-full min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={distributionData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                  {distributionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+              </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -160,20 +240,34 @@ export default function CustomDashboardBuilder() {
         
         {/* Menu Add Widget */}
         <div className="flex gap-3">
-          <button 
+          <button type="button"
             onClick={() => addWidget('kpi')}
-            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2"
-          >
+            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2">
             <span>+</span> KPI Card
           </button>
-          <button 
+          <button type="button"
+            onClick={() => addWidget('line')}
+            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2">
+            <span>+</span> Line Chart
+          </button>
+          <button type="button"
+            onClick={() => addWidget('pie')}
+            className="bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2">
+            <span>+</span> Pie Chart
+          </button>
+          <button type="button"
             onClick={() => addWidget('bar')}
-            className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2"
-          >
+            className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2">
             <span>+</span> Bar Chart
           </button>
+          
           <div className="w-px bg-slate-200 mx-2"></div>
-          <button 
+          <button type="button"
+            onClick={handleShare} 
+            className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors">
+            🔗 Share
+          </button>
+          <button type="button"
             onClick={saveDashboardToDB} 
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-bold text-sm shadow-md transition-colors">
             💾 Save

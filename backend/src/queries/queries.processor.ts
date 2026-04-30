@@ -12,8 +12,7 @@ export class QueryProcessor extends WorkerHost {
 
   async process(job: Job<any, any, string>): Promise<any> {
     console.log(`🚀 Sedang memproses query ke Database untuk job ID: ${job.id}`);
-    
-    // Ini teks SQL asli yang dikirim dari web SARAI
+ 
     const { rawSql, queryId } = job.data;
 
     try {
@@ -25,7 +24,7 @@ export class QueryProcessor extends WorkerHost {
 
       // 3. RAPAIKAN FORMAT HASILNYA
       // Prisma memberikan hasil seperti ini: [{ id: 1, nama: "Budi" }, { id: 2, nama: "Siti" }]
-      // Tapi Frontend butuh format terpisah antara columns dan rows. ubah di sini:
+      // Tapi Frontend butuh format terpisah antara columns dan rows. ubah di sini
       
       let columns: string[] = [];
       let rows: any[] = [];

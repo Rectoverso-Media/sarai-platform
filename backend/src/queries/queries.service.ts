@@ -89,6 +89,7 @@ export class QueriesService {
       });
 
       // 4. Kembalikan log eksekusi beserta sampel datanya ke Frontend
+      // Masih data dummy
       return {
         message: 'Query berhasil dieksekusi!',
         executionLog: executionLog,
