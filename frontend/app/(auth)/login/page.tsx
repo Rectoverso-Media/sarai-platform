@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '../../../components/ui/Card'; 
 import { Button } from '../../../components/ui/button'; 
 import Link from 'next/link'; 
@@ -7,6 +7,27 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation'; 
 
 export default function LoginPage() {
+
+  // Fungsi penangkap token dari URL (hasil callback Google)
+  useEffect(() => {
+    // Hanya berjalan di sisi client (browser)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      const userDataStr = urlParams.get('userData');
+
+      if (token && userDataStr) {
+        // Simpan ke Local Storage
+        localStorage.setItem('access_token', token);
+        localStorage.setItem('userData', userDataStr);
+        // Set Cookie biar (Middleware) bolehin lewat
+        document.cookie = "isLoggedIn=true; path=/";
+        // Bersihkan URL & pindah ke Dashboard
+        window.history.replaceState({}, document.title, "/login");
+        window.location.href = '/dashboard';
+      }
+    }
+  }, []);
   const router = useRouter();
 
   // Wadah buat nyimpen ketikan email & password
@@ -137,7 +158,9 @@ export default function LoginPage() {
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Or continue with</p>
           <div className="flex items-center justify-center gap-4">
             <button type="button" className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors">
-              <span className="font-bold text-slate-700 text-sm">Google</span>
+              <a href="http://localhost:3001/auth/google" className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer">
+                <span className="font-bold text-slate-700 text-sm">Google</span>
+              </a>
             </button>
             <button type="button" className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors">
               <span className="font-bold text-slate-700 text-sm">GitHub</span>

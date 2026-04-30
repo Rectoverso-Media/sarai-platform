@@ -20,7 +20,7 @@ export class TeamService {
       orderBy: { createdAt: 'desc' }
     });
 
-    // Modifikasi data biar formatnya pas sama tabel Frontend kamu
+    // Modifikasi data biar formatnya pas sama tabel Frontend
     return members.map(m => ({
       ...m,
       status: m.isEmailVerified ? 'Active' : 'Pending'

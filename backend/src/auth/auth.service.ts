@@ -60,4 +60,33 @@ export class AuthService {
       user: userWithoutPassword
     };
   }
+
+  // 3. FUNGSI GOOGLE OAUTH
+  async validateGoogleUser(googleUser: { email: string; name: string }) {
+    let user = await this.prisma.user.findUnique({ where: { email: googleUser.email } });
+
+    if (!user) {
+      // Kalau belum pernah daftar, otomatis bikinkan akunnya
+      user = await this.prisma.user.create({
+        data: {
+          email: googleUser.email,
+          name: googleUser.name,
+          password: null, // Sengaja null karena login pakai Google
+          role: Role.VIEWER, // Role default
+          isEmailVerified: true, // Otomatis verified karena dari Google
+        },
+      });
+    }
+
+    // Buatkan Token KTP Digital seperti login biasa
+    const payload = { sub: user.id, email: user.email, role: user.role, name: user.name };
+    const token = this.jwtService.sign(payload);
+
+    const { password, ...userWithoutPassword } = user;
+
+    return {
+      access_token: token,
+      user: userWithoutPassword,
+    };
+  }
 }
