@@ -79,7 +79,7 @@ export default function LoginPage() {
         toast.success(data.message || 'Login successful!');
         // Simpan Token KTP Digital
         localStorage.setItem('access_token', data.access_token);
-        // Simpan data user (backend kita ngasih nama variabelnya "user", bukan "data")
+        // Simpan data user (backend ngasih nama variabelnya "user", bukan "data")
         localStorage.setItem('userData', JSON.stringify(data.user));
         // Cookie (KTP buat Satpam Server)
         document.cookie = "isLoggedIn=true; path=/";

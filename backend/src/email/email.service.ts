@@ -57,7 +57,7 @@ export class EmailService {
       <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center; color: #333;">
         <h2 style="color: #2563eb;">Selamat datang di SARAI!</h2>
         <p>Terima kasih sudah mendaftar. Tinggal satu langkah lagi untuk mengaktifkan akun kamu.</p>
-        <p>Silakan klik tombol di bawah ini untuk memverifikasi alamat email kamu:</p>
+        <p>Silakan klik tombol di bawah ini untuk memverifikasi alamat email:</p>
         <a href="${verifyLink}" style="display: inline-block; margin: 20px 0; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Verifikasi Email Sekarang</a>
         <p style="font-size: 12px; color: #777;">Link ini akan kedaluwarsa dalam 1 jam.</p>
       </div>
