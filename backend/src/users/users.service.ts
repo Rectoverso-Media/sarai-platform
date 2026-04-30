@@ -38,7 +38,7 @@ export class UsersService {
     }
 
     // Cocokkan password ketikan user dengan password alien di database
-    const isPasswordValid = await bcrypt.compare(data.password, user.password);
+    const isPasswordValid = await bcrypt.compare(data.password, user.password as string);
 
     // Kalau passwordnya salah
     if (!isPasswordValid) {

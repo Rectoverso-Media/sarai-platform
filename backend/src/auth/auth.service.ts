@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { Role } from '@prisma/client'; 
 
 @Injectable()
 export class AuthService {
@@ -10,44 +11,39 @@ export class AuthService {
     private jwtService: JwtService
   ) {}
 
-  // ==========================================
   // 1. FUNGSI REGISTER
-  // ==========================================
-  async register(data: { name: string; email: string; password: string; role?: string }) {
-    const existingUser = await this.prisma.teamMember.findUnique({ where: { email: data.email } });
+  async register(data: { name: string; email: string; password: string; role?: Role }) {
+    const existingUser = await this.prisma.user.findUnique({ where: { email: data.email } });
     if (existingUser) {
       throw new BadRequestException('Email sudah terdaftar bro!');
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    const user = await this.prisma.teamMember.create({
+    const user = await this.prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         password: hashedPassword,
-        role: data.role || 'Admin',
+        
+        role: data.role || Role.VIEWER, 
       },
     });
 
-    // Solusi Error 1 & 3: Pakai teknik Destructuring untuk misahin password dari data user
+    // Destructuring untuk misahin password dari data user yang dikembalikan
     const { password, ...userWithoutPassword } = user;
     
     return { message: 'Registrasi sukses! Silakan Login.', user: userWithoutPassword };
   }
 
-  // ==========================================
   // 2. FUNGSI LOGIN
-  // ==========================================
   async login(data: { email: string; password: string }) {
-    const user = await this.prisma.teamMember.findUnique({ where: { email: data.email } });
+    const user = await this.prisma.user.findUnique({ where: { email: data.email } });
     
-    // Solusi Error 2: Kita cek juga user.password biar bcrypt nggak nerima 'null'
     if (!user || !user.password) {
       throw new UnauthorizedException('Email atau Password salah!');
     }
 
-    // Karena di atas udah dicek (!user.password), di sini TypeScript udah yakin passwordnya string
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Email atau Password salah!');
@@ -56,7 +52,6 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, role: user.role, name: user.name };
     const token = this.jwtService.sign(payload);
 
-    // Solusi Error 1 & 3 lagi
     const { password, ...userWithoutPassword } = user;
     
     return {

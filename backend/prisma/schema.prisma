@@ -7,11 +7,21 @@ generator client {
   provider = "prisma-client-js"
 }
 
+
+
 model User {
-  id        Int     @id @default(autoincrement())
-  name      String
-  email     String  @unique
-  password  String 
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String?   // Boleh kosong (null) untuk user yang login pakai Google OAuth
+  name          String
+  role          Role      @default(VIEWER) // Default role untuk user baru
+  
+  // Untuk fitur Email Verification & 2FA nanti
+  isEmailVerified Boolean   @default(false)
+  refreshToken    String?   @db.Text
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model DataSource {
@@ -144,4 +154,12 @@ model Dashboard {
   layout    Json     // Menyimpan array posisi (x,y,w,h)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+
+enum Role {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
 }

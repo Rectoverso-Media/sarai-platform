@@ -48,7 +48,7 @@ export default function RegisterPage() {
           name: formData.name, 
           email: formData.email,
           password: formData.password,
-          role: 'Admin' // biar otomatis dapet role Admin
+          role: 'ADMIN'
         }),
 });
 
