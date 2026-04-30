@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res, UseGuards, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
@@ -35,5 +35,15 @@ export class AuthController {
     const frontendUrl = `http://localhost:3000/login?token=${result.access_token}&userData=${encodeURIComponent(JSON.stringify(result.user))}`;
     
     res.redirect(frontendUrl);
+  }
+
+  // 3. Rute untuk menangkap klik dari email
+  @Get('verify-email')
+  async verifyEmail(@Query('token') token: string, @Res() res: Response) {
+    await this.authService.verifyEmail(token);
+    
+    // Kalau sukses, lempar balik ke halaman login di frontend 
+    // (Bisa tambahin parameter ?verified=true biar di frontend bisa nampilin toast sukses)
+    res.redirect('http://localhost:3000/login?verified=true');
   }
 }

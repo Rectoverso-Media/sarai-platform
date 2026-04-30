@@ -8,23 +8,29 @@ import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
 
-  // Fungsi penangkap token dari URL (hasil callback Google)
+  // Fungsi penangkap token & status verifikasi dari URL
   useEffect(() => {
-    // Hanya berjalan di sisi client (browser)
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
+      
+      // 1. Penangkap Google OAuth (Udah ada dari sebelumnya)
       const token = urlParams.get('token');
       const userDataStr = urlParams.get('userData');
 
       if (token && userDataStr) {
-        // Simpan ke Local Storage
         localStorage.setItem('access_token', token);
         localStorage.setItem('userData', userDataStr);
-        // Set Cookie biar (Middleware) bolehin lewat
         document.cookie = "isLoggedIn=true; path=/";
-        // Bersihkan URL & pindah ke Dashboard
         window.history.replaceState({}, document.title, "/login");
         window.location.href = '/dashboard';
+      }
+
+      // 2. Penangkap Verifikasi Email (BARU DITAMBAHKAN)
+      if (urlParams.get('verified') === 'true') {
+        // Tampilkan notifikasi hijau
+        toast.success('Email berhasil diverifikasi! Silakan Login.');
+        // Bersihkan URL biar toast nggak muncul terus-terusan kalau di-refresh
+        window.history.replaceState({}, document.title, "/login");
       }
     }
   }, []);

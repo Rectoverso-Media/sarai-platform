@@ -13,6 +13,7 @@ import { QueriesModule } from './queries/queries.module';
 import { DataTransfersModule } from './data-transfers/data-transfers.module';
 import { BullModule } from '@nestjs/bullmq';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, 
@@ -28,7 +29,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
                 tls: {}, // WAJIB ADA buat Upstash karena mereka pakai SSL
               },
             }),
-          DashboardModule,],
+          DashboardModule,
+          EmailModule,],
   controllers: [AppController],
   providers: [AppService],
 })

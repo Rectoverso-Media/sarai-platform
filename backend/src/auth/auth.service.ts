@@ -3,12 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Role } from '@prisma/client'; 
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private emailService: EmailService
   ) {}
 
   // 1. FUNGSI REGISTER
@@ -29,6 +31,16 @@ export class AuthService {
         role: data.role || Role.VIEWER, 
       },
     });
+
+    const verifyToken = this.jwtService.sign(
+      { email: user.email, purpose: 'email_verification' }, 
+      { expiresIn: '1h' }
+    );
+
+    this.emailService.sendVerificationEmail(user.email, verifyToken);
+    
+
+    
 
     // Destructuring untuk misahin password dari data user yang dikembalikan
     const { password, ...userWithoutPassword } = user;
@@ -88,5 +100,29 @@ export class AuthService {
       access_token: token,
       user: userWithoutPassword,
     };
+  }
+
+  // ==========================================
+  // 4. FUNGSI VERIFIKASI EMAIL DARI LINK
+  // ==========================================
+  async verifyEmail(token: string) {
+    try {
+      // Cek apakah tokennya asli dan belum expired
+      const payload = this.jwtService.verify(token);
+
+      if (payload.purpose !== 'email_verification') {
+        throw new BadRequestException('Token tidak valid untuk verifikasi email');
+      }
+
+      // Update status user di database
+      await this.prisma.user.update({
+        where: { email: payload.email },
+        data: { isEmailVerified: true },
+      });
+
+      return true;
+    } catch (error) {
+      throw new BadRequestException('Link verifikasi tidak valid atau sudah kedaluwarsa!');
+    }
   }
 }

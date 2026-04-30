@@ -5,12 +5,13 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy } from './google.strategy';
-
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
     PrismaModule,
     PassportModule,
+    EmailModule,
     // Konfigurasi Token KTP Digital (JWT)
     JwtModule.register({
       secret: 'SARAI_RAHASIA_SUPER_AMAN_123!', // Aslinya ini wajib ditaruh di file .env
