@@ -64,4 +64,21 @@ export class EmailService {
     `;
     return this.sendEmail(email, subject, html);
   }
+
+  // Fungsi ngirim email reset password
+  async sendResetPasswordEmail(email: string, token: string) {
+    // Nanti link ini mengarah ke halaman set-new-password di frontend
+    const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+    const subject = 'Reset Password Akun SARAI 🔑';
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center; color: #333;">
+        <h2 style="color: #5f748d;">Permintaan Reset Password</h2>
+        <p>Kami menerima permintaan untuk mereset password akun SARAI kamu.</p>
+        <p>Silakan klik tombol di bawah ini untuk membuat password baru:</p>
+        <a href="${resetLink}" style="display: inline-block; margin: 20px 0; padding: 12px 24px; background-color: #5f748d; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Reset Password</a>
+        <p style="font-size: 12px; color: #777;">Link ini hanya berlaku selama 15 menit. Jika kamu tidak merasa meminta reset password, abaikan saja email ini.</p>
+      </div>
+    `;
+    return this.sendEmail(email, subject, html);
+  }
 }

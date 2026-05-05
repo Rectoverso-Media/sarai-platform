@@ -46,4 +46,16 @@ export class AuthController {
     // (Bisa tambahin parameter ?verified=true biar di frontend bisa nampilin toast sukses)
     res.redirect('http://localhost:3000/login?verified=true');
   }
+
+  // 4. Rute untuk Minta Link Reset Password
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    return this.authService.forgotPassword(email);
+  }
+
+  // 5. Rute untuk Eksekusi Reset Password
+  @Post('reset-password')
+  async resetPassword(@Body() body: { token: string; newPassword: string }) {
+    return this.authService.resetPassword(body.token, body.newPassword);
+  }
 }

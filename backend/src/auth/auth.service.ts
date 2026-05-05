@@ -125,4 +125,54 @@ export class AuthService {
       throw new BadRequestException('Link verifikasi tidak valid atau sudah kedaluwarsa!');
     }
   }
+
+  // 5. FUNGSI LUPA PASSWORD
+  async forgotPassword(email: string) {
+    // 1. Cek apakah emailnya terdaftar
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    
+    // Kalau nggak ada, tetep balikin sukses biar hacker nggak bisa nebak email mana aja yang terdaftar
+    if (!user) {
+      return { message: 'Jika email terdaftar, link reset telah dikirim.' };
+    }
+
+    // 2. Buat token khusus reset (umur pendek, cuma 15 menit)
+    const resetToken = this.jwtService.sign(
+      { email: user.email, purpose: 'reset_password' }, 
+      { expiresIn: '15m' }
+    );
+
+    // 3. Suruh kurir ngirim email
+    await this.emailService.sendResetPasswordEmail(user.email, resetToken);
+
+    return { message: 'Jika email terdaftar, link reset telah dikirim.' };
+  }
+
+  // ==========================================
+  // 6. FUNGSI EKSEKUSI RESET PASSWORD
+  // ==========================================
+  async resetPassword(token: string, newPassword: string) {
+    try {
+      // 1. Validasi token dari email
+      const payload = this.jwtService.verify(token);
+      
+      if (payload.purpose !== 'reset_password') {
+        throw new BadRequestException('Token tidak valid untuk reset password');
+      }
+
+      // 2. Hash password baru biar aman di database
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // 3. Timpa password lama di database
+      await this.prisma.user.update({
+        where: { email: payload.email },
+        data: { password: hashedPassword },
+      });
+
+      return { message: 'Password berhasil diubah!' };
+    } catch (error) {
+      throw new BadRequestException('Link reset password tidak valid atau sudah kedaluwarsa!');
+    }
+  }
+
 }

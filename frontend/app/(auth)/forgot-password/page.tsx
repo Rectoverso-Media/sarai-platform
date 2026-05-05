@@ -3,13 +3,48 @@
 import React, { useState } from 'react';
 import Card from '../../../components/ui/Card'; 
 import { Button } from '../../../components/ui/button'; 
+import toast from 'react-hot-toast';
 
 export default function ForgotPasswordPage() {
+  // const [isSubmitted, setIsSubmitted] = useState(false);
+  // State ditambah untuk nangkap email dan status loading
+  const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSumbit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); 
-    setIsSubmitted(true); 
+    
+    if (!email) {
+      toast.error('Email harus diisi!');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Nembak ke API NestJS yang baru kita buat
+      const response = await fetch('http://localhost:3001/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        setIsSubmitted(true); // Ganti tampilan jadi pesan sukses
+        toast.success('Permintaan reset password berhasil dikirim!');
+      } else {
+        const data = await response.json();
+        toast.error(data.message || 'Gagal memproses permintaan.');
+      }
+    } catch (error) {
+      toast.error('Terputus dari server backend!');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -99,16 +134,18 @@ export default function ForgotPasswordPage() {
           </div>
 
           {/* Input Form */}
-          <form onSubmit={handleSumbit} className="space-y-5 text-left pt-2">
+          <form onSubmit={handleSubmit} className="space-y-5 text-left pt-2">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-slate-600">Email</label>
               <input 
                 id="email" 
                 type="email" 
                 required
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
                 placeholder="Enter email address" 
                 className="block w-full px-4 py-3 border border-slate-300 rounded-xl text-sm transition-all bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-[#597393] outline-none" 
-              />
+  />
             </div>
 
             <div className="pt-2">
