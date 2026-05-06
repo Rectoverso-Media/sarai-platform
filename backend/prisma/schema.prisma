@@ -10,18 +10,29 @@ generator client {
 
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  password      String?   // Boleh kosong (null) untuk user yang login pakai Google OAuth
-  name          String
-  role          Role      @default(VIEWER) // Default role untuk user baru
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String?   // Boleh kosong (null) untuk user yang login pakai Google OAuth
+  name            String
+  role            Role     @default(VIEWER) // Default role untuk user baru
   
   // Untuk fitur Email Verification & 2FA nanti
-  isEmailVerified Boolean   @default(false)
-  refreshToken    String?   @db.Text
+  isEmailVerified Boolean  @default(false)
+  refreshToken    String?  @db.Text
   
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  teamId          String?  // Kosong kalau dia belum diundang ke tim mana pun
+  team            Team?    @relation(fields: [teamId], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String   // Nama organisasi/perusahaan (Contoh: "Tim Alpha")
+  members     User[]   // Relasi balik ke tabel User (1 Tim punya banyak User)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model DataSource {
@@ -57,17 +68,6 @@ model InfrastructureNode {
   updatedAt DateTime @updatedAt
 }
 
-
-model TeamMember {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String?  
-  role      String   // Owner, Admin, Developer, Viewer
-  status    String   @default("Active")
-  avatar    String?
-  createdAt DateTime @default(now())
-}
 
 model SecurityLog {
   id        String   @id @default(uuid())

@@ -14,6 +14,8 @@ import { DataTransfersModule } from './data-transfers/data-transfers.module';
 import { BullModule } from '@nestjs/bullmq';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { EmailModule } from './email/email.module';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, 
@@ -29,9 +31,20 @@ import { EmailModule } from './email/email.module';
                 tls: {}, // WAJIB ADA buat Upstash karena mereka pakai SSL
               },
             }),
+
+
+            ThrottlerModule.forRoot([{
+              ttl: 60000, // Waktu blokir (60.000 ms = 1 menit)
+              limit: 20,  // Maksimal 20 request per menit
+            }]),
           DashboardModule,
           EmailModule,],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,
+              {
+                provide: APP_GUARD,
+                useClass: ThrottlerGuard,
+              },
+  ],
 })
 export class AppModule {}

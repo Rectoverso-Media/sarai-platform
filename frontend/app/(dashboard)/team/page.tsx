@@ -1,20 +1,33 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast'; 
 
 export default function TeamPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch data dari API
+  // Fetch data dari API (Dengan KTP/Token)
   const fetchMembers = async () => {
     try {
-      const response = await fetch('http://localhost:3001/team');
+      // Ambil token dari localStorage yang disimpan saat login
+      const token = localStorage.getItem('access_token')
+      
+      const response = await fetch('http://localhost:3001/team', {
+        headers: {
+          'Authorization': `Bearer ${token}` 
+        }
+      });
+      
       if (response.ok) {
         const data = await response.json();
         setMembers(data);
+      } else {
+        const errData = await response.json();
+        toast.error(errData.message || 'Gagal mengambil data tim');
       }
     } catch (error) {
       console.error("Gagal ambil data tim:", error);
+      toast.error('Terputus dari server backend');
     } finally {
       setIsLoading(false);
     }
@@ -22,21 +35,38 @@ export default function TeamPage() {
 
   useEffect(() => { fetchMembers(); }, []);
 
-  // Fungsi Tambah Member (Simpel via Prompt)
+  // Fungsi Tambah Member
   const handleAddMember = async () => {
     const name = prompt("Nama Anggota:");
     const email = prompt("Email:");
     const role = prompt("Role (OWNER/ADMIN/EDITOR/VIEWER):", "VIEWER");
     
     if (name && email && role) {
+      const toastId = toast.loading('Membuat akun & mengirim email undangan...');
       try {
-        await fetch('http://localhost:3001/team', {
+        const token = localStorage.getItem('access_token')
+        
+        const response = await fetch('http://localhost:3001/team', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ name, email, role }),
         });
-        fetchMembers();
-      } catch (e) { console.error(e); }
+
+        const data = await response.json();
+
+        if (response.ok) {
+          toast.success('Undangan berhasil dikirim!', { id: toastId });
+          fetchMembers(); // Refresh tabel biar member baru langsung muncul
+        } else {
+          toast.error(data.message || 'Gagal mengundang anggota', { id: toastId });
+        }
+      } catch (e) { 
+        console.error(e); 
+        toast.error('Terputus dari server', { id: toastId });
+      }
     }
   };
 
@@ -68,12 +98,14 @@ export default function TeamPage() {
           <tbody className="divide-y divide-slate-100">
             {isLoading ? (
               <tr><td colSpan={4} className="p-10 text-center text-slate-400">Loading members...</td></tr>
+            ) : members.length === 0 ? (
+              <tr><td colSpan={4} className="p-10 text-center text-slate-400 font-medium">Belum ada anggota tim.</td></tr>
             ) : members.map((member) => (
               <tr key={member.id} className="hover:bg-slate-50/50 transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600">
-                      {member.name.charAt(0)}
+                      {member.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <p className="font-bold text-slate-800">{member.name}</p>
@@ -87,9 +119,16 @@ export default function TeamPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md w-max border border-green-100">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div> {member.status}
-                  </span>
+                  {/* logika Badge Dinamis: Active (Hijau) vs Pending (Kuning) */}
+                  {member.status === 'Active' ? (
+                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md w-max border border-green-100">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div> Active
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md w-max border border-amber-100">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div> Pending
+                    </span>
+                  )}
                 </td>
                 <td className="px-6 py-4 text-right">
                   <button className="text-slate-400 hover:text-blue-600 text-xs font-bold">Edit Role</button>

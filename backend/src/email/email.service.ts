@@ -81,4 +81,21 @@ export class EmailService {
     `;
     return this.sendEmail(email, subject, html);
   }
+
+  // Fungsi ngirim email undangan tim
+  async sendTeamInviteEmail(email: string, inviterName: string, teamName: string, token: string) {
+    // Link ini nanti mengarah ke halaman Register dengan membawa token undangan
+    const inviteLink = `http://localhost:3000/register?inviteToken=${token}`;
+    const subject = `Undangan Bergabung ke Tim ${teamName} di SARAI 🏢`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center; color: #333;">
+        <h2 style="color: #2563eb;">Kamu Diundang!</h2>
+        <p>Halo! <b>${inviterName}</b> telah mengundang kamu untuk bergabung ke dalam tim <b>${teamName}</b> di platform SARAI.</p>
+        <p>Silakan klik tombol di bawah ini untuk menerima undangan dan membuat akun:</p>
+        <a href="${inviteLink}" style="display: inline-block; margin: 20px 0; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Terima Undangan</a>
+        <p style="font-size: 12px; color: #777;">Link undangan ini berlaku selama 7 hari.</p>
+      </div>
+    `;
+    return this.sendEmail(email, subject, html);
+  }
 }
