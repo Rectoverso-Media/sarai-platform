@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Req, Res, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res, UseGuards, Query, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
@@ -57,5 +57,13 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() body: { token: string; newPassword: string }) {
     return this.authService.resetPassword(body.token, body.newPassword);
+  }
+
+  @Post('accept-invite')
+  async acceptInvite(@Body() body: { token: string; password: string }) {
+    if (!body.token || !body.password) {
+      throw new BadRequestException('Token dan password harus diisi');
+    }
+    return this.authService.acceptInvite(body.token, body.password);
   }
 }

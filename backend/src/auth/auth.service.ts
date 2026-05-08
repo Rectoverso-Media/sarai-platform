@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Role } from '@prisma/client'; 
 import { EmailService } from '../email/email.service';
+// import { BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
@@ -172,6 +173,34 @@ export class AuthService {
       return { message: 'Password berhasil diubah!' };
     } catch (error) {
       throw new BadRequestException('Link reset password tidak valid atau sudah kedaluwarsa!');
+    }
+  }
+
+  async acceptInvite(token: string, newPassword: string) {
+    try {
+      // 1. Bongkar dan verifikasi KTP (Token) undangannya
+      const payload = this.jwtService.verify(token);
+      
+      // 2. Pastikan ini token undangan, bukan token login
+      if (payload.purpose !== 'team_invite') {
+        throw new BadRequestException('Token tidak valid untuk undangan tim.');
+      }
+
+      // 3. Hash password baru yang diinput user
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // 4. Update data user di database
+      await this.prisma.user.update({
+        where: { email: payload.email },
+        data: {
+          password: hashedPassword,
+          isEmailVerified: true, // Mengubah status Pending menjadi Active!
+        },
+      });
+
+      return { message: 'Akun berhasil diaktifkan! Silakan login.' };
+    } catch (error) {
+      throw new BadRequestException('Token undangan tidak valid atau sudah kedaluwarsa.');
     }
   }
 
