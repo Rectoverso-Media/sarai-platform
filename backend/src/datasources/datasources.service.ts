@@ -1,10 +1,11 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class DatasourcesService {
   private prisma = new PrismaClient();
-
+  constructor(private readonly prismaService: PrismaService) {}
   // FUNGSI SIMPAN DATA SOURCE BARU
   async createDataSource(data: any) {
     try {

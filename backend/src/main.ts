@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter'; // 👈 Import ini
+import { HttpExceptionFilter } from './common/filters/http-exception.filter'; 
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,7 +15,6 @@ async function bootstrap() {
   // Validasi input otomatis 
   app.useGlobalPipes(new ValidationPipe());
 
-  // 👇 Daftarkan Global Error Handler di sini
   app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen(3001);

@@ -1,12 +1,15 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { PrismaService } from '../prisma/prisma.service'; 
 
 @Injectable()
 export class AirbyteService {
   private readonly airbyteApiUrl = 'https://api.airbyte.com/v1';
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService,
+              private readonly prisma: PrismaService
+  ) {}
 
   private async getAccessToken(): Promise<string> {
     try {
@@ -66,36 +69,55 @@ export class AirbyteService {
   async createSource(data: any) {
     const token = await this.getAccessToken();
     const workspaceId = process.env.AIRBYTE_WORKSPACE_ID;
+    
+    // Siapkan ID cadangan kalau ditolak Airbyte
+    let finalSourceId = `airbyte-mock-${Date.now()}`; 
 
     try {
       const payload = {
         workspaceId: workspaceId,
         name: data.name,
-        sourceDefinitionId: 'decd338e-5647-4c0b-adf4-da0e75f5a750', 
-        connectionConfiguration: {} 
+        sourceDefinitionId: 'decd338e-5647-4c0b-adf4-da0e75f5a750', // Mock UUID
+        connectionConfiguration: {} // Akan ditolak karena kosong
       };
 
+      // 1. Tembak ke API Airbyte Cloud
       const response = await firstValueFrom(
         this.httpService.post(`${this.airbyteApiUrl}/sources`, payload, {
           headers: { Authorization: `Bearer ${token}` },
         })
       );
       
-      return { message: 'Berhasil membuat source asli!', data: response.data };
-    } catch (error: any) {
-      // SIMPAN DATA SIMULASI KE DALAM GUDANG SEMENTARA
-      const mockSource = { 
-        sourceId: `mock-id-${Date.now()}`, 
-        name: data.name, 
-        sourceName: data.type || data.connectorId 
-      };
+      // Kalau suatu saat konfigurasinya udah valid, pakai ID asli dari Airbyte
+      finalSourceId = response.data.sourceId; 
       
-      // this.mockDataStore.push(mockSource);
+    } catch (error: any) {
+      // 2. TANGKAP ERROR-NYA TAPI JANGAN DIBIKIN CRASH!
+      console.warn('⚠️ Airbyte Cloud menolak payload (Wajar karena konfigurasi kosong). Melanjutkan dengan Mock ID...');
+    }
+
+    // 3. TETAP SIMPAN KE SUPABASE (Menggunakan Asli atau Mock ID)
+    try {
+      const trialEnds = new Date();
+      trialEnds.setDate(trialEnds.getDate() + 14);
+
+      const savedSource = await this.prisma.dataSource.create({
+        data: {
+          name: data.name,
+          sourceType: data.type || 'airbyte',
+          connectorName: data.connectorId || 'Custom Connector', 
+          airbyteSourceId: finalSourceId, 
+          status: 'Connected',
+          trialEndsAt: trialEnds,
+        }
+      });
 
       return { 
-        message: 'Simulasi berhasil disimpan!',
-        data: mockSource
+        message: 'Koneksi berhasil disimulasikan dan disimpan di Database!', 
+        data: savedSource 
       };
+    } catch (dbError) {
+      throw new HttpException('Gagal menyimpan ke database Supabase', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

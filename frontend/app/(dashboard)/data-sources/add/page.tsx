@@ -24,17 +24,20 @@ export default function AddDataSourcePage() {
   ];
 
   // Fungsi pintar buat ngirim data ke Backend
+  // Fungsi pintar buat ngirim data ke Backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading) return; // Cegah double click
+    if (isLoading) return; 
     setIsLoading(true);
 
     let finalType = 'Database';
-    // FIX: Sekarang HANYA ADA 1 JALUR URL UNTUK SEMUA TIPE (Satpam Prisma kita)
-    const apiUrl = 'http://localhost:3001/datasources'; 
+    // DEFAULT URL untuk Database/API biasa
+    let apiUrl = 'http://localhost:3001/datasources'; 
 
     if (sourceType === 'airbyte') {
-      finalType = 'Airbyte Connection';
+      finalType = 'airbyte';
+      // JALUR KHUSUS AIRBYTE
+      apiUrl = 'http://localhost:3001/airbyte/sources'; 
     } else if (sourceType === 'api') {
       finalType = 'REST API';
     }
@@ -53,10 +56,10 @@ export default function AddDataSourcePage() {
 
       if (response.ok) {
         alert('Data Source berhasil ditambahkan! 🎉');
-        // KEMBALIKAN KE URL TABEL KAMU
         router.push('/data-sources'); 
       } else {
-        alert('Gagal menambahkan data source.');
+        const err = await response.json();
+        alert(`Gagal: ${err.message || 'Terjadi kesalahan'}`);
       }
     } catch (error) {
       console.error("Error saving data:", error);
