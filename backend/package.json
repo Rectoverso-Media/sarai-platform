@@ -40,6 +40,7 @@
     "google-spreadsheet": "^5.2.0",
     "googleapis": "^171.4.0",
     "nodemailer": "^8.0.7",
+    "openai": "^6.37.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",

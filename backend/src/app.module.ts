@@ -16,6 +16,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { EmailModule } from './email/email.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, 
@@ -38,7 +39,8 @@ import { APP_GUARD } from '@nestjs/core';
               limit: 20,  // Maksimal 20 request per menit
             }]),
           DashboardModule,
-          EmailModule,],
+          EmailModule,
+          AiModule,],
   controllers: [AppController],
   providers: [AppService,
               {
