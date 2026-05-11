@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Sse, MessageEvent } from '@nestjs/common';
+import { Controller, Query, Sse, MessageEvent } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -7,16 +7,15 @@ import { map } from 'rxjs/operators';
 export class AiController {
   constructor(private readonly aiService: AiService) {}
 
-  // Endpoint: GET /ai/chat-stream?message=Hello
   @Sse('chat-stream')
   streamChat(@Query('message') message: string): Observable<MessageEvent> {
     if (!message) {
-      throw new Error('Message is required');
+      throw new Error('Message parameter is required');
     }
 
     return this.aiService.streamChatResponse(message).pipe(
-      // Memastikan tipe datanya sesuai standar SSE NestJS (MessageEvent)
-      map((payload) => ({ data: payload.data } as MessageEvent))
+      //  Tambahkan deklarasi ": any" untuk memuaskan TypeScript Strict Mode
+      map((payload: any) => ({ data: payload.data } as MessageEvent))
     );
   }
 }

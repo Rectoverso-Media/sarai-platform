@@ -1,142 +1,59 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
-
-import { PrismaService } from '../prisma/prisma.service';
-
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service'; 
 import OpenAI from 'openai';
-
-import { Observable } from 'rxjs';
+import { Observable, Subscriber } from 'rxjs';
 
 @Injectable()
 export class AiService {
   private openai: OpenAI;
 
-  constructor(
-    private prisma: PrismaService,
-  ) {
+  constructor(private prisma: PrismaService) {
+    // ⚡ Arahkan SDK OpenAI ke server Groq
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-
-      baseURL:
-        'https://gpt4.mirbuds.com/v1',
+      apiKey: process.env.GROQ_API_KEY, 
+      baseURL: 'https://api.groq.com/openai/v1', 
     });
   }
 
-  streamChatResponse(
-    userMessage: string,
-  ): Observable<any> {
-    return new Observable(
-      (subscriber) => {
-        const systemPrompt = `
-You are SARAI, an advanced data analytics AI assistant.
+  streamChatResponse(userMessage: string): Observable<any> {
+    return new Observable((subscriber) => {
+      const systemPrompt = `You are SARAI, an advanced data analytics AI assistant. 
+      Your job is to help users analyze their integrated database and provide insightful summaries.
+      Be concise, professional, and directly answer the user's questions in Indonesian.`;
 
-Your job is to help users analyze their integrated database and provide insightful summaries.
-
-Be concise, professional, and directly answer the user's questions.
-`;
-
-        this.executeOpenAiStream(
-          userMessage,
-          systemPrompt,
-          subscriber,
-        );
-      },
-    );
+      this.executeGroqStream(userMessage, systemPrompt, subscriber);
+    });
   }
 
-  private async executeOpenAiStream(
-    userMessage: string,
-    systemPrompt: string,
-    subscriber: any,
-  ) {
+  private async executeGroqStream(userMessage: string, systemPrompt: string, subscriber: Subscriber<any>) {
     try {
+      console.log(`🤖 Menerima pesan: "${userMessage}"`);
+      console.log('⚡ Menghubungkan ke Groq API...');
 
-      console.log(
-        '🚀 Request ke Mirbuds AI...',
-      );
-
-      // =========================
-      // NON STREAM MODE
-      // =========================
-
-      const response =
-        await this.openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
-
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt,
-            },
-            {
-              role: 'user',
-              content: userMessage,
-            },
-          ],
-        });
-
-      console.log(
-        '✅ RESPONSE:',
-        JSON.stringify(
-          response,
-          null,
-          2,
-        ),
-      );
-
-      // Ambil text response
-      const text =
-        response?.choices?.[0]?.message
-          ?.content ||
-        'AI tidak memberikan respons.';
-
-      // =========================
-      // FAKE STREAMING
-      // =========================
-
-      const words = text.split(' ');
-
-      for (const word of words) {
-
-        subscriber.next({
-          data: {
-            text: word + ' ',
-          },
-        });
-
-        await new Promise((resolve) =>
-          setTimeout(resolve, 30),
-        );
-      }
-
-      // DONE
-      subscriber.next({
-        data: {
-          status: 'DONE',
-        },
+      const stream = await this.openai.chat.completions.create({
+        // Model Llama 3 8B milik Groq yang super cepat dan gratis
+        model: 'llama-3.1-8b-instant', 
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage },
+        ],
+        stream: true, 
       });
 
+      for await (const chunk of stream) {
+        const text = chunk.choices[0]?.delta?.content || '';
+        if (text) {
+          subscriber.next({ data: { text: text } });
+        }
+      }
+
+      subscriber.next({ data: { status: 'DONE' } });
       subscriber.complete();
+      console.log('✅ Selesai streaming balasan dari Groq!');
 
-      console.log(
-        '✅ Streaming selesai',
-      );
-
-    } catch (error: any) {
-
-      console.error(
-        '❌ AI ERROR:',
-        error,
-      );
-
-      subscriber.error(
-        new InternalServerErrorException(
-          error?.message ||
-            'Gagal memproses AI response',
-        ),
-      );
+    } catch (error) {
+      console.error('Groq API Error:', error);
+      subscriber.error(new InternalServerErrorException('Gagal memproses AI response dari Groq'));
     }
   }
 }
