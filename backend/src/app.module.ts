@@ -17,6 +17,7 @@ import { EmailModule } from './email/email.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AiModule } from './ai/ai.module';
+import { ExportModule } from './export/export.module';
 
 @Module({
   imports: [UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, 
@@ -40,7 +41,8 @@ import { AiModule } from './ai/ai.module';
             }]),
           DashboardModule,
           EmailModule,
-          AiModule,],
+          AiModule,
+          ExportModule,],
   controllers: [AppController],
   providers: [AppService,
               {

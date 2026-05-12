@@ -1,161 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
-
-
 model User {
   id              String   @id @default(uuid())
   email           String   @unique
-  password        String?   // Boleh kosong (null) untuk user yang login pakai Google OAuth
+  password        String?
   name            String
-  role            Role     @default(VIEWER) // Default role untuk user baru
-  
-  // Untuk fitur Email Verification & 2FA nanti
+  role            Role     @default(VIEWER)
   isEmailVerified Boolean  @default(false)
-  refreshToken    String?  @db.Text
-  
-  teamId          String?  // Kosong kalau dia belum diundang ke tim mana pun
-  team            Team?    @relation(fields: [teamId], references: [id])
-  
+  refreshToken    String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  teamId          String?
+  team            Team?    @relation(fields: [teamId], references: [id])
 }
 
 model Team {
-  id          String   @id @default(uuid())
-  name        String   // Nama organisasi/perusahaan (Contoh: "Tim Alpha")
-  members     User[]   // Relasi balik ke tabel User (1 Tim punya banyak User)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  members   User[]
 }
 
 model DataSource {
-  id              String   @id @default(uuid())
-  name            String   // Nama koneksi (Contoh: "Facebook Ads SARAI")
-  sourceType      String   // Tipe konektor (Contoh: "airbyte", "database", "api")
-  connectorName   String?  // Nama konektor asli (Contoh: "Salesforce (v0.1.2)")
-  
-  // Data integrasi Airbyte
-  airbyteSourceId String?  @unique // ID asli dari server Airbyte
-  airbyteHost     String?  // Host kalau pakai database langsung
-  
-  // Sistem Trial 14 Hari
-  status          String   @default("Connected") // Connected, Error, Expired
-  trialStartsAt   DateTime @default(now())
+  id              String         @id @default(uuid())
+  name            String
+  sourceType      String
+  connectorName   String?
+  airbyteSourceId String?        @unique
+  airbyteHost     String?
+  status          String         @default("Connected")
+  trialStartsAt   DateTime       @default(now())
   trialEndsAt     DateTime
-  isTrialActive   Boolean  @default(true)
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
+  isTrialActive   Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
   transfers       DataTransfer[]
 }
 
-
 model InfrastructureNode {
   id        String   @id @default(uuid())
-  name      String   // misal: "Core Engine Alpha"
-  type      String   // misal: "GPU Node", "CPU Node"
-  status    String   @default("Online") // Online, Warning, Critical, Offline
+  name      String
+  type      String
+  status    String   @default("Online")
   uptime    String   @default("0d 0h")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-
 model SecurityLog {
   id        String   @id @default(uuid())
-  action    String   // Contoh: "USER_LOGIN", "NODE_DEPLOYED", "DATA_DELETED"
-  actor     String   // Siapa pelakunya, misal: "Admin" atau "System"
-  details   String?  // Info tambahan: "Menghapus Database Dummy"
+  action    String
+  actor     String
+  details   String?
   ipAddress String   @default("127.0.0.1")
   createdAt DateTime @default(now())
 }
 
 model Query {
-  id          String   @id @default(uuid())
-  name        String   // Contoh: "Rekap Ads Harian"
-  description String?  // Deskripsi opsional
-  rawSql      String?  // Untuk nyimpen kode SQL murni
-  builderData Json?    // Untuk nyimpen konfigurasi Visual Builder (Drag & Drop)
-  
-  // Relasi ke tabel log dan jadwal
+  id          String           @id @default(uuid())
+  name        String
+  description String?
+  rawSql      String?
+  builderData Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
   executions  QueryExecution[]
-  schedules   QuerySchedule[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  schedules   QuerySchedule?
 }
 
 model QueryExecution {
   id           String   @id @default(uuid())
   queryId      String
-  query        Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
-  
-  status       String   // Status: "SUCCESS", "FAILED", "RUNNING"
-  durationMs   Int?     // Lama eksekusi dalam milidetik (buat ngukur performa)
-  rowsReturned Int?     // Jumlah baris data yang berhasil ditarik
-  errorMessage String?  // Pesan error kalau query-nya gagal
-  
+  status       String
+  durationMs   Int?
+  rowsReturned Int?
+  errorMessage String?
   executedAt   DateTime @default(now())
+  query        Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
 }
 
 model QuerySchedule {
-  id             String   @id @default(uuid())
-  queryId        String   @unique // 1 Query biasanya cuma punya 1 Jadwal utama
-  query          Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
-  
-  cronExpression String   // Format jadwal (Contoh: "0 0 * * *" untuk tiap tengah malam)
-  isActive       Boolean  @default(true) // Tombol on/off jadwal
-  
+  id             String    @id @default(uuid())
+  queryId        String    @unique
+  cronExpression String
+  isActive       Boolean   @default(true)
   lastRunAt      DateTime?
   nextRunAt      DateTime?
-  
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  query          Query     @relation(fields: [queryId], references: [id], onDelete: Cascade)
 }
-
 
 model DataTransfer {
-  id              String   @id @default(uuid())
-  name            String   // Contoh: "Export Harian Facebook Ads"
-  
-  // Relasi: Data apa yang mau diexport? (Bisa ambil dari DataSource langsung atau Query)
-  sourceId        String   
-  source          DataSource @relation(fields: [sourceId], references: [id])
-  
-  // Target Export (Google Sheets)
-  targetType      String   @default("Google Sheets")
-  spreadsheetId   String   // ID unik yang ada di URL Google Sheets
-  sheetName       String   // Nama Tab (Contoh: "Sheet1" atau "Q1 Report")
-  
-  // Mode Penulisan (append = tambah ke bawah, replace = hapus & tulis ulang)
-  writeMode       String   @default("append") 
-  
-  // Penjadwalan
-  cronExpression  String?  // Kalau mau dikirim otomatis
-  lastExportAt    DateTime?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String     @id @default(uuid())
+  name           String
+  sourceId       String
+  targetType     String     @default("Google Sheets")
+  spreadsheetId  String
+  sheetName      String
+  writeMode      String     @default("append")
+  cronExpression String?
+  lastExportAt   DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  source         DataSource @relation(fields: [sourceId], references: [id])
 }
 
-// Model untuk menyimpan layout Custom Dashboard
 model Dashboard {
   id        String   @id @default(uuid())
   name      String   @default("My Custom Dashboard")
-  widgets   Json     // Menyimpan array daftar widget
-  layout    Json     // Menyimpan array posisi (x,y,w,h)
+  widgets   Json
+  layout    Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 
 enum Role {
   OWNER
