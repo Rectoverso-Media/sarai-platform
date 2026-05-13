@@ -36,7 +36,7 @@ export class AirbyteController {
 
   // JALUR UNTUK CEK STATUS SYNC (Dari Halaman Detail Data Source)
   @Get('sources/:id/sync-status')
-  getSyncStatus(@Param('id') id: string) {
+  async getSyncStatus(@Param('id') id: string) {
     return this.airbyteService.getSyncStatus(id);
   }
 }

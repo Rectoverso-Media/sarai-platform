@@ -70,9 +70,6 @@ export class AirbyteService {
     const token = await this.getAccessToken();
     const workspaceId = process.env.AIRBYTE_WORKSPACE_ID;
     
-    let realSourceId = `demo-mock-id-${Date.now()}`; // Siapkan ID cadangan
-    let connectorName = 'Custom Connector';
-
     try {
       const payload = {
         workspaceId: workspaceId,
@@ -88,44 +85,36 @@ export class AirbyteService {
         })
       );
       
-      realSourceId = response.data.sourceId; 
-      connectorName = response.data.sourceName;
-      console.log('✅ Airbyte Cloud menerima konfigurasi!');
+      const realSourceId = response.data.sourceId; 
+      const realSourceName = response.data.sourceName;
 
-    } catch (error: any) {
-      // 2. TANGKAP ERROR AIRBYTE (BAD REQUEST), TAPI JANGAN DIBIKIN CRASH!
-      console.warn('⚠️ Airbyte menolak konfigurasi (Wajar jika pakai data dummy).');
-      console.error('Detail:', error.response?.data?.message || 'Bad Request');
-      console.log('🛠️ [DEMO MODE] Melanjutkan proses penyimpanan ke Database lokal...');
-      
-      // Ambil nama konektor dari payload jika Airbyte gagal merespons
-      connectorName = 'Demo Connector (Unverified)';
-    }
-
-    // 3. TETAP SIMPAN KE DATABASE LOKAL (PRISMA) AGAR UI TETAP JALAN
-    try {
+      // 2. SIMPAN KE DATABASE LOKAL HANYA JIKA AIRBYTE SUKSES
       const trialEnds = new Date();
       trialEnds.setDate(trialEnds.getDate() + 14);
 
       const savedSource = await this.prisma.dataSource.create({
         data: {
           name: data.name,
-          sourceType: data.type || 'airbyte',
-          connectorName: connectorName, 
-          airbyteSourceId: realSourceId, 
-          status: 'Connected', // Anggap sukses untuk keperluan demo
+          sourceType: 'airbyte',
+          connectorName: realSourceName, 
+          airbyteSourceId: realSourceId, // Ini sekarang pakai ID Asli dari Airbyte
+          status: 'Connected',
           trialEndsAt: trialEnds,
         }
       });
 
       return { 
-        message: 'Koneksi berhasil dibuat (Demo Mode) dan tersimpan di sistem!', 
+        message: 'Koneksi berhasil dibuat di Airbyte!', 
         data: savedSource 
       };
 
-    } catch (dbError: any) {
-      console.error('Prisma Error:', dbError);
-      throw new HttpException('Gagal menyimpan ke database lokal', HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch (error: any) {
+      // 3. JIKA AIRBYTE MENOLAK, LEMPAR ERROR KE FRONTEND
+      console.error('Airbyte Rejection Detail:', error.response?.data);
+      throw new HttpException(
+        `Validasi Gagal: ${error.response?.data?.message || 'Pastikan kredensial (JSON) yang dimasukkan sudah benar sesuai standar Airbyte.'}`, 
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -154,26 +143,33 @@ export class AirbyteService {
     const token = await this.getAccessToken();
     
     try {
-      // Menarik riwayat pekerjaan (Job History) dari koneksi tersebut
       const response = await firstValueFrom(
-        this.httpService.get(`${this.airbyteApiUrl}/jobs?connectionId=${connectionId}&jobType=sync&limit=1`, {
+        this.httpService.get(`${this.airbyteApiUrl}/jobs?connectionId=${connectionId}&jobType=sync&limit=3`, {
           headers: { Authorization: `Bearer ${token}` },
         })
       );
 
-      const latestJob = response.data.data[0];
+      const jobs = response.data.data;
+      const latestJob = jobs[0]; // Ambil job paling terakhir
 
+      // Mapping data asli dari Airbyte ke format Frontend kamu
       return {
-        message: 'Berhasil mengambil status sinkronisasi asli',
+        message: 'Berhasil mengambil status',
         data: {
-          connectionId: connectionId,
-          status: latestJob ? latestJob.status : 'No Sync History',
+          sourceId: connectionId,
+          status: latestJob ? latestJob.status : 'Pending',
           lastSync: latestJob ? latestJob.createdAt : null,
+          nextSync: null, // Airbyte API butuh endpoint terpisah untuk schedule
           totalRowsExtracted: latestJob ? latestJob.recordsSynced : 0,
+          recentLogs: jobs.map((job: any) => ({
+            time: job.createdAt,
+            status: job.status === 'succeeded' ? 'Success' : 'Warning',
+            message: `Sync job ${job.status}. Records synced: ${job.recordsSynced}`
+          }))
         }
       };
     } catch (error: any) {
-       throw new HttpException('Gagal menarik status sinkronisasi', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Gagal menarik status real dari Airbyte', HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -181,29 +177,35 @@ export class AirbyteService {
     try {
       const token = await this.getAccessToken();
       const workspaceId = process.env.AIRBYTE_WORKSPACE_ID;
-      
-      // 1. Coba tembak API Airbyte Cloud
+
       const response = await firstValueFrom(
-        this.httpService.get(`${this.airbyteApiUrl}/source-definitions?workspaceId=${workspaceId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        this.httpService.get(
+          `${this.airbyteApiUrl}/source_definitions`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            params: {
+              workspaceId: workspaceId,
+            },
+          }
+        )
       );
-      
-      // Kalau berhasil, kembalikan data ratusan konektor aslinya
-      return response.data.data; 
+
+      return response.data;
 
     } catch (error: any) {
-      // 2. Kalau gagal (karena token expired / error API), jangan bikin crash!
-      console.warn('⚠️ Gagal narik dari API Airbyte, menggunakan data fallback...', error.message);
-      
-      // Kembalikan data cadangan ini agar UI Frontend tidak kosong
-      return [
-        { sourceDefinitionId: 'b112928d-9653-4874-a633-82a176882650', name: 'Salesforce' },
-        { sourceDefinitionId: '71607597-9431-466c-9223-34e8f7a83d47', name: 'Google Sheets' },
-        { sourceDefinitionId: '7442111c-1647-4c0b-adf4-da0e75f5a750', name: 'Hubspot' },
-        { sourceDefinitionId: '12345678-1234-1234-1234-123456789012', name: 'PostgreSQL Database' },
-        { sourceDefinitionId: '87654321-4321-4321-4321-210987654321', name: 'Facebook Ads' },
-      ];
+      console.log(
+        "STATUS:",
+        error.response?.status
+      );
+
+      console.log(
+        "DETAIL:",
+        JSON.stringify(error.response?.data, null, 2)
+      );
+
+      throw error;
     }
   }
 }

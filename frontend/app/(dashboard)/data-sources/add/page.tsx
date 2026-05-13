@@ -93,7 +93,7 @@ export default function AddDataSourcePage() {
     <div className="p-8 max-w-4xl mx-auto h-full flex flex-col">
       {/* Breadcrumbs */}
       <nav className="flex text-sm text-slate-400 mb-8 font-medium">
-        <Link href="/dashboard/data-sources" className="hover:text-blue-600 transition-colors">Data Sources</Link>
+        <Link href="/data-sources" className="hover:text-blue-600 transition-colors">Data Sources</Link>
         <span className="mx-2">/</span>
         <span className="text-slate-800">Add New Source</span>
       </nav>

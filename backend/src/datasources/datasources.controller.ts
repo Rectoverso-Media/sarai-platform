@@ -16,7 +16,7 @@ export class DatasourcesController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async deleteDataSource(@Param('id') id: string) {
     return this.datasourcesService.deleteDataSource(id);
   }
 }

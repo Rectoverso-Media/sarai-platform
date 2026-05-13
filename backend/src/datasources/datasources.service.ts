@@ -56,12 +56,34 @@ export class DatasourcesService {
   // FUNGSI HAPUS DATA SOURCE
   async deleteDataSource(id: string) {
     try {
-      await this.prisma.dataSource.delete({
-        where: { id: id }
+      // 1. Cek dulu apakah datanya ada
+      const existingSource = await this.prisma.dataSource.findUnique({
+        where: { id: id },
       });
-      return { message: 'Berhasil menghapus Data Source!' };
-    } catch (error) {
-      throw new HttpException('Gagal menghapus data', HttpStatus.BAD_REQUEST);
+
+      if (!existingSource) {
+        throw new HttpException('Data Source tidak ditemukan', HttpStatus.NOT_FOUND);
+      }
+
+      // 2. (Opsional) Kalau mau advance, tambahkan logika panggil API Airbyte 
+      // untuk menghapus koneksi di Airbyte Cloud juga menggunakan this.httpService.
+      // Tapi untuk demo M2, hapus dari database lokal sudah cukup.
+
+      // 3. Eksekusi hapus dari PostgreSQL
+      await this.prisma.dataSource.delete({
+        where: { id: id },
+      });
+
+      console.log(`✅ Data Source dengan ID ${id} berhasil dihapus.`);
+      return { message: 'Data Source berhasil dihapus permanen' };
+
+    } catch (error: any) {
+      console.error('Gagal menghapus data source:', error);
+      // Lempar error HTTP agar ditangkap oleh Frontend
+      throw new HttpException(
+        error.response || 'Gagal menghapus data', 
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 }
