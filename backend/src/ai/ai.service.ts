@@ -11,12 +11,13 @@ export class AiService {
     this.openai = new OpenAI({
       apiKey: process.env.GROQ_API_KEY, 
       baseURL: 'https://api.groq.com/openai/v1', 
+      // apiKey: process.env.OPENAI_API_KEY, 
+      
     });
   }
 
   streamChatResponse(userMessage: string): Observable<any> {
     return new Observable((subscriber) => {
-      // Pindahkan logic ke dalam fungsi async
       this.executeContextAwareStream(userMessage, subscriber);
     });
   }
@@ -26,7 +27,6 @@ export class AiService {
       console.log(`🤖 Menerima pesan: "${userMessage}"`);
       console.log('🔍 Mengumpulkan konteks dari database...');
 
-      // 1. Tarik ringkasan data dari PostgreSQL (Prisma)
       const totalSources = await this.prisma.dataSource.count();
       const connectedSources = await this.prisma.dataSource.count({
         where: { status: 'Connected' }
@@ -34,7 +34,6 @@ export class AiService {
       const totalQueries = await this.prisma.query.count();
       const totalUsers = await this.prisma.user.count();
 
-      // 2. Suntikkan data tersebut ke dalam System Prompt
       const systemPrompt = `Kamu adalah SARAI, asisten AI pintar untuk platform analitik data terintegrasi. 
 Kamu memiliki akses ke metrik sistem real-time berikut:
 - Total pengguna terdaftar: ${totalUsers}
@@ -46,10 +45,10 @@ Tugasmu:
 2. Jika pengguna bertanya hal di luar data tersebut, jawab berdasarkan pengetahuan umummu tentang data engineering dan analytics.
 3. Selalu gunakan bahasa Indonesia yang profesional, ringkas, dan mudah dipahami.`;
 
-      console.log('⚡ Menghubungkan ke Groq API...');
+      console.log('⚡ Menghubungkan ke OpenAI API...');
 
-      // 3. Eksekusi Groq API dengan konteks yang sudah diperkaya
       const stream = await this.openai.chat.completions.create({
+        // 👇 Menggunakan model andalan OpenAI yang cepat dan cerdas
         model: 'llama-3.1-8b-instant', 
         messages: [
           { role: 'system', content: systemPrompt },
@@ -67,11 +66,11 @@ Tugasmu:
 
       subscriber.next({ data: { status: 'DONE' } });
       subscriber.complete();
-      console.log('✅ Selesai streaming balasan cerdas dari Groq!');
+      console.log('✅ Selesai streaming balasan cerdas dari OpenAI!');
 
     } catch (error) {
       console.error('AI Context Stream Error:', error);
-      subscriber.error(new InternalServerErrorException('Gagal memproses AI response'));
+      subscriber.error(new InternalServerErrorException('Gagal memproses AI response dari OpenAI'));
     }
   }
 }

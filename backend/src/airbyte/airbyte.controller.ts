@@ -1,9 +1,16 @@
 import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
 import { AirbyteService } from './airbyte.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { HttpService } from '@nestjs/axios';
 
 @Controller('airbyte')
 export class AirbyteController {
   constructor(private readonly airbyteService: AirbyteService) {}
+
+  @Get('connectors')
+  async getAvailableConnectors() {
+    return this.airbyteService.getAvailableConnectors();
+  }
 
   @Get('test-connection')
   testConnection() {

@@ -1,7 +1,8 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+// import { useEffect } from 'react';
 
 export default function AddDataSourcePage() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function AddDataSourcePage() {
   const [host, setHost] = useState('');
   // Nanti nilai ini akan kita mapping ke SourceDefinitionId asli dari Airbyte
   const [connectorId, setConnectorId] = useState('Salesforce (v0.1.2)');
+  const [availableConnectors, setAvailableConnectors] = useState<any[]>([]);
 
   const categories = [
     { id: 'database', name: 'Standard Database', icon: '🗄️', desc: 'Direct connect to Postgres, MySQL, MongoDB.' },
@@ -23,35 +25,53 @@ export default function AddDataSourcePage() {
     { id: 'api', name: 'REST API / Webhook', icon: '🌐', desc: 'Connect via custom API endpoints.' },
   ];
 
-  // Fungsi pintar buat ngirim data ke Backend
-  // Fungsi pintar buat ngirim data ke Backend
+  // mapping ID asli Airbyte (Contoh beberapa)
+  const AIRBYTE_CONNECTOR_MAPPING: Record<string, string> = {
+    'Salesforce': 'b112928d-9653-4874-a633-82a176882650',
+    'Google Sheets': '71607597-9431-466c-9223-34e8f7a83d47',
+    'Hubspot': '7442111c-1647-4c0b-adf4-da0e75f5a750',
+  };
+
+  // state untuk konfigurasi (dalam bentuk JSON string/object)
+  const [config, setConfig] = useState('{}'); 
+  const [selectedConnectorId, setSelectedConnectorId] = useState('');
+
+  // const [selectedConnectorId, setSelectedConnectorId] = useState('');
+
+  useEffect(() => {
+    if (step === 2 && sourceType === 'airbyte') {
+      fetch('http://localhost:3001/airbyte/connectors')
+        .then(res => res.json())
+        .then(data => setAvailableConnectors(data))
+        .catch(err => console.error("Gagal load konektor", err));
+    }
+  }, [step, sourceType]);
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading) return; 
     setIsLoading(true);
 
-    let finalType = 'Database';
-    // DEFAULT URL untuk Database/API biasa
     let apiUrl = 'http://localhost:3001/datasources'; 
+    let payload: any = { name, type: sourceType };
 
     if (sourceType === 'airbyte') {
-      finalType = 'airbyte';
-      // JALUR KHUSUS AIRBYTE
-      apiUrl = 'http://localhost:3001/airbyte/sources'; 
-    } else if (sourceType === 'api') {
-      finalType = 'REST API';
+      apiUrl = 'http://localhost:3001/airbyte/sources';
+      payload = {
+        name: name,
+        sourceDefinitionId: selectedConnectorId, // 
+        connectionConfiguration: config ? JSON.parse(config) : {} 
+      };
+    } else {
+      payload.host = host;
     }
 
     try {
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name,
-          type: finalType,
-          host: sourceType === 'airbyte' ? null : host,
-          connectorId: sourceType === 'airbyte' ? connectorId : null
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -78,7 +98,7 @@ export default function AddDataSourcePage() {
         <span className="text-slate-800">Add New Source</span>
       </nav>
 
-      {/* Step 1: Select Type */}
+      {/* Step 1: Select Type (KEMBALI KE KOTAK-KOTAK BESAR) */}
       {step === 1 && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
           <div>
@@ -130,18 +150,36 @@ export default function AddDataSourcePage() {
               
               {/* Dinamis: Dropdown Airbyte ATAU Input Host */}
               {sourceType === 'airbyte' ? (
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700">Airbyte Connector ID</label>
-                  <select 
-                    value={connectorId}
-                    onChange={(e) => setConnectorId(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                  >
-                    <option value="Salesforce (v0.1.2)">Salesforce (v0.1.2)</option>
-                    <option value="Google Sheets (v1.0.5)">Google Sheets (v1.0.5)</option>
-                    <option value="Hubspot (v0.4.0)">Hubspot (v0.4.0)</option>
-                    <option value="Shopify (v0.2.1)">Shopify (v0.2.1)</option>
-                  </select>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Connector Type</label>
+                    
+                    {/* DROPDOWN DINAMIS DARI BACKEND */}
+                    <select 
+                      value={selectedConnectorId}
+                      onChange={(e) => setSelectedConnectorId(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                      required
+                    >
+                      <option value="">-- Select Official Connector --</option>
+                      {availableConnectors.map((conn: any) => (
+                        <option key={conn.sourceDefinitionId} value={conn.sourceDefinitionId}>
+                          {conn.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">Connection Credentials (JSON)</label>
+                    <textarea 
+                      value={config}
+                      onChange={(e) => setConfig(e.target.value)}
+                      placeholder='{ "api_key": "your-key-here" }'
+                      className="w-full px-4 py-3 h-32 rounded-xl border border-slate-200 bg-slate-50 font-mono text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                    />
+                    <p className="text-[10px] text-slate-400 italic">*Format disesuaikan dengan kebutuhan setiap konektor Airbyte.</p>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-2">

@@ -18,11 +18,13 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AiModule } from './ai/ai.module';
 import { ExportModule } from './export/export.module';
+import { InsightsService } from './insights/insights.service';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, 
             SecurityModule, AuthModule, AirbyteModule, QueriesModule, ScheduleModule.forRoot(), 
-            AirbyteModule, QueriesModule, DataTransfersModule,
+            AirbyteModule, QueriesModule, DataTransfersModule, PrismaModule,
           // 1. Setup Koneksi Utama ke Redis Upstash
             BullModule.forRoot({
               connection: {
@@ -49,6 +51,7 @@ import { ExportModule } from './export/export.module';
                 provide: APP_GUARD,
                 useClass: ThrottlerGuard,
               },
+              InsightsService,
   ],
 })
 export class AppModule {}
