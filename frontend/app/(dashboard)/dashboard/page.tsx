@@ -266,7 +266,7 @@ export default function MainDashboard() {
         </div>
 
         {/* Kotak Kanan: Placeholder untuk fitur selanjutnya */}
-        {/* 👇 Kotak Kanan: DIISI DENGAN LINE CHART PERFORMA 👇 */}
+        {/* Kotak Kanan: DIISI DENGAN LINE CHART PERFORMA */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col min-h-[350px]">
           <div className="flex justify-between items-center mb-6">
             <div>

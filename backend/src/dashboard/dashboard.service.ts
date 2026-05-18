@@ -19,23 +19,74 @@ export class DashboardService {
     }));
   }
 
-  getTrafficData() {
+  // 1. REAL TRAFFIC DATA
+  async getTrafficData() {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const executions = await this.prisma.queryExecution.findMany({
+      where: {
+        executedAt: { gte: sevenDaysAgo } 
+      },
+      select: { executedAt: true }
+    });
+
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const result: { day: string; value: number }[] = [];
+    const trafficMap = new Map<string, number>();
+    
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
-      d.setDate(d.getDate() - i); 
-      result.push({ day: days[d.getDay()], value: Math.floor(Math.random() * 70) + 20 });
+      d.setDate(d.getDate() - i);
+      trafficMap.set(days[d.getDay()], 0);
     }
-    return result;
+
+    executions.forEach(log => {
+      const dayName = days[log.executedAt.getDay()];
+      if (trafficMap.has(dayName)) {
+        trafficMap.set(dayName, trafficMap.get(dayName)! + 1);
+      }
+    });
+
+    return Array.from(trafficMap, ([day, value]) => ({ day, value }));
   }
 
-  getPerformanceData() {
-    const times = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
-    const result: { time: string; avgTime: number }[] = [];
-    times.forEach(time => {
-      result.push({ time: time, avgTime: Math.floor(Math.random() * 250) + 50 });
+  // 2. REAL PERFORMANCE DATA
+  async getPerformanceData() {
+    const oneDayAgo = new Date();
+    oneDayAgo.setHours(oneDayAgo.getHours() - 24);
+
+    const executions = await this.prisma.queryExecution.findMany({
+      where: {
+        status: 'SUCCESS',
+        executedAt: { gte: oneDayAgo }
+      },
+      select: { executedAt: true, durationMs: true }
     });
+
+    const perfMap = new Map<string, { totalTime: number, count: number }>();
+
+    executions.forEach(log => {
+      const hourStr = `${log.executedAt.getHours().toString().padStart(2, '0')}:00`;
+      
+      if (!perfMap.has(hourStr)) {
+        perfMap.set(hourStr, { totalTime: 0, count: 0 });
+      }
+      
+      const current = perfMap.get(hourStr)!;
+      // Kasih fallback "|| 0" untuk mengatasi durationMs yang null
+      current.totalTime += (log.durationMs || 0);
+      current.count += 1;
+    });
+
+    const result = Array.from(perfMap, ([time, data]) => ({
+      time,
+      avgTime: data.count > 0 ? Math.round(data.totalTime / data.count) : 0 
+    })).sort((a, b) => a.time.localeCompare(b.time));
+
+    if (result.length === 0) {
+      return [{ time: 'Belum ada data', avgTime: 0 }];
+    }
+
     return result;
   }
 
