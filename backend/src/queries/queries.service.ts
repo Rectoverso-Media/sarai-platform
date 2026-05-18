@@ -179,7 +179,64 @@ export class QueriesService {
     });
   }
 
-  
+  async generateSql(prompt: string, tableName: string) {
+    // 1. Kita tarik skema tabelnya dulu biar AI-nya pintar
+    // Karena kamu udah bikin fungsi getTableColumns, kita manfaatkan!
+    const columns = await this.getTableColumns(tableName);
+    const schemaText = columns.map(c => `${c.name} (${c.type})`).join(', ');
+
+    // 2. Tembak ke API Groq (LLaMA 3)
+    const apiKey = process.env.GROQ_API_KEY;
+    
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant', // Pake LLaMA 3 8B yang gratis dan kenceng
+          messages: [
+            {
+              role: 'system',
+              content: `Kamu adalah asisten Database Expert. 
+              Tugasmu HANYA menghasilkan query PostgreSQL yang valid.
+              Skema Tabel "${tableName}": ${schemaText}.
+              ATURAN SUPER KETAT: 
+              1. HANYA balas dengan kode SQL mentah.
+              2. JANGAN tambahkan penjelasan apapun (tanpa markdown \`\`\`sql).
+              3. JANGAN pakai titik koma di akhir jika tidak perlu.`
+            },
+            {
+              role: 'user',
+              content: `Buatkan query untuk: ${prompt}`
+            }
+          ],
+          temperature: 0.1 // Bikin AI-nya strict & logis, nggak halu
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'Gagal menghubungi LLaMA');
+      }
+
+      // Bersihkan hasil (jaga-jaga kalau AI bandel ngasih markdown)
+      let generatedSql = data.choices[0].message.content.trim();
+      generatedSql = generatedSql.replace(/^```sql\n?/, '').replace(/```$/, '').trim();
+
+      return {
+        message: 'SQL berhasil di-generate',
+        sql: generatedSql
+      };
+
+    } catch (error) {
+      console.error('Error AI Generation:', error);
+      throw new HttpException('Gagal men-generate SQL dengan AI', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 
   
 

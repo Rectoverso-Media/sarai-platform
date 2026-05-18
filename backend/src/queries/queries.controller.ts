@@ -62,4 +62,9 @@ export class QueriesController {
     );
   }
 
+  @Post('generate-sql')
+  async generateSqlWithAI(@Body() body: { prompt: string, tableName: string }) {
+    return this.queriesService.generateSql(body.prompt, body.tableName);
+  }
+
 }

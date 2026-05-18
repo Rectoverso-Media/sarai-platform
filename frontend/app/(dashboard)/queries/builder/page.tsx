@@ -25,6 +25,9 @@ export default function QueryBuilderPage() {
   // State untuk Tab Mode (Visual vs Raw SQL)
   const [activeMode, setActiveMode] = useState<'visual' | 'sql'>('sql');
 
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
   // Fungsi untuk melempar query ke antrean BullMQ (Redis)
   const handleRunQuery = async () => {
     if (!rawSql || rawSql.trim() === '') return alert("Kode SQL tidak boleh kosong!");
@@ -182,7 +185,7 @@ export default function QueryBuilderPage() {
   };
 
   const handleExportRealData = async () => {
-    // 👇 SABUK PENGAMAN FRONTEND 👇
+    // SABUK PENGAMAN FRONTEND 
     if (!queryResult || queryResult.status !== 'success') {
       alert("Jalankan query dulu sampai datanya muncul!");
       return;
@@ -225,6 +228,32 @@ export default function QueryBuilderPage() {
       alert("❌ Gagal menghubungi server.");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleGenerateAI = async () => {
+    if (!aiPrompt) return alert("Masukkan perintah AI-nya dulu!");
+    setIsGenerating(true);
+    
+    try {
+      const res = await fetch('http://localhost:3001/queries/generate-sql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: aiPrompt, tableName })
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        setRawSql(data.sql); // Langsung timpa editor SQL dengan hasil AI!
+        setActiveMode('sql'); // Pindah ke tab SQL biar kelihatan
+        setAiPrompt(''); // Kosongkan input
+      } else {
+        alert("❌ AI Gagal: " + data.message);
+      }
+    } catch (error) {
+      alert("❌ Error menghubungi server AI.");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -404,6 +433,25 @@ export default function QueryBuilderPage() {
             </div>
           )}
 
+          <div className="bg-blue-50/50 p-4 border-b border-slate-200 flex gap-2 items-center">
+              <span className="text-2xl">✨</span>
+              <input 
+                type="text" 
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Tanya AI: Tampilkan nama campaign dengan spend di atas 1 juta..."
+                className="flex-1 px-4 py-2 text-sm rounded-lg border border-blue-200 outline-none focus:ring-2 focus:ring-blue-500/20"
+                onKeyDown={(e) => e.key === 'Enter' && handleGenerateAI()}
+              />
+              <button 
+                onClick={handleGenerateAI}
+                disabled={isGenerating}
+                className="bg-blue-600 text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors whitespace-nowrap"
+              >
+                {isGenerating ? 'Mikir...' : 'Generate SQL'}
+              </button>
+            </div>
+
           {/* KONTEN TAB: RAW SQL EDITOR */}
           <div className={activeMode === 'sql' ? 'flex flex-col flex-1' : 'hidden'}>
             <div className="bg-[#2d2d2d] px-4 py-3 flex items-center gap-3 border-b border-[#404040]">
@@ -414,6 +462,8 @@ export default function QueryBuilderPage() {
               </div>
               <span className="text-slate-400 font-mono text-sm ml-2">editor.sql</span>
             </div>
+
+            
             
             <textarea
               value={rawSql}
