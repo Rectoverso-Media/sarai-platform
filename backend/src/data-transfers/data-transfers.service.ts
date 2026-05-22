@@ -52,7 +52,7 @@ export class DataTransfersService {
   // 3. FUNGSI UNTUK MENJALANKAN TRANSFER DATA ASLI
   async executeTransfer(transferId: string) {
     try {
-      const config = await this.prisma.dataTransfer.findUnique({
+      const config = await this.prisma.transfer.findUnique({
         where: { id: transferId },
         include: { source: true } 
       });
@@ -69,15 +69,15 @@ export class DataTransfersService {
         s.name,
         s.connectorName || s.sourceType,
         s.status,
-        s.trialEndsAt.toISOString()
+        s.trialEndsAt?.toISOString() || null // ✅ FIX: Tambah tanda tanya (?) di trialEndsAt
       ]);
 
       const finalData = [header, ...rows];
 
       // Tembak data ke Google Sheets
       return await this.pushDataToSheet(
-        config.spreadsheetId,
-        config.sheetName,
+        (config.configData as any)?.spreadsheetId, // ✅ FIX: Ambil parameter dari dalam configData JSON
+        (config.configData as any)?.sheetName,     // ✅ FIX: Ambil parameter dari dalam configData JSON
         finalData
       );
     } catch (error: any) {
@@ -87,13 +87,18 @@ export class DataTransfersService {
 
   // 4. FUNGSI SIMPAN KONFIGURASI BARU
   async createTransfer(data: any) {
-    return this.prisma.dataTransfer.create({
+    return this.prisma.transfer.create({
       data: {
         name: data.name,
-        sourceId: data.sourceId,
-        spreadsheetId: data.spreadsheetId,
-        sheetName: data.sheetName,
-        writeMode: data.writeMode || 'append'
+        sourceId: data.sourceId, // ✅ FIX: sourceId wajib dimasukkan sesuai relasi database
+        targetType: "Google Sheets",
+        
+        // ✅ FIX: Bungkus semua atribut spesifik Google Sheets ke dalam configData JSON
+        configData: {
+          spreadsheetId: data.spreadsheetId,
+          sheetName: data.sheetName,
+          writeMode: data.writeMode || 'append'
+        }
       }
     });
   }

@@ -7,7 +7,7 @@ export class SecurityService {
 
   // Ambil semua log, urutkan dari yang paling baru
   async findAll() {
-    return this.prisma.securityLog.findMany({
+    return this.prisma.auditLog.findMany({
       orderBy: { createdAt: 'desc' },
       take: 50, // Batasi 50 log terbaru biar nggak berat
     });
@@ -15,7 +15,7 @@ export class SecurityService {
 
   // Catat aktivitas baru
   async logAction(data: { action: string; actor: string; details?: string; ipAddress?: string }) {
-    return this.prisma.securityLog.create({
+    return this.prisma.auditLog.create({
       data: {
         action: data.action,
         actor: data.actor,

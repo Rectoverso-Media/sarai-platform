@@ -25,6 +25,9 @@ model User {
   subscriptions    UserSubscription[]
   aiSessions       AiChatSession[]
   notifications    Notification[]
+
+  teamId           String?
+  team             Team?             @relation(fields: [teamId], references: [id])
 }
 
 model UserSession {
@@ -50,6 +53,8 @@ model Team {
   members     TeamMember[]
   invitations TeamInvitation[]
   dashboards  Dashboard[]
+
+  legacyUsers User[]
 }
 
 model TeamMember {
@@ -90,6 +95,13 @@ model DataSource {
   connections      Connection[]
   transfers        Transfer[]
   blends           BlendSourceConfig[]
+
+  connectorName    String?
+  airbyteSourceId  String?        @unique
+  airbyteHost      String?
+  trialStartsAt    DateTime?      @default(now())
+  trialEndsAt      DateTime?      
+  isTrialActive    Boolean?       @default(true)
 }
 
 model Connection {
@@ -249,7 +261,10 @@ model Dashboard {
   updatedAt DateTime @updatedAt
   
   team      Team?    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  widgets   Widget[]
+  widgetItems Widget[]
+
+  widgets   Json?
+  layout    Json?
 }
 
 model Widget {
@@ -437,6 +452,16 @@ model AuditLog {
   details   String?
   ipAddress String   @default("127.0.0.1")
   createdAt DateTime @default(now())
+}
+
+model InfrastructureNode {
+  id        String   @id @default(uuid())
+  name      String
+  type      String
+  status    String   @default("Online")
+  uptime    String   @default("0d 0h")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model AppSetting {
