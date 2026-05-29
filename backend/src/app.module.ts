@@ -20,9 +20,12 @@ import { AiModule } from './ai/ai.module';
 import { ExportModule } from './export/export.module';
 import { InsightsService } from './insights/insights.service';
 import { PrismaModule } from './prisma/prisma.module';
+import { AuditModule } from './audit/audit.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { AuditInterceptor } from './audit/audit.interceptor';
 
 @Module({
-  imports: [UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, 
+  imports: [AuditModule, UsersModule, DatasourcesModule, InfrastructureModule, TeamModule, 
             SecurityModule, AuthModule, AirbyteModule, QueriesModule, ScheduleModule.forRoot(), 
             AirbyteModule, QueriesModule, DataTransfersModule, PrismaModule,
           // 1. Setup Koneksi Utama ke Redis Upstash
@@ -44,14 +47,23 @@ import { PrismaModule } from './prisma/prisma.module';
           DashboardModule,
           EmailModule,
           AiModule,
-          ExportModule,],
+          ExportModule,
+          AuditModule,],
   controllers: [AppController],
-  providers: [AppService,
-              {
-                provide: APP_GUARD,
-                useClass: ThrottlerGuard,
-              },
-              InsightsService,
+  providers: [
+    AppService,
+    
+    // Blok 1: Untuk Rate Limiting (ThrottlerGuard)
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    
+    // Blok 2: Untuk CCTV (AuditInterceptor)
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
+    },
   ],
 })
 export class AppModule {}
