@@ -111,7 +111,7 @@ export default function SettingsProfile() {
             <label className="font-semibold text-slate-700 text-sm">Nama Lengkap</label>
             <input 
               type="text" 
-              value={profileForm.name}
+              value={profileForm.name || ''}
               onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
               className="border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
@@ -139,7 +139,7 @@ export default function SettingsProfile() {
             <input 
               type="password"
               placeholder="Min. 8 karakter"
-              value={profileForm.password}
+              value={profileForm.password || ''}
               onChange={(e) => setProfileForm({...profileForm, password: e.target.value})}
               className="border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:border-blue-500"
             />
@@ -149,7 +149,7 @@ export default function SettingsProfile() {
             <input 
               type="password"
               placeholder="Ketik ulang password baru"
-              value={profileForm.confirmPassword}
+              value={profileForm.confirmPassword || '' }
               onChange={(e) => setProfileForm({...profileForm, confirmPassword: e.target.value})}
               className="border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:border-blue-500"
             />

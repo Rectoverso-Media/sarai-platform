@@ -40,7 +40,7 @@ export default function SettingsAudit() {
         <div>
           <h2 className="text-2xl font-bold text-slate-800">System Audit Logs</h2>
           <p className="text-sm text-slate-500 mt-1">
-            Riwayat aktivitas mutasi data oleh pengguna di dalam platform.
+            Riwayat aktivitas mutasi data oleh pengguna di dalam platform
           </p>
         </div>
         <button className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
