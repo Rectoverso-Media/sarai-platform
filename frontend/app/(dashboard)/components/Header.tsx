@@ -24,47 +24,26 @@ export default function Header() {
       }
     }
   }, []);
+// ... (kode atas tetap sama) ...
 
-  const handleLogout = () => {
-    localStorage.removeItem('userData'); 
-    
-    // Hapus Cookie dengan cara bikin dia expired
-    document.cookie = "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"; 
-    
-    // Tendang ke Login
-    router.push('/login');
+  // GANTI FUNGSI LOGOUT MENJADI NAVIGASI
+  const goToProfile = () => {
+    router.push('/settings');
   };
 
   return (
-    <header className="h-16 border-b bg-white flex items-center px-8 justify-between sticky top-0 z-10 shadow-sm">
-      {/* Search Bar */}
-      <div className="flex-1 max-w-md">
-        <div className="relative group">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 group-focus-within:text-blue-500 transition-colors">
-            🔍
-          </span>
-          <input 
-            type="text" 
-            placeholder="Search infrastructure, logs, or nodes..." 
-            className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-          />
-        </div>
-      </div>
-
-      {/* Right Side Icons */}
+    <header className="h-16 border-b bg-white flex items-center px-8 justify-end sticky top-0 z-10 shadow-sm w-full">
       <div className="flex items-center gap-5">
-        <button className="relative p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-all">
-          <span className="text-xl">🔔</span>
-          <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-          </span>
-        </button>
-
+        {/* ... (ikon lonceng notifikasi tetap sama) ... */}
+        
         <div className="h-6 w-px bg-slate-200 mx-1"></div>
 
-        {/* User Profile (Clickable for Logout) */}
-        <div className="flex items-center gap-3 pl-2 group relative cursor-pointer" onClick={handleLogout} title="Click to Logout">
+        {/* User Profile (Sekarang link ke Settings) */}
+        <div 
+          className="flex items-center gap-3 pl-2 group relative cursor-pointer" 
+          onClick={goToProfile} 
+          title="Buka Pengaturan Profil"
+        >
           <div className="text-right hidden sm:block">
             <p className="text-xs font-bold text-slate-800 leading-tight">{userFullName}</p>
             <p className="text-[10px] text-blue-600 font-medium">Administrator</p>
@@ -74,8 +53,9 @@ export default function Header() {
               {userInitials}
             </div>
           </div>
+          {/* Ubah teks Tooltip */}
           <div className="absolute top-12 right-0 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-            Logout
+            Pengaturan Profil
           </div>
         </div>
       </div>

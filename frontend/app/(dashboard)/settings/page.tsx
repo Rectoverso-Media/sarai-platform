@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function SettingsPage() {
-const [activeTab, setActiveTab] = useState('notifications');
+const [activeTab, setActiveTab] = useState('profile');
 
   // State untuk Notifikasi (yang sudah kita buat kemarin)
   const [alerts, setAlerts] = useState({ inApp: true, email: true, slack: false, webhook: false });
@@ -101,7 +102,74 @@ const [activeTab, setActiveTab] = useState('notifications');
         <div className="flex-1 bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
           
           {/* JIKA TAB NOTIFIKASI AKTIF */}
-          {activeTab === 'notifications' ? (
+          {/* TAB PROFIL USER */}
+          {activeTab === 'profile' ? (
+            <div className="max-w-3xl">
+              <h2 className="text-2xl font-bold text-slate-800 mb-6">Profil Pengguna</h2>
+              
+              <div className="space-y-6">
+                {/* Avatar Section */}
+                <div className="flex items-center gap-6 pb-6 border-b border-slate-100">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 p-1 shadow-lg">
+                    <div className="w-full h-full bg-white rounded-xl flex items-center justify-center font-bold text-blue-600 text-2xl">
+                      {/* Gunakan inisial dari context/state jika ada, sementara statis */}
+                      AR
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-800">Foto Profil</h3>
+                    <p className="text-xs text-slate-500 mb-3">Format JPG atau PNG, maksimal 2MB.</p>
+                    <div className="flex gap-2">
+                      <button className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                        Ubah Foto
+                      </button>
+                      <button className="bg-white text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+                        Hapus
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Informasi Personal */}
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="col-span-2 sm:col-span-1 flex flex-col gap-2">
+                    <label className="font-semibold text-slate-700 text-sm">Nama Lengkap</label>
+                    <input 
+                      type="text" 
+                      defaultValue="Arif"
+                      className="border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="col-span-2 sm:col-span-1 flex flex-col gap-2">
+                    <label className="font-semibold text-slate-700 text-sm">Alamat Email</label>
+                    <input 
+                      type="email" 
+                      defaultValue="arif@rectoverso.com"
+                      disabled
+                      className="border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm text-slate-500 cursor-not-allowed"
+                    />
+                    <p className="text-[10px] text-slate-400">Email tidak dapat diubah karena terikat pada tim.</p>
+                  </div>
+                  <div className="col-span-2 flex flex-col gap-2">
+                    <label className="font-semibold text-slate-700 text-sm">Role Saat Ini</label>
+                    <input 
+                      type="text" 
+                      defaultValue="Administrator"
+                      disabled
+                      className="border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm text-slate-500 font-semibold cursor-not-allowed w-1/2"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div className="mt-8 flex justify-end pt-6 border-t border-slate-100">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors text-sm shadow-sm">
+                  Simpan Perubahan
+                </button>
+              </div>
+            </div>
+          ) : activeTab === 'notifications' ? (
             <div className="max-w-3xl">
               <h2 className="text-2xl font-bold text-slate-800 mb-6">Notifikasi & Alert Rules</h2>
               

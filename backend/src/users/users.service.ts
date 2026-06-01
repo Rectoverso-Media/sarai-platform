@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -11,7 +11,7 @@ export class UsersService {
     return this.prisma.user.findMany();
   }
 
-  // --- FUNGSI REGISTER ---
+  // FUNGSI REGISTER
   async create(data: { name: string; email: string; password: string }): Promise<User> {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(data.password, saltRounds);
@@ -25,27 +25,22 @@ export class UsersService {
     });
   }
 
-  // --- FUNGSI LOGIN BARU ---
+  // FUNGSI LOGIN BARU
   async login(data: { email: string; password: string }) {
-    // Cari user di database berdasarkan email
     const user = await this.prisma.user.findUnique({
       where: { email: data.email },
     });
 
-    // Kalau emailnya nggak ketemu
     if (!user) {
       throw new UnauthorizedException('Email tidak terdaftar!');
     }
 
-    // Cocokkan password ketikan user dengan password alien di database
     const isPasswordValid = await bcrypt.compare(data.password, user.password as string);
 
-    // Kalau passwordnya salah
     if (!isPasswordValid) {
       throw new UnauthorizedException('Password salah!');
     }
 
-    // Kalau sukses! (Kita balikin datanya, tapi passwordnya JANGAN ikut dikirim)
     return {
       message: 'Login Berhasil!',
       data: {
@@ -54,5 +49,33 @@ export class UsersService {
         email: user.email,
       }
     };
+  }
+
+  // FUNGSI UPDATE PROFIL (BARU)
+  async updateProfile(userId: string, updateData: { name?: string; password?: string }) {
+    // 1. Cek apakah user ada di database
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User tidak ditemukan!');
+
+    const dataToUpdate: any = {};
+
+    // 2. Jika ada nama baru, masukkan ke objek update
+    if (updateData.name) {
+      dataToUpdate.name = updateData.name;
+    }
+
+    // 3. Jika ada password baru, enkripsi dulu!
+    if (updateData.password) {
+      const saltRounds = 10;
+      dataToUpdate.password = await bcrypt.hash(updateData.password, saltRounds);
+    }
+
+    // 4. Update data di database
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: dataToUpdate,
+      // HANYA KEMBALIKAN DATA AMAN (Jangan return password)
+      select: { id: true, name: true, email: true } 
+    });
   }
 }
