@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import SettingsProfile from './components/SettingsProfile';
 import SettingsAudit from './components/SettingsAudit';
 import SettingsNotifications from './components/SettingsNotifications';
+import SettingsBilling from './components/SettingsBilling';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile'); // Default ke profile aja biar bagus
@@ -18,6 +19,7 @@ export default function SettingsPage() {
     { id: 'team', label: 'Manajemen Tim', icon: '👥' },
     { id: 'billing', label: 'Billing & Quota', icon: '💳' },
     { id: 'notifications', label: 'Notifikasi & Alert', icon: '🔔' },
+    
     ...(currentUser.role === 'ADMIN' || currentUser.role === 'OWNER' 
       ? [{ id: 'audit', label: 'Audit Log', icon: '🛡️' }] 
       : []
@@ -33,6 +35,8 @@ export default function SettingsPage() {
         return <SettingsAudit />;
       case 'notifications':
         return <SettingsNotifications />;
+      case 'billing': 
+        return <SettingsBilling />;
       default:
         // Placeholder untuk tab yang belum dibuat (Tim, Billing)
         return (

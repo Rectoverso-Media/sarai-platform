@@ -22,7 +22,6 @@ model User {
   
   sessions         UserSession[]
   teamMemberships  TeamMember[]
-  subscriptions    UserSubscription[]
   aiSessions       AiChatSession[]
   notifications    Notification[]
 
@@ -45,16 +44,29 @@ model UserSession {
 // 2. TEAM
 // ==========================================
 model Team {
-  id          String           @id @default(uuid())
+  id          String       @id @default(uuid())
   name        String
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  // --- STRIPE & BILLING (Deliverable 1) ---
+  stripeCustomerId     String?   @unique // ID Pelanggan di dashboard Stripe
+  stripeSubscriptionId String?   @unique // ID Langganan aktif
+  subscriptionPlan     String    @default("FREE") // FREE, PRO, ENTERPRISE
+  subscriptionStatus   String    @default("INACTIVE") // ACTIVE, PAST_DUE, CANCELED
+  trialEndsAt          DateTime?
+
+  // --- USAGE TRACKING (Deliverable 2) ---
+  aiTokensUsed         Int       @default(0)
+  queriesUsed          Int       @default(0)
+  rowsSynced           Int       @default(0) // Data dari Airbyte
+  storageUsedMB        Int       @default(0) // Kapasitas penyimpanan
   
   members     TeamMember[]
   invitations TeamInvitation[]
   dashboards  Dashboard[]
-
   legacyUsers User[]
+  usageLogs   UsageMetric[] // Relasi ke riwayat pemakaian
 }
 
 model TeamMember {
@@ -361,32 +373,25 @@ model TableRow {
 }
 
 // ==========================================
-// 15. SUBSCRIPTION
+// 15. SUBSCRIPTION & USAGE TRACKING
 // ==========================================
 model Subscription {
-  id            String             @id @default(uuid())
-  planName      String
-  price         Decimal
-  features      Json
-  users         UserSubscription[]
+  id          String             @id @default(uuid())
+  planName    String             // misal: "Pro Tier"
+  price       Decimal
+  features    Json
+  // Menghapus UserSubscription karena kita sekarang pakai data di dalam model Team
 }
 
-model UserSubscription {
-  id             String       @id @default(uuid())
-  userId         String
-  subscriptionId String
-  status         String       @default("ACTIVE")
-  validUntil     DateTime
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
-}
-
+// Model ini digunakan untuk mencatat log historis (Audit pemakaian harian)
 model UsageMetric {
-  id        String   @id @default(uuid())
-  tenantId  String
-  metricType String  // misal: QUERY_COUNT, ROW_SCANNED
-  value     Int
-  loggedAt  DateTime @default(now())
+  id          String   @id @default(uuid())
+  teamId      String   // Diubah dari tenantId menjadi teamId
+  metricType  String   // enum/string: AI_TOKEN, QUERY_RUN, AIRBYTE_SYNC
+  value       Int      // Jumlah yang dipakai saat aksi terjadi
+  loggedAt    DateTime @default(now())
+
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
 }
 
 // ==========================================
