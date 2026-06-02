@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { apiFetch } from '../../../../lib/api';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -49,7 +50,7 @@ export default function SettingsProfile() {
       }
 
       // Pastikan port NestJS kamu (misal 3001)
-      const res = await fetch('http://localhost:3001/users/profile', {
+      const res = await apiFetch('/users/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

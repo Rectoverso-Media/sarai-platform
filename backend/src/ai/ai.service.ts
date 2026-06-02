@@ -11,8 +11,6 @@ export class AiService {
     this.openai = new OpenAI({
       apiKey: process.env.GROQ_API_KEY, 
       baseURL: 'https://api.groq.com/openai/v1', 
-      // apiKey: process.env.OPENAI_API_KEY, 
-      
     });
   }
 
@@ -45,10 +43,9 @@ Tugasmu:
 2. Jika pengguna bertanya hal di luar data tersebut, jawab berdasarkan pengetahuan umummu tentang data engineering dan analytics.
 3. Selalu gunakan bahasa Indonesia yang profesional, ringkas, dan mudah dipahami.`;
 
-      console.log('⚡ Menghubungkan ke OpenAI API...');
+      console.log('⚡ Menghubungkan ke Groq API...');
 
       const stream = await this.openai.chat.completions.create({
-        // 👇 Menggunakan model andalan OpenAI yang cepat dan cerdas
         model: 'llama-3.1-8b-instant', 
         messages: [
           { role: 'system', content: systemPrompt },
@@ -66,11 +63,73 @@ Tugasmu:
 
       subscriber.next({ data: { status: 'DONE' } });
       subscriber.complete();
-      console.log('✅ Selesai streaming balasan cerdas dari OpenAI!');
+      console.log('✅ Selesai streaming balasan dari Groq!');
 
     } catch (error) {
       console.error('AI Context Stream Error:', error);
-      subscriber.error(new InternalServerErrorException('Gagal memproses AI response dari OpenAI'));
+      subscriber.error(new InternalServerErrorException('Gagal memproses AI response'));
     }
   }
-}
+
+  // ============================================
+  // CHAT HISTORY — Simpan & Ambil Percakapan
+  // ============================================
+
+  // Buat sesi chat baru
+  async createChatSession(userId: string, title?: string) {
+    return this.prisma.aiChatSession.create({
+      data: {
+        userId,
+        title: title || `Sesi ${new Date().toLocaleDateString('id-ID')}`,
+      },
+    });
+  }
+
+  // Simpan satu pesan ke sesi chat
+  async saveMessage(sessionId: string, role: 'user' | 'assistant', content: string) {
+    return this.prisma.aiChatMessage.create({
+      data: { sessionId, role, content },
+    });
+  }
+
+  // Ambil semua sesi chat milik user
+  async getChatSessions(userId: string) {
+    return this.prisma.aiChatSession.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        createdAt: true,
+        _count: { select: { messages: true } },
+      },
+    });
+  }
+
+  // Ambil pesan dalam satu sesi chat
+  async getChatMessages(sessionId: string, userId: string) {
+    // Verifikasi sesi milik user yang request
+    const session = await this.prisma.aiChatSession.findFirst({
+      where: { id: sessionId, userId },
+    });
+
+    if (!session) return null;
+
+    return this.prisma.aiChatMessage.findMany({
+      where: { sessionId },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  // Hapus sesi chat beserta semua pesannya
+  async deleteChatSession(sessionId: string, userId: string) {
+    const session = await this.prisma.aiChatSession.findFirst({
+      where: { id: sessionId, userId },
+    });
+
+    if (!session) return { message: 'Sesi tidak ditemukan.' };
+
+    await this.prisma.aiChatSession.delete({ where: { id: sessionId } });
+    return { message: 'Sesi chat berhasil dihapus.' };
+  }
+}

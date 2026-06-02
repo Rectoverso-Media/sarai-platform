@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { apiFetch } from '../../../../lib/api';
 
 export default function DataSourceDetailPage() {
   const params = useParams();
@@ -13,7 +14,7 @@ export default function DataSourceDetailPage() {
   useEffect(() => {
     const fetchSyncStatus = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/airbyte/sources/${id}/sync-status`);
+        const response = await apiFetch(`/airbyte/sources/${id}/sync-status`);
         if (response.ok) {
           const result = await response.json();
           setSyncData(result.data);

@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { apiFetch } from '../../../lib/api';
 import React, { useState, useEffect } from 'react';
 
 export default function InfrastructurePage() {
@@ -8,7 +9,7 @@ export default function InfrastructurePage() {
   // Fungsi Ambil Data dari Backend
   const fetchNodes = async () => {
     try {
-      const response = await fetch('http://localhost:3001/infrastructure');
+      const response = await apiFetch('/infrastructure');
       if (response.ok) {
         const data = await response.json();
         
@@ -70,7 +71,7 @@ export default function InfrastructurePage() {
     const randomType = types[Math.floor(Math.random() * types.length)];
 
     try {
-      const response = await fetch('http://localhost:3001/infrastructure', {
+      const response = await apiFetch('/infrastructure', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, type: randomType }),
@@ -88,7 +89,7 @@ export default function InfrastructurePage() {
   const handleDelete = async (id: string) => {
     if (confirm("Yakin ingin mematikan dan menghapus server ini secara permanen?")) {
       try {
-        const response = await fetch(`http://localhost:3001/infrastructure/${id}`, {
+        const response = await fetch(`/infrastructure/${id}`, {
           method: 'DELETE',
         });
         if (response.ok) {

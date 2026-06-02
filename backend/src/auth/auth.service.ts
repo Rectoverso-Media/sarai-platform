@@ -62,6 +62,11 @@ export class AuthService {
       throw new UnauthorizedException('Email atau Password salah!');
     }
 
+    // Cek apakah email sudah diverifikasi
+    if (!user.isEmailVerified) {
+      throw new UnauthorizedException('Email belum diverifikasi. Silakan cek inbox Anda dan klik link verifikasi.');
+    }
+
     const payload = { sub: user.id, email: user.email, role: user.role, name: user.name };
     const token = this.jwtService.sign(payload);
 

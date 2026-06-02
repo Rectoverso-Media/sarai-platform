@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { apiFetch } from '../../../lib/api';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
@@ -17,7 +18,7 @@ export default function QueriesListPage() {
 
   const fetchQueries = async () => {
     try {
-      const response = await fetch('http://localhost:3001/queries');
+      const response = await apiFetch('/queries');
       if (response.ok) {
         const result = await response.json();
         setQueries(result.data || []);
@@ -43,7 +44,7 @@ export default function QueriesListPage() {
     const isConfirmed = window.confirm("Yakin ingin menghapus Query ini?");
     if (isConfirmed) {
       try {
-        const response = await fetch(`http://localhost:3001/queries/${id}`, {
+        const response = await fetch(`/queries/${id}`, {
           method: 'DELETE',
         });
         if (response.ok) {
@@ -66,7 +67,7 @@ export default function QueriesListPage() {
     if (isConfirmed) {
       try {
         // Tembak API execute yang baru kita bikin
-        const response = await fetch(`http://localhost:3001/queries/${id}/execute`, {
+        const response = await fetch(`/queries/${id}/execute`, {
           method: 'POST',
         });
         
@@ -98,7 +99,7 @@ export default function QueriesListPage() {
     setIsSavingSchedule(true);
 
     try {
-      const response = await fetch(`http://localhost:3001/queries/${selectedQuery.id}/schedule`, {
+      const response = await fetch(`/queries/${selectedQuery.id}/schedule`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

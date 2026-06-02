@@ -4,20 +4,22 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-// Daftar Menu Sidebar (Biar rapi kalau mau nambah menu nanti)
+// Daftar Menu Sidebar sesuai dengan fitur yang tersedia
 const menuItems = [
   { name: 'Dashboard', icon: '📊', path: '/dashboard' },
   { name: 'Data Sources', icon: '📂', path: '/data-sources' },
+  { name: 'Queries', icon: '🪄', path: '/queries' },
+  { name: 'Custom Dashboard', icon: '🖥️', path: '/custom-dashboard' },
+  { name: 'AI Chat', icon: '✨', path: '/ai-chat' },
   { name: 'Infrastructure', icon: '🏗️', path: '/infrastructure' },
   { name: 'Team Management', icon: '👥', path: '/team' },
-  { name: 'Queries', icon: '🪄', path: '/queries' },
-  // { name: 'Builder', icon: '🔨', path: '/queries/builder' },
   { name: 'Security & Logs', icon: '🛡️', path: '/security' },
+  { name: 'Billing', icon: '💳', path: '/billing' },
   { name: 'Settings', icon: '⚙️', path: '/settings' },
 ];
 
 export default function Sidebar() {
-  const pathname = usePathname(); // Ambil URL saat ini
+  const pathname = usePathname();
 
   return (
     <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800">
@@ -32,14 +34,13 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 px-4 space-y-1">
+      <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
         {menuItems.map((item) => {
-          // Cek apakah menu ini sedang aktif
-          const isActive = pathname === item.path;
+          const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
 
           return (
-            <Link 
-              key={item.path} 
+            <Link
+              key={item.path}
               href={item.path}
               className={`
                 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group
@@ -53,7 +54,7 @@ export default function Sidebar() {
               </span>
               {item.name}
               
-              {/* Indikator Garis kecil kalau aktif */}
+              {/* Indikator dot kalau aktif */}
               {isActive && (
                 <div className="ml-auto w-1.5 h-1.5 bg-blue-200 rounded-full"></div>
               )}
@@ -62,7 +63,8 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer Sidebar (Opsional) */}
+
+      {/* Footer Sidebar */}
       <div className="p-6 border-t border-slate-800">
         <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
           <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Plan</p>

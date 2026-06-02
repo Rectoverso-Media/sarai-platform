@@ -1,9 +1,16 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
+import { AuthGuard } from '@nestjs/passport';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('dashboard')
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
+
+  @Get('stats/summary')
+  getSummary() {
+    return this.dashboardService.getSummaryStats();
+  }
 
   @Get('stats/distribution')
   getDistribution() {

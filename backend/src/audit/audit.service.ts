@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AuditService {
-  private prisma = new PrismaClient();
+  constructor(private readonly prisma: PrismaService) {}
 
   async getAuditLogs() {
     return this.prisma.auditLog.findMany({
@@ -11,4 +11,4 @@ export class AuditService {
       take: 50, // Batasi 50 log terbaru biar API cepat
     });
   }
-}
+}

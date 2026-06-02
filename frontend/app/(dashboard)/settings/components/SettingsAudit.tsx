@@ -1,20 +1,28 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../../../../lib/api';
 
 export default function SettingsAudit() {
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAuditLogs = async () => {
       setIsLoadingLogs(true);
+      setErrorMsg(null);
       try {
-        const res = await fetch('http://localhost:3001/audit/logs');
+        const res = await apiFetch('/audit/logs');
+        if (res.status === 401 || res.status === 403) {
+          setErrorMsg('Akses ditolak. Hanya Admin/Owner yang dapat melihat Audit Log.');
+          return;
+        }
         if (!res.ok) throw new Error('Gagal mengambil data log');
         const data = await res.json();
         setAuditLogs(data);
       } catch (error) {
         console.error("Error fetching logs:", error);
+        setErrorMsg('Tidak dapat terhubung ke server backend.');
       } finally {
         setIsLoadingLogs(false);
       }
@@ -63,6 +71,15 @@ export default function SettingsAudit() {
               <tr>
                 <td colSpan={4} className="px-6 py-8 text-center text-slate-400">
                   <span className="animate-pulse">⏳ Mengambil data dari CCTV...</span>
+                </td>
+              </tr>
+            ) : errorMsg ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-8 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-2xl">🔒</span>
+                    <p className="text-sm font-semibold text-slate-600">{errorMsg}</p>
+                  </div>
                 </td>
               </tr>
             ) : auditLogs.length === 0 ? (

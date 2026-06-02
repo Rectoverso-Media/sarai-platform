@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { JwtService } from '@nestjs/jwt';
@@ -47,7 +47,7 @@ export class TeamService {
       throw new BadRequestException('Kamu belum memiliki/tergabung dalam tim!');
     }
 
-    // b. Validasi email & role (Kodingan asli kamu)
+    // b. Validasi email & role
     const existingUser = await this.prisma.user.findUnique({ where: { email: data.email } });
     if (existingUser) {
       throw new BadRequestException('Email sudah terdaftar di sistem!');
@@ -65,7 +65,7 @@ export class TeamService {
         email: data.email,
         password: hashedPassword,
         role: validRole,
-        teamId: inviter.teamId, //  Hubungkan ke tim si pengundang
+        teamId: inviter.teamId, // Hubungkan ke tim si pengundang
         isEmailVerified: false,
       },
     });
@@ -86,4 +86,63 @@ export class TeamService {
 
     return { message: 'Berhasil mengundang anggota baru & email terkirim!', member: newMember };
   }
-}
+
+  // 3. Hapus anggota dari tim
+  async removeMember(requesterId: string, memberId: string) {
+    // Pastikan requester dan target ada & se-tim
+    const requester = await this.prisma.user.findUnique({ where: { id: requesterId } });
+    const member = await this.prisma.user.findUnique({ where: { id: memberId } });
+
+    if (!member) {
+      throw new NotFoundException('Anggota tidak ditemukan!');
+    }
+
+    // Tidak boleh hapus diri sendiri
+    if (requesterId === memberId) {
+      throw new BadRequestException('Kamu tidak bisa menghapus dirimu sendiri dari tim!');
+    }
+
+    // Pastikan se-tim
+    if (requester?.teamId !== member.teamId) {
+      throw new BadRequestException('Anggota ini bukan bagian dari tim kamu!');
+    }
+
+    // Lepas dari tim (set teamId menjadi null, bukan hapus akun)
+    await this.prisma.user.update({
+      where: { id: memberId },
+      data: { teamId: null },
+    });
+
+    return { message: 'Anggota berhasil dikeluarkan dari tim.' };
+  }
+
+  // 4. Update role anggota tim
+  async updateMemberRole(requesterId: string, memberId: string, newRole: string) {
+    const requester = await this.prisma.user.findUnique({ where: { id: requesterId } });
+    const member = await this.prisma.user.findUnique({ where: { id: memberId } });
+
+    if (!member) {
+      throw new NotFoundException('Anggota tidak ditemukan!');
+    }
+
+    if (requester?.teamId !== member.teamId) {
+      throw new BadRequestException('Anggota ini bukan bagian dari tim kamu!');
+    }
+
+    const validRole = (Object.values(Role) as string[]).includes(newRole.toUpperCase())
+      ? (newRole.toUpperCase() as Role)
+      : null;
+
+    if (!validRole) {
+      throw new BadRequestException(`Role tidak valid. Pilihan: ${Object.values(Role).join(', ')}`);
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: memberId },
+      data: { role: validRole },
+      select: { id: true, name: true, email: true, role: true }
+    });
+
+    return { message: 'Role anggota berhasil diperbarui!', member: updated };
+  }
+}

@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { apiFetch } from '../../../lib/api';
 import { useEffect } from 'react';
 import React, { useState } from 'react';
 
@@ -26,7 +27,7 @@ export default function CustomDashboardBuilder() {
   useEffect(() => {
     const loadDashboardFromDB = async () => {
       try {
-        const res = await fetch('http://localhost:3001/dashboard/dashboard/load');
+        const res = await apiFetch('/dashboard/dashboard/load');
         if (res.ok) {
           const data = await res.json();
           // Kalau ada data dari DB, timpa state awal dengan data dari DB
@@ -46,7 +47,7 @@ export default function CustomDashboardBuilder() {
   useEffect(() => {
     const fetchWidgetData = async () => {
       try {
-        const res = await fetch('http://localhost:3001/dashboard/stats/traffic');
+        const res = await apiFetch('/dashboard/stats/traffic');
         if (res.ok) {
           const data = await res.json();
           setTrafficData(data); // Simpan ke state
@@ -64,9 +65,9 @@ export default function CustomDashboardBuilder() {
       try {
         // Tarik 3 API sekaligus pakai Promise.all biar ngebut
         const [trafficRes, distRes, perfRes] = await Promise.all([
-          fetch('http://localhost:3001/dashboard/stats/traffic'),
-          fetch('http://localhost:3001/dashboard/stats/distribution'),
-          fetch('http://localhost:3001/dashboard/stats/performance')
+          apiFetch('/dashboard/stats/traffic'),
+          apiFetch('/dashboard/stats/distribution'),
+          apiFetch('/dashboard/stats/performance')
         ]);
 
         if (trafficRes.ok) setTrafficData(await trafficRes.json());
@@ -128,7 +129,7 @@ export default function CustomDashboardBuilder() {
         y: (l.y === null || l.y === undefined) ? 99 : l.y
       }));
 
-      const res = await fetch('http://localhost:3001/dashboard/save', {
+      const res = await apiFetch('/dashboard/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ widgets, layout: cleanLayout })

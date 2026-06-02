@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { apiFetch } from '../../../../lib/api';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -37,7 +38,7 @@ export default function QueryBuilderPage() {
     setPollingStatus('Mengirim ke antrean...');
 
     try {
-      const response = await fetch('http://localhost:3001/queries/test-queue', {
+      const response = await apiFetch('/queries/test-queue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ queryId: `TEST-${Date.now()}`, rawSql }),
@@ -49,7 +50,7 @@ export default function QueryBuilderPage() {
         
         // Mulai proses Polling (Nanya ke backend tiap 1 detik)
         const pollInterval = setInterval(async () => {
-          const statusRes = await fetch(`http://localhost:3001/queries/job-status/${data.jobId}`);
+          const statusRes = await fetch(`/queries/job-status/${data.jobId}`);
           const statusData = await statusRes.json();
 
           if (statusData.state === 'active') {
@@ -139,7 +140,7 @@ export default function QueryBuilderPage() {
     
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/queries', {
+      const response = await apiFetch('/queries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, description, rawSql }),
@@ -164,7 +165,7 @@ export default function QueryBuilderPage() {
     if (!tableName) return;
     setIsFetchingSchema(true);
     try {
-      const res = await fetch(`http://localhost:3001/queries/schema/${tableName}`);
+      const res = await fetch(`/queries/schema/${tableName}`);
       const data = await res.json();
       
       if (Array.isArray(data) && data.length > 0) {
@@ -206,7 +207,7 @@ export default function QueryBuilderPage() {
 
     setIsExporting(true);
     try {
-      const response = await fetch('http://localhost:3001/queries/export/sheets', {
+      const response = await apiFetch('/queries/export/sheets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -236,7 +237,7 @@ export default function QueryBuilderPage() {
     setIsGenerating(true);
     
     try {
-      const res = await fetch('http://localhost:3001/queries/generate-sql', {
+      const res = await apiFetch('/queries/generate-sql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: aiPrompt, tableName })

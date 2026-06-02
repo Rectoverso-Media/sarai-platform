@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch } from '../../../../lib/api';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -40,7 +41,7 @@ export default function AddDataSourcePage() {
 
   useEffect(() => {
     if (step === 2 && sourceType === 'airbyte') {
-      fetch('http://localhost:3001/airbyte/connectors')
+      apiFetch('/airbyte/connectors')
         .then(res => res.json())
         .then(data => setAvailableConnectors(data))
         .catch(err => console.error("Gagal load konektor", err));
@@ -53,14 +54,14 @@ export default function AddDataSourcePage() {
     if (isLoading) return; 
     setIsLoading(true);
 
-    let apiUrl = 'http://localhost:3001/datasources'; 
+    let endpoint = '/datasources'; 
     let payload: any = { name, type: sourceType };
 
     if (sourceType === 'airbyte') {
-      apiUrl = 'http://localhost:3001/airbyte/sources';
+      endpoint = '/airbyte/sources';
       payload = {
         name: name,
-        sourceDefinitionId: selectedConnectorId, // 
+        sourceDefinitionId: selectedConnectorId,
         connectionConfiguration: config ? JSON.parse(config) : {} 
       };
     } else {
@@ -68,9 +69,8 @@ export default function AddDataSourcePage() {
     }
 
     try {
-      const response = await fetch(apiUrl, {
+      const response = await apiFetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 

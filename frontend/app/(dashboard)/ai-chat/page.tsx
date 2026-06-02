@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 type Message = {
   id: string;
   role: "user" | "ai";
@@ -13,8 +15,7 @@ export default function AiChatPage() {
     {
       id: "1",
       role: "ai",
-      content:
-        "Halo! Saya SARAI AI. Ada yang bisa saya bantu terkait analisis data kamu hari ini?",
+      content: "Hello! I'm SARAI AI. How can I help you analyze your data today?",
     },
   ]);
 
@@ -29,9 +30,7 @@ export default function AiChatPage() {
     });
   }, [messages]);
 
-  const handleSendMessage = async (
-    e: React.FormEvent
-  ) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!input.trim() || isTyping) return;
@@ -44,7 +43,7 @@ export default function AiChatPage() {
     const userMessageId = Date.now().toString();
     const aiMessageId = (Date.now() + 1).toString();
 
-    // Tambahkan user + placeholder AI SEKALIGUS
+    // Tambahkan user + placeholder AI sekaligus
     setMessages((prev) => [
       ...prev,
       {
@@ -59,29 +58,18 @@ export default function AiChatPage() {
       },
     ]);
 
+    // Kirim JWT token via query param sebagai workaround keterbatasan EventSource
+    const token = localStorage.getItem('access_token') || '';
     const eventSource = new EventSource(
-      `http://localhost:3001/ai/chat-stream?message=${encodeURIComponent(
-        userMsg
-      )}`
+      `${API_URL}/ai/chat-stream?message=${encodeURIComponent(userMsg)}&token=${encodeURIComponent(token)}`
     );
 
     eventSource.onmessage = (event) => {
       try {
-        console.log("RAW SSE:", event.data);
-
         const parsed = JSON.parse(event.data);
 
-        // SUPPORT 2 FORMAT:
-        // { text: "halo" }
-        // { data: { text: "halo" } }
-
-        const text =
-          parsed?.text ||
-          parsed?.data?.text;
-
-        const status =
-          parsed?.status ||
-          parsed?.data?.status;
+        const text = parsed?.text || parsed?.data?.text;
+        const status = parsed?.status || parsed?.data?.status;
 
         if (status === "DONE") {
           eventSource.close();
@@ -102,16 +90,11 @@ export default function AiChatPage() {
           );
         }
       } catch (err) {
-        console.error(
-          "SSE Parse Error:",
-          err
-        );
+        console.error("SSE Parse Error:", err);
       }
     };
 
-    eventSource.onerror = (err) => {
-      console.error("SSE Error:", err);
-
+    eventSource.onerror = () => {
       eventSource.close();
 
       setIsTyping(false);
@@ -121,8 +104,7 @@ export default function AiChatPage() {
           msg.id === aiMessageId
             ? {
                 ...msg,
-                content:
-                  "⚠️ Gagal terhubung ke AI server.",
+                content: "⚠️ Failed to connect to AI server. Please try again.",
               }
             : msg
         )
@@ -135,15 +117,12 @@ export default function AiChatPage() {
       
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-          <span className="text-blue-600">
-            ✨
-          </span>
+          <span className="text-blue-600">✨</span>
           SARAI AI Assistant
         </h1>
 
         <p className="text-slate-500 mt-1">
-          Tanyakan apa saja terkait data
-          Anda.
+          Ask anything about your data.
         </p>
       </div>
 
@@ -154,16 +133,12 @@ export default function AiChatPage() {
             <div
               key={msg.id}
               className={`flex ${
-                msg.role === "user"
-                  ? "justify-end"
-                  : "justify-start"
+                msg.role === "user" ? "justify-end" : "justify-start"
               }`}
             >
               <div
                 className={`max-w-[80%] flex gap-4 ${
-                  msg.role === "user"
-                    ? "flex-row-reverse"
-                    : "flex-row"
+                  msg.role === "user" ? "flex-row-reverse" : "flex-row"
                 }`}
               >
                 
@@ -175,9 +150,7 @@ export default function AiChatPage() {
                       : "bg-indigo-100 text-indigo-700"
                   }`}
                 >
-                  {msg.role === "user"
-                    ? "U"
-                    : "AI"}
+                  {msg.role === "user" ? "U" : "AI"}
                 </div>
 
                 <div
@@ -211,24 +184,18 @@ export default function AiChatPage() {
             <input
               type="text"
               value={input}
-              onChange={(e) =>
-                setInput(e.target.value)
-              }
+              onChange={(e) => setInput(e.target.value)}
               disabled={isTyping}
               placeholder={
-                isTyping
-                  ? "SARAI sedang berpikir..."
-                  : "Tanyakan sesuatu..."
+                isTyping ? "SARAI is thinking..." : "Ask something about your data..."
               }
-              className="w-full pl-6 pr-16 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none"
+              className="w-full pl-6 pr-16 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
 
             <button
               type="submit"
-              disabled={
-                !input.trim() || isTyping
-              }
-              className="absolute right-3 p-2.5 bg-blue-600 text-white rounded-xl"
+              disabled={!input.trim() || isTyping}
+              className="absolute right-3 p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
             >
               →
             </button>

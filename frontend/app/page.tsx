@@ -1,6 +1,7 @@
 import React from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import Link from 'next/link';
 
 export default function LandingPage() {
   return (
@@ -9,10 +10,10 @@ export default function LandingPage() {
       {/* NAVBAR (Khusus Publik) */}
       <Navbar/>
 
-      {/* Dummy navbar (Spacer) */}
+      {/* Spacer untuk fixed navbar */}
       <div className="w-full h-20 md:h-20 bg-transparent" aria-hidden="true"></div>
 
-      {/* HERO SECTION (Fleksibel dengan Aspect)   */}
+      {/* HERO SECTION */}
       <section 
         className="relative w-full aspect-[14/9] md:aspect-[16/9] flex flex-col justify-center bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/background/Background2.png')" }}
@@ -27,20 +28,24 @@ export default function LandingPage() {
               SARAI is an advanced data platform designed to help you analyze, understand, and predict your business trends effortlessly.
             </p>
             <div className="flex flex-wrap items-center gap-4">
-              <button className="px-8 py-3.5 bg-[#4A627E] hover:bg-blue-700 text-white rounded-full font-medium transition-colors shadow-lg shadow-blue-600/20">
+              <Link 
+                href="/register"
+                className="px-8 py-3.5 bg-[#4A627E] hover:bg-blue-700 text-white rounded-full font-medium transition-colors shadow-lg shadow-blue-600/20 inline-block"
+              >
                 Get Started
-              </button>
-              <button className="px-8 py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full font-medium transition-colors flex items-center gap-2">
-                <span></span> Try Demo
-              </button>
+              </Link>
+              <Link
+                href="/register"
+                className="px-8 py-3.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full font-medium transition-colors flex items-center gap-2"
+              >
+                <span>▶</span> Try Demo
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      
-
-      {/* HOW IT WORKS SECTION (Natural Height)    */}
+      {/* HOW IT WORKS SECTION */}
       <section 
         className="relative py-24 px-6 border-y border-slate-100 bg-cover bg-center bg-no-repeat"
         style={{ 
@@ -59,19 +64,19 @@ export default function LandingPage() {
             <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-slate-200 via-[#4A627E] to-slate-200 opacity-50 z-0"></div>
 
             <div className="relative text-center z-10 group">
-              <div className="w-24 h-24 mx-auto bg-white rounded-2xl shadow-lg border border-slate-100 flex items-center justify-center text-3xl font-bold text-slate-400 mb-6 group-hover:text-black-600 group-hover:-translate-y-2 transition-all duration-300">1</div>
+              <div className="w-24 h-24 mx-auto bg-white rounded-2xl shadow-lg border border-slate-100 flex items-center justify-center text-3xl font-bold text-slate-400 mb-6 group-hover:-translate-y-2 transition-all duration-300">1</div>
               <h3 className="text-xl font-bold text-[#4A627E] mb-3">Connect Data</h3>
               <p className="text-slate-500">Integrate your databases and APIs with our secure platform.</p>
             </div>
 
             <div className="relative text-center z-10 group">
-              <div className="w-24 h-24 mx-auto bg-[#4A627E] rounded-2xl shadow-lg shadow-black-600/30 border border-black-500 flex items-center justify-center text-3xl font-bold text-white mb-6 group-hover:-translate-y-2 transition-all duration-300">2</div>
+              <div className="w-24 h-24 mx-auto bg-[#4A627E] rounded-2xl shadow-lg shadow-blue-600/30 border border-blue-500/20 flex items-center justify-center text-3xl font-bold text-white mb-6 group-hover:-translate-y-2 transition-all duration-300">2</div>
               <h3 className="text-xl font-bold text-[#4A627E] mb-3">Analyze & Process</h3>
               <p className="text-slate-500">Our engine cleans, structures, and analyzes your data.</p>
             </div>
 
             <div className="relative text-center z-10 group">
-              <div className="w-24 h-24 mx-auto bg-white rounded-2xl shadow-lg border border-slate-100 flex items-center justify-center text-3xl font-bold text-slate-400 mb-6 group-hover:text-black-600 group-hover:-translate-y-2 transition-all duration-300">3</div>
+              <div className="w-24 h-24 mx-auto bg-white rounded-2xl shadow-lg border border-slate-100 flex items-center justify-center text-3xl font-bold text-slate-400 mb-6 group-hover:-translate-y-2 transition-all duration-300">3</div>
               <h3 className="text-xl font-bold text-[#4A627E] mb-3">Get Insights</h3>
               <p className="text-slate-500">View real-time dashboards and make data-driven decisions.</p>
             </div>
@@ -79,97 +84,114 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FEATURES SECTION (Natural Height)*/}
+      {/* FEATURES SECTION — 8 Fitur Utama SARAI sesuai brief */}
       <section 
         id="feature" 
         className="relative py-24 px-6 bg-cover bg-center bg-no-repeat"
         style={{ 
           backgroundImage: "url('/background/bg-features-placeholder.png')",
-          backgroundColor: "rgba(248, 250, 252, 0.8)", // Efek kaca film keabuan biar elegan
+          backgroundColor: "rgba(248, 250, 252, 0.8)",
           backgroundBlendMode: "overlay"
         }}
       >
         <div className="max-w-6xl mx-auto relative z-10">
           {/* Section Header */}
           <div className="text-center max-w-2xl mx-auto mb-16 md:mb-20">
+            <p className="text-sm font-semibold text-[#4A627E] uppercase tracking-widest mb-3">Platform Features</p>
             <h2 className="text-3xl md:text-4xl font-bold text-[#4A627E]">
-              Trusted by Data Driven Teams
+              Everything You Need to Turn Data Into Decisions
             </h2>
+            <p className="text-slate-500 mt-4 text-lg">8 powerful features designed to unify your marketing data and drive business growth.</p>
           </div>
           
-          {/* Grid Container (Pakai items-start biar bisa dibikin turun berundak) */}
-          <div className="grid md:grid-cols-3 gap-6 md:gap-8 items-start">
+          {/* Grid 8 Fitur */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             
-            {/* Card 1: Paling Atas */}
-            <div className="p-8 md:p-10 rounded-3xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-base font-bold text-slate-800">Accuracy</h3>
-                <span className="text-5xl font-extrabold text-[#4A627E]">95%</span>
-              </div>
-              <p className="text-slate-500 text-sm leading-relaxed pr-4">
-                Accurate analysis results powered by AI.
-              </p>
+            {/* Feature 1: Connect */}
+            <div className="p-7 rounded-3xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">🔌</div>
+              <h3 className="font-bold text-slate-800 mb-2">Connect</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">600+ connectors to ads, analytics, CRM, and more via Airbyte.</p>
             </div>
 
-            {/* Card 2: Turun Dikit (Pakai md:mt-12) */}
-            <div className="p-8 md:p-10 rounded-3xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 md:mt-12">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-base font-bold text-slate-800">Faster Processing</h3>
-                <span className="text-5xl font-extrabold text-[#4A627E]">3X</span>
-              </div>
-              <p className="text-slate-500 text-sm leading-relaxed pr-4">
-                Processes data faster than manual methods.
-              </p>
+            {/* Feature 2: Query */}
+            <div className="p-7 rounded-3xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">🪄</div>
+              <h3 className="font-bold text-slate-800 mb-2">Query</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">Visual query builder with metrics, filters, and scheduled runs.</p>
             </div>
 
-            {/* Card 3: Paling Bawah (Pakai md:mt-24) */}
-            <div className="p-8 md:p-10 rounded-3xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 md:mt-24">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-base font-bold text-slate-800">Data Processed</h3>
-                <span className="text-5xl font-extrabold text-[#4A627E]">120K+</span>
-              </div>
-              <p className="text-slate-500 text-sm leading-relaxed pr-4">
-                We have processed thousands of data points from various sources.
-              </p>
+            {/* Feature 3: Blend */}
+            <div className="p-7 rounded-3xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">🔀</div>
+              <h3 className="font-bold text-slate-800 mb-2">Blend</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">Join data from multiple sources with custom formulas and calculations.</p>
+            </div>
+
+            {/* Feature 4: Visualize */}
+            <div className="p-7 rounded-3xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">📊</div>
+              <h3 className="font-bold text-slate-800 mb-2">Visualize</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">Interactive dashboards with 8 widget types and drag-drop layout.</p>
+            </div>
+
+            {/* Feature 5: Analyze (AI) */}
+            <div className="p-7 rounded-3xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(59,130,246,0.15)] hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">✨</div>
+              <h3 className="font-bold text-slate-800 mb-2">Analyze AI</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">Chat with AI for real-time insights, trend analysis, and forecasting.</p>
+            </div>
+
+            {/* Feature 6: Export */}
+            <div className="p-7 rounded-3xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">📤</div>
+              <h3 className="font-bold text-slate-800 mb-2">Export</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">Auto-export to Google Sheets, Excel, Looker Studio, and Power BI.</p>
+            </div>
+
+            {/* Feature 7: Manage */}
+            <div className="p-7 rounded-3xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">👥</div>
+              <h3 className="font-bold text-slate-800 mb-2">Manage</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">Multi-tenant team management with 4 access levels and collaboration.</p>
+            </div>
+
+            {/* Feature 8: Scale */}
+            <div className="p-7 rounded-3xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">🚀</div>
+              <h3 className="font-bold text-slate-800 mb-2">Scale</h3>
+              <p className="text-slate-500 text-sm leading-relaxed">Flexible subscription with usage tracking and quota management.</p>
             </div>
 
           </div>
         </div>
       </section>
 
-      {/* STATS SECTION (Premium Dark Blue)       
-      <section 
-        className="relative py-20 px-6 bg-cover bg-center bg-fixed bg-no-repeat"
-        style={{ 
-          // Cocok dikasih gambar node map / jaring-jaring teknologi
-          backgroundImage: "url('/background/bg-tech-placeholder.png')",
-          backgroundColor: "rgba(239,241,245)", 
-          backgroundBlendMode: "multiply" 
-        }}
-      >
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-blue-400/30">
+      {/* STATS SECTION */}
+      <section className="py-20 px-6 bg-[#4A627E]">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-white/20">
+            <div className="space-y-2">
+              <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight">600+</h3>
+              <p className="text-blue-200 font-medium">Data Connectors</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight">95%</h3>
+              <p className="text-blue-200 font-medium">AI Accuracy</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight">3X</h3>
+              <p className="text-blue-200 font-medium">Faster Processing</p>
+            </div>
             <div className="space-y-2">
               <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight">99.9%</h3>
               <p className="text-blue-200 font-medium">Uptime Guarantee</p>
             </div>
-            <div className="space-y-2">
-              <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight">50M+</h3>
-              <p className="text-blue-200 font-medium">Queries Processed</p>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight">&lt;10ms</h3>
-              <p className="text-blue-200 font-medium">Average Latency</p>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-4xl md:text-5xl font-bold text-white tracking-tight">24/7</h3>
-              <p className="text-blue-200 font-medium">Expert Support</p>
-            </div>
           </div>
         </div>
-      </section> */}
+      </section>
 
-      {/* BRANDS SECTION (Dibiarkan Putih Bersih)  */}
+      {/* BRANDS SECTION */}
       <section className="py-24 bg-white overflow-hidden px-6 relative z-10">
         <div className="max-w-7xl mx-auto text-center mb-12">
           <p className="text-sm font-semibold text-slate-400 uppercase tracking-widest">
@@ -190,14 +212,13 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-          <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-white to-transparent z-5"></div>
-          <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-white to-transparent z-5"></div>
+          <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-white to-transparent z-10"></div>
+          <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-white to-transparent z-10"></div>
         </div>
       </section>
 
-      {/* CTA SECTION (Fleksibel dengan Aspect)    */}
+      {/* CTA SECTION */}
       <section 
-        // upgrade pakai aspect rasio biar super mulus
         className="relative w-full aspect-[4/3] md:aspect-[21/9] flex flex-col items-center justify-center bg-cover bg-bottom bg-no-repeat"
         style={{ backgroundImage: "url('/background/Background1.png')" }}
       >
@@ -212,11 +233,11 @@ export default function LandingPage() {
           <p className="text-slate-600 text-lg md:text-xl mb-12 leading-relaxed max-w-2xl">
             Start using SARAI to turn data into insights that help improve your business performance
           </p>
-          <a href="/register">
-            <button className="px-12 py-5 text-lg font-bold text-white bg-[#597393] hover:bg-[#4a627e] rounded-full shadow-xl shadow-slate-400/30 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-              Get Started
+          <Link href="/register">
+            <button id="cta-get-started" className="px-12 py-5 text-lg font-bold text-white bg-[#597393] hover:bg-[#4a627e] rounded-full shadow-xl shadow-slate-400/30 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+              Get Started — It's Free
             </button>
-          </a>
+          </Link>
         </div>
       </section>
 

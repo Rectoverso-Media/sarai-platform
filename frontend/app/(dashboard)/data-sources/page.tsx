@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { apiFetch } from '../../../lib/api';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
@@ -16,7 +17,7 @@ export default function DataSourcesPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:3001/datasources');
+        const response = await apiFetch('/datasources');
         if (response.ok) {
           const result = await response.json();
           
@@ -47,7 +48,7 @@ export default function DataSourcesPage() {
     if (isConfirmed) {
       try {
         // Nanti bikin endpoint DELETE ini di NestJS
-        const response = await fetch(`http://localhost:3001/datasources/${id}`, {
+        const response = await fetch(`/datasources/${id}`, {
           method: 'DELETE',
         });
 
@@ -94,7 +95,7 @@ export default function DataSourcesPage() {
       ];
 
       // Memanggil API NestJS yang baru kita buat
-      const response = await fetch('http://localhost:3001/queries/export/sheets', {
+      const response = await apiFetch('/queries/export/sheets', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

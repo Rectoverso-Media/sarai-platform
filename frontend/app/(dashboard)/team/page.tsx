@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast'; 
+import toast from 'react-hot-toast';
+import { apiFetch } from '../../../lib/api';
 
 export default function TeamPage() {
   const [members, setMembers] = useState<any[]>([]);
@@ -9,14 +10,7 @@ export default function TeamPage() {
   // Fetch data dari API (Dengan KTP/Token)
   const fetchMembers = async () => {
     try {
-      // Ambil token dari localStorage yang disimpan saat login
-      const token = localStorage.getItem('access_token')
-      
-      const response = await fetch('http://localhost:3001/team', {
-        headers: {
-          'Authorization': `Bearer ${token}` 
-        }
-      });
+      const response = await apiFetch('/team');
       
       if (response.ok) {
         const data = await response.json();
@@ -44,14 +38,8 @@ export default function TeamPage() {
     if (name && email && role) {
       const toastId = toast.loading('Membuat akun & mengirim email undangan...');
       try {
-        const token = localStorage.getItem('access_token')
-        
-        const response = await fetch('http://localhost:3001/team', {
+        const response = await apiFetch('/team', {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
           body: JSON.stringify({ name, email, role }),
         });
 

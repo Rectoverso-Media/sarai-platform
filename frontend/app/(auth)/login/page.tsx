@@ -6,6 +6,8 @@ import Link from 'next/link';
 import toast from 'react-hot-toast'; 
 import { useRouter } from 'next/navigation'; 
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export default function LoginPage() {
 
   // Fungsi penangkap token & status verifikasi dari URL
@@ -13,7 +15,7 @@ export default function LoginPage() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       
-      // 1. Penangkap Google OAuth (Udah ada dari sebelumnya)
+      // 1. Penangkap Google OAuth
       const token = urlParams.get('token');
       const userDataStr = urlParams.get('userData');
 
@@ -25,27 +27,23 @@ export default function LoginPage() {
         window.location.href = '/dashboard';
       }
 
-      // 2. Penangkap Verifikasi Email (BARU DITAMBAHKAN)
+      // 2. Penangkap Verifikasi Email
       if (urlParams.get('verified') === 'true') {
-        // Tampilkan notifikasi hijau
         toast.success('Email berhasil diverifikasi! Silakan Login.');
-        // Bersihkan URL biar toast nggak muncul terus-terusan kalau di-refresh
         window.history.replaceState({}, document.title, "/login");
       }
     }
   }, []);
+
   const router = useRouter();
 
-  // Wadah buat nyimpen ketikan email & password
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
 
-  // State buat animasi loading
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fungsi nangkep ketikan
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -53,20 +51,18 @@ export default function LoginPage() {
     });
   };
 
-  // Fungsi pas tombol "Sign In" diklik
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.email || !formData.password) {
-      toast.error('Email or password must be filled!');
+      toast.error('Email and password must be filled!');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Nembak ke API /auth/login yang bener
-      const response = await fetch('http://localhost:3001/auth/login', {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,17 +73,11 @@ export default function LoginPage() {
 
       if (response.ok) {
         toast.success(data.message || 'Login successful!');
-        // Simpan Token KTP Digital
         localStorage.setItem('access_token', data.access_token);
-        // Simpan data user (backend ngasih nama variabelnya "user", bukan "data")
         localStorage.setItem('userData', JSON.stringify(data.user));
-        // Cookie (KTP buat Satpam Server)
         document.cookie = "isLoggedIn=true; path=/";
-        // Pindah ke halaman dashboard
-        // router.push('/dashboard'); 
         window.location.href = '/dashboard';
       } else {
-        // Kalau email nggak ada atau password salah (Error 401/400 dari backend)
         toast.error(data.message || 'Email or password is wrong!');
       }
     } catch (error) {
@@ -113,7 +103,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* onSubmit di form */}
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5 text-left">
           
           {/* Email Input */}
@@ -159,17 +149,21 @@ export default function LoginPage() {
           </div>
         </form>
 
-        {/* Social Sign-On */}
+        {/* Social Sign-On — perbaikan: ganti button>a menjadi langsung <a> */}
         <div className="space-y-6 pt-6 border-t border-slate-100">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Or continue with</p>
           <div className="flex items-center justify-center gap-4">
-            <button type="button" className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors">
-              <a href="http://localhost:3001/auth/google" className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer">
-                <span className="font-bold text-slate-700 text-sm">Google</span>
-              </a>
-            </button>
-            <button type="button" className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors">
-              <span className="font-bold text-slate-700 text-sm">GitHub</span>
+            <a
+              href={`${API_URL}/auth/google`}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer font-bold text-slate-700 text-sm"
+            >
+              Google
+            </a>
+            <button
+              type="button"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors font-bold text-slate-700 text-sm"
+            >
+              GitHub
             </button>
           </div>
         </div>

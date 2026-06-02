@@ -1,11 +1,11 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { google } from 'googleapis';
 import * as path from 'path';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class DataTransfersService {
-  private prisma = new PrismaClient();
+  constructor(private readonly prisma: PrismaService) {}
 
   // 1. FUNGSI UNTUK MEMBACA KUNCI RAHASIA (AUTHENTICATION)
   private getAuthClient() {

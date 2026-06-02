@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { apiFetch } from '../../../lib/api';
 import React, { useState, useEffect } from 'react';
 
 export default function SecurityPage() {
@@ -7,7 +8,7 @@ export default function SecurityPage() {
 
   const fetchLogs = async () => {
     try {
-      const response = await fetch('http://localhost:3001/security');
+      const response = await apiFetch('/security');
       if (response.ok) {
         const data = await response.json();
         setLogs(data);
@@ -24,7 +25,7 @@ export default function SecurityPage() {
   // Fungsi buat ngetes nambah log manual
   const handleSimulateLog = async () => {
     try {
-      await fetch('http://localhost:3001/security', {
+      await apiFetch('/security', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

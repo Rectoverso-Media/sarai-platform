@@ -5,6 +5,29 @@ import { PrismaService } from '../prisma/prisma.service';
 export class DashboardService {
   constructor(private prisma: PrismaService) {}
 
+  // 0. SUMMARY STATS — Untuk KPI cards di header dashboard
+  async getSummaryStats() {
+    const [totalUsers, totalSources, connectedSources, totalQueries, executionsToday] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.dataSource.count(),
+      this.prisma.dataSource.count({ where: { status: 'Connected' } }),
+      this.prisma.query.count(),
+      this.prisma.queryExecution.count({
+        where: {
+          executedAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) }
+        }
+      })
+    ]);
+
+    return {
+      totalUsers,
+      totalSources,
+      connectedSources,
+      totalQueries,
+      executionsToday,
+    };
+  }
+
   async getDataSourceDistribution() {
     const allSources = await this.prisma.dataSource.findMany();
     const distribution = allSources.reduce((acc, source) => {

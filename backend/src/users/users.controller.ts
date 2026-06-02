@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Patch, Body } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, UseGuards, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('users')
 export class UsersController {
@@ -20,11 +21,12 @@ export class UsersController {
     return this.usersService.login(body);
   }
 
-  // PINTU BARU BUAT UPDATE PROFIL (http://localhost:3001/users/profile) 
+  // PINTU UPDATE PROFIL (Hanya user yang login) → http://localhost:3001/users/profile
+  @UseGuards(AuthGuard('jwt'))
   @Patch('profile')
-  updateProfile(@Body() body: { userId: string; name?: string; password?: string }) {
-    // Karena belum ada token JWT, kita minta frontend ngirim userId di dalam body
-    const { userId, name, password } = body;
-    return this.usersService.updateProfile(userId, { name, password });
+  updateProfile(@Req() req: any, @Body() body: { name?: string; password?: string }) {
+    // Ambil userId dari JWT token — lebih aman daripada dari body
+    const userId = req.user.sub || req.user.id;
+    return this.usersService.updateProfile(userId, body);
   }
 }

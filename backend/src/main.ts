@@ -6,9 +6,22 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Mengizinkan frontend Next.js (port 3000) mengakses backend ini
+  // Izinkan frontend mengakses backend (support multiple origins untuk dev)
+  const allowedOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'http://localhost:3000',
+    'http://localhost:3001',
+  ];
+
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Izinkan request tanpa origin (misalnya dari Postman/curl) atau dari allowed origins
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   });
 
@@ -19,4 +32,4 @@ async function bootstrap() {
 
   await app.listen(3001);
 }
-bootstrap();
+bootstrap();

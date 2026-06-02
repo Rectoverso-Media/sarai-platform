@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { DatasourcesService } from './datasources.service';
+import { AuthGuard } from '@nestjs/passport';
 
-@Controller('datasources') // Pastikan ini sesuai dengan URL target kamu
+@UseGuards(AuthGuard('jwt'))
+@Controller('datasources')
 export class DatasourcesController {
   constructor(private readonly datasourcesService: DatasourcesService) {}
 
