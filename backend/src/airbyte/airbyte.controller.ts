@@ -1,42 +1,92 @@
-import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AirbyteService } from './airbyte.service';
-import { PrismaService } from '../prisma/prisma.service';
-import { HttpService } from '@nestjs/axios';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('airbyte')
 export class AirbyteController {
   constructor(private readonly airbyteService: AirbyteService) {}
 
+  // ─── Workspace ───────────────────────────────────────────────────────────
+
+  @Get('test-connection')
+  testAirbyteConnection() {
+    return this.airbyteService.getWorkspaceInfo();
+  }
+
+  // ─── Connector Catalog ───────────────────────────────────────────────────
+
   @Get('connectors')
-  async getAvailableConnectors() {
+  getAvailableConnectors() {
     return this.airbyteService.getAvailableConnectors();
   }
 
-  @Get('test-connection')
-  testConnection() {
-    return this.airbyteService.getWorkspaceInfo();
-  }
+  // ─── Sources ─────────────────────────────────────────────────────────────
 
   @Get('sources')
   getSources() {
     return this.airbyteService.getSources();
   }
 
-  // JALUR UNTUK TAMBAH DATA (Dari Halaman Add Data Source)
   @Post('sources')
   createSource(@Body() body: any) {
     return this.airbyteService.createSource(body);
   }
 
-  // JALUR UNTUK HAPUS DATA (Dari Halaman Katalog)
   @Delete('sources/:id')
   deleteSource(@Param('id') id: string) {
     return this.airbyteService.deleteSource(id);
   }
 
-  // JALUR UNTUK CEK STATUS SYNC (Dari Halaman Detail Data Source)
+  // ─── Sync Status ─────────────────────────────────────────────────────────
+
   @Get('sources/:id/sync-status')
-  async getSyncStatus(@Param('id') id: string) {
+  getSyncStatus(@Param('id') id: string) {
     return this.airbyteService.getSyncStatus(id);
+  }
+
+  // ─── Connections ─────────────────────────────────────────────────────────
+
+  @Get('connections')
+  getConnections() {
+    return this.airbyteService.getConnections();
+  }
+
+  @Patch('connections/:id')
+  updateConnection(@Param('id') id: string, @Body() body: any) {
+    return this.airbyteService.updateConnection(id, body);
+  }
+
+  @Post('connections/:id/test')
+  testConnection(@Param('id') id: string, @Req() req: any) {
+    const userId = req.user?.id;
+    return this.airbyteService.testConnection(id, userId);
+  }
+
+  // ─── Sync Configuration ──────────────────────────────────────────────────
+
+  @Get('connections/:id/config')
+  getSyncConfiguration(@Param('id') id: string) {
+    return this.airbyteService.getSyncConfiguration(id);
+  }
+
+  @Patch('connections/:id/config')
+  updateSyncConfiguration(
+    @Param('id') id: string,
+    @Body() body: any,
+    @Req() req: any,
+  ) {
+    const userId = req.user?.id;
+    return this.airbyteService.updateSyncConfiguration(id, body, userId);
   }
 }

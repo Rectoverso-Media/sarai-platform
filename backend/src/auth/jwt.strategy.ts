@@ -9,7 +9,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       // Ngambil token dari header: "Authorization: Bearer <token>"
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false, // Tolak token yang udah expired
-      secretOrKey: 'SARAI_RAHASIA_SUPER_AMAN_123!', 
+      secretOrKey: process.env.JWT_SECRET || 'SARAI_RAHASIA_SUPER_AMAN_123!',
     });
   }
 

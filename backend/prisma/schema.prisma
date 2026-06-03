@@ -11,22 +11,26 @@ datasource db {
 // 1. USER & AUTH
 // ==========================================
 model User {
-  id               String            @id @default(uuid())
-  email            String            @unique
-  password         String?
-  name             String
-  role             Role              @default(VIEWER)
-  isEmailVerified  Boolean           @default(false)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id                   String            @id @default(uuid())
+  email                String            @unique
+  password             String?
+  name                 String
+  role                 Role              @default(VIEWER)
+  isEmailVerified      Boolean           @default(false)
+  // 2FA
+  isTwoFactorEnabled   Boolean           @default(false)
+  twoFactorSecret      String?           // TOTP secret (encrypted)
+  twoFactorTempToken   String?           // Short-lived token saat proses login 2FA
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
   
-  sessions         UserSession[]
-  teamMemberships  TeamMember[]
-  aiSessions       AiChatSession[]
-  notifications    Notification[]
+  sessions             UserSession[]
+  teamMemberships      TeamMember[]
+  aiSessions           AiChatSession[]
+  notifications        Notification[]
 
-  teamId           String?
-  team             Team?             @relation(fields: [teamId], references: [id])
+  teamId               String?
+  team                 Team?             @relation(fields: [teamId], references: [id])
 }
 
 model UserSession {
@@ -107,6 +111,7 @@ model DataSource {
   connections      Connection[]
   transfers        Transfer[]
   blends           BlendSourceConfig[]
+  oauthToken       OAuthToken?    // Relasi ke OAuth token jika koneksi via OAuth
 
   connectorName    String?
   airbyteSourceId  String?        @unique
@@ -126,6 +131,7 @@ model Connection {
   
   dataSource      DataSource           @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
   authLinks       ConnectionAuthLink[]
+  syncedData      SyncedData[]         // Data yang sudah di-sync dari koneksi ini
 }
 
 model ConnectionAuthLink {
@@ -481,6 +487,42 @@ model RateLimitConfig {
   endpoint  String   @unique
   limit     Int
   windowMs  Int
+}
+
+// ==========================================
+// 19. SYNCED DATA (Airbyte Destination)
+// ==========================================
+// Tabel universal untuk menampung data yang di-sync dari Airbyte.
+// Setiap baris mewakili satu record dari source manapun.
+model SyncedData {
+  id            String   @id @default(uuid())
+  connectionId  String   // FK ke Connection (source mana yang ngasih data ini)
+  streamName    String   // Nama tabel/stream dari source (misal: "campaigns", "orders")
+  recordData    Json     // Data aslinya dalam format JSON
+  syncedAt      DateTime @default(now())
+  abGenerationId Int?    // Internal Airbyte field untuk deduplikasi
+
+  connection    Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId])
+  @@index([streamName])
+  @@map("synced_data") // Nama tabel di PostgreSQL
+}
+
+// ==========================================
+// 20. OAUTH TOKEN (Untuk koneksi source OAuth)
+// ==========================================
+model OAuthToken {
+  id            String   @id @default(uuid())
+  dataSourceId  String   @unique
+  provider      String   // "google", "facebook", dll.
+  accessToken   String   // Encrypted
+  refreshToken  String?  // Encrypted
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  dataSource    DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
 }
 
 enum Role {

@@ -25,8 +25,14 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Validasi input otomatis 
-  app.useGlobalPipes(new ValidationPipe());
+  // Validasi input otomatis: whitelist membuang properti tak dikenal, transform konversi tipe otomatis
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,    // Buang properti yang tidak ada di DTO
+      transform: true,    // Konversi tipe otomatis (string → number, dll)
+      forbidNonWhitelisted: false, // Log warning tapi jangan error (lebih lenient)
+    }),
+  );
 
   app.useGlobalFilters(new HttpExceptionFilter());
 

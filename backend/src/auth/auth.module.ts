@@ -6,20 +6,21 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy } from './google.strategy';
 import { EmailModule } from '../email/email.module';
-import { JwtStrategy } from './jwt.strategy'; 
+import { JwtStrategy } from './jwt.strategy';
+import { RolesGuard } from './roles.guard';
 
 @Module({
   imports: [
     PrismaModule,
     PassportModule,
     EmailModule,
-    // Konfigurasi Token KTP Digital (JWT)
     JwtModule.register({
-      secret: 'SARAI_RAHASIA_SUPER_AMAN_123!', // Aslinya ini wajib ditaruh di file .env
-      signOptions: { expiresIn: '1d' }, // Token berlaku 1 hari
+      secret: process.env.JWT_SECRET || 'SARAI_RAHASIA_SUPER_AMAN_123!',
+      signOptions: { expiresIn: '1d' }, // Access token berlaku 1 hari
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, GoogleStrategy, JwtStrategy],
+  providers: [AuthService, GoogleStrategy, JwtStrategy, RolesGuard],
+  exports: [AuthService, JwtModule, RolesGuard], // Export agar modul lain bisa pakai
 })
 export class AuthModule {}
