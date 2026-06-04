@@ -6,6 +6,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 @Module({
   imports: [PrismaModule],
   providers: [DataTransfersService],
-  controllers: [DataTransfersController]
+  controllers: [DataTransfersController],
+  exports: [DataTransfersService],
 })
 export class DataTransfersModule {}

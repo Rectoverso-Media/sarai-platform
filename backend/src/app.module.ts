@@ -22,6 +22,11 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuditModule } from './audit/audit.module';
 import { AuditInterceptor } from './audit/audit.interceptor';
 import { NotificationsModule } from './notifications/notifications.module';
+import { CustomFieldsModule } from './custom-fields/custom-fields.module';
+import { BlendsModule } from './blends/blends.module';
+import { ApiQueriesModule } from './api-queries/api-queries.module';
+import { WarehouseModule } from './warehouse/warehouse.module';
+import { TableManagerModule } from './table-manager/table-manager.module';
 
 @Module({
   imports: [
@@ -59,6 +64,11 @@ import { NotificationsModule } from './notifications/notifications.module';
     AiModule,
     ExportModule,
     NotificationsModule,
+    CustomFieldsModule,
+    BlendsModule,
+    ApiQueriesModule,
+    WarehouseModule,
+    TableManagerModule,
   ],
   controllers: [AppController],
   providers: [

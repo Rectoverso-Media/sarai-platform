@@ -147,16 +147,24 @@ model ConnectionAuthLink {
 // 5. QUERY (Grup 4 Airbyte Synced Tables tidak di-define di ORM)
 // ==========================================
 model Query {
-  id          String           @id @default(uuid())
-  name        String
-  description String?
-  rawSql      String?
-  builderData Json?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  
-  executions  QueryExecution[]
-  schedules   QuerySchedule?   // Opsional: Untuk Cron
+  id            String           @id @default(uuid())
+  name          String
+  description   String?
+  rawSql        String?
+  builderData   Json?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  // Scope & Tracking
+  teamId        String?          // Query di-scope per team
+  createdById   String?          // User yang membuat query
+
+  // Source mapping (untuk eksekusi ke synced_data)
+  connectionId  String?          // Koneksi Airbyte yang menjadi sumber data
+  streamName    String?          // Nama stream/tabel spesifik yang di-query
+
+  executions    QueryExecution[]
+  schedules     QuerySchedule?   // Opsional: Untuk Cron
 }
 
 model QueryExecution {
@@ -249,22 +257,27 @@ model TransferExecution {
 // 9. API QUERY
 // ==========================================
 model ApiQuery {
-  id          String              @id @default(uuid())
-  name        String
-  endpointUrl String              @unique
-  method      String              @default("GET")
-  sqlTemplate String
-  createdAt   DateTime            @default(now())
-  executions  ApiQueryExecution[]
+  id              String              @id @default(uuid())
+  name            String
+  endpointUrl     String              // Hapus @unique — boleh ada 2 query ke URL yg sama
+  method          String              @default("GET")   // GET, POST, PUT, DELETE, PATCH
+  headers         Json?               // {"Authorization": "Bearer ...", ...}
+  bodyTemplate    Json?               // Request body untuk POST/PUT
+  authType        String              @default("NONE")  // NONE, API_KEY, BEARER, BASIC
+  authConfig      Json?               // {"key": "...", "value": "..."}
+  responseMapping Json?               // JSONPath mapping: {"field": "$.data.items[0].name"}
+  createdAt       DateTime            @default(now())
+  executions      ApiQueryExecution[]
 }
 
 model ApiQueryExecution {
-  id         String   @id @default(uuid())
-  apiQueryId String
-  statusCode Int
-  latencyMs  Int
-  calledAt   DateTime @default(now())
-  apiQuery   ApiQuery @relation(fields: [apiQueryId], references: [id], onDelete: Cascade)
+  id               String   @id @default(uuid())
+  apiQueryId       String
+  statusCode       Int
+  latencyMs        Int
+  responseSnapshot Json?    // Simpan hasil response untuk preview
+  calledAt         DateTime @default(now())
+  apiQuery         ApiQuery @relation(fields: [apiQueryId], references: [id], onDelete: Cascade)
 }
 
 // ==========================================
@@ -351,21 +364,26 @@ model InsightResult {
 // 13 & 14. WAREHOUSE & TABLE MANAGER
 // ==========================================
 model WarehouseTable {
-  id        String   @id @default(uuid())
-  tableName String   @unique
-  schema    Json
-  createdAt DateTime @default(now())
+  id            String        @id @default(uuid())
+  tableName     String        @unique
+  schema        Json          // [{name: string, type: string}]
+  retentionDays Int?          // null = simpan selamanya
+  createdAt     DateTime      @default(now())
+  data          WarehouseData[]
 }
 
 model WarehouseData {
-  id      String @id @default(uuid())
-  tableId String
-  rowData Json
+  id        String         @id @default(uuid())
+  tableId   String
+  rowData   Json
+  createdAt DateTime       @default(now())
+  table     WarehouseTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
 }
 
 model ManagedTable {
   id        String     @id @default(uuid())
   name      String     @unique
+  columns   Json?      // [{name: string, type: string, required?: boolean}]
   createdAt DateTime   @default(now())
   rows      TableRow[]
 }
