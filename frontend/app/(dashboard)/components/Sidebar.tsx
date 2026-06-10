@@ -12,6 +12,8 @@ const menuItems = [
   { name: 'Custom Dashboard', icon: '🖥️', path: '/custom-dashboard' },
   { name: 'Data Explorer', icon: '🔍', path: '/data-explorer' },
   { name: 'AI Chat', icon: '✨', path: '/ai-chat' },
+  { name: 'AI Insights', icon: '🧠', path: '/ai-insights' },
+  { name: 'Integrations', icon: '🔗', path: '/integrations' },
   { name: 'Infrastructure', icon: '🏗️', path: '/infrastructure' },
   { name: 'Team Management', icon: '👥', path: '/team' },
   { name: 'Security & Logs', icon: '🛡️', path: '/security' },

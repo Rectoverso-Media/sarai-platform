@@ -28,6 +28,10 @@ import { ApiQueriesModule } from './api-queries/api-queries.module';
 import { WarehouseModule } from './warehouse/warehouse.module';
 import { TableManagerModule } from './table-manager/table-manager.module';
 import { DataExplorerModule } from './data-explorer/data-explorer.module';
+import { InsightsModule } from './insights/insights.module';
+import { IntegrationsModule } from './integrations/integrations.module';
+import { ExcelModule } from './integrations/excel/excel.module';
+import { ODataModule } from './odata/odata.module';
 
 @Module({
   imports: [
@@ -71,6 +75,10 @@ import { DataExplorerModule } from './data-explorer/data-explorer.module';
     WarehouseModule,
     TableManagerModule,
     DataExplorerModule,
+    InsightsModule,
+    IntegrationsModule,
+    ExcelModule,
+    ODataModule,
   ],
   controllers: [AppController],
   providers: [

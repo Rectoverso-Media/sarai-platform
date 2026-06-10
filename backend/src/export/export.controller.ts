@@ -1,19 +1,47 @@
-import { Controller, Get, Param, Res, Header } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Res,
+  Header,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import { ExportService } from './export.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('export')
+@UseGuards(AuthGuard('jwt')) // ✅ SECURITY FIX: Semua endpoint export harus authenticated
 export class ExportController {
   constructor(private readonly exportService: ExportService) {}
 
-  // ENDPOINT: http://localhost:3001/export/csv/USER_TOKEN_RAHASIA
-  @Get('csv/:token')
+  // GET /export/csv — Export DataSources sebagai CSV (protected)
+  @Get('csv')
   @Header('Content-Type', 'text/csv')
   @Header('Content-Disposition', 'attachment; filename="sarai-data-export.csv"')
-  async exportCsv(@Param('token') token: string, @Res() res: Response) {
-    const csvContent = await this.exportService.getCsvData(token);
-    
-    // Kirim konten CSV langsung ke stream response
+  async exportCsv(@Res() res: Response) {
+    const csvContent = await this.exportService.getCsvData();
+    return res.send(csvContent);
+  }
+
+  // GET /export/csv/query/:queryId — Export hasil query tertentu sebagai CSV
+  @Get('csv/query/:queryId')
+  @Header('Content-Type', 'text/csv')
+  async exportQueryCsv(
+    @Param('queryId') queryId: string,
+    @Res() res: Response,
+    @Query('filename') filename?: string,
+  ) {
+    const csvContent = await this.exportService.getQueryResultCsv(queryId);
+    const safeFilename = filename
+      ? `${filename.replace(/[^a-z0-9-_]/gi, '_')}.csv`
+      : `query-${queryId.substring(0, 8)}-export.csv`;
+
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${safeFilename}"`,
+    );
     return res.send(csvContent);
   }
 }

@@ -70,7 +70,8 @@ model Team {
   invitations TeamInvitation[]
   dashboards  Dashboard[]
   legacyUsers User[]
-  usageLogs   UsageMetric[] // Relasi ke riwayat pemakaian
+  usageLogs   UsageMetric[]  // Relasi ke riwayat pemakaian
+  integrations Integration[] // Relasi ke integrasi platform output
 }
 
 model TeamMember {
@@ -366,18 +367,34 @@ model AiChatMessage {
 }
 
 model InsightConfig {
-  id          String   @id @default(uuid())
-  targetTable String
-  metric      String
-  frequency   String   // daily, weekly
-  createdAt   DateTime @default(now())
+  id          String      @id @default(uuid())
+  insightType InsightType @default(ANOMALY_DETECTION)
+  targetTable String      @default("system")
+  metric      String      @default("health_check")
+  frequency   String      @default("daily")        // daily, weekly
+  parameters  Json?       // Config tambahan per tipe insight
+  teamId      String?     // Scope per tim (null = system-wide)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  results     InsightResult[]
 }
 
 model InsightResult {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   configId    String
-  insightText String   @db.Text
-  generatedAt DateTime @default(now())
+  insightType InsightType
+  insightText String        @db.Text
+  metadata    Json?         // Data numerik pendukung (tren pct, anomaly score, dll)
+  generatedAt DateTime      @default(now())
+  config      InsightConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+}
+
+enum InsightType {
+  TREND_ANALYSIS
+  ANOMALY_DETECTION
+  PERIOD_COMPARISON
+  FORECAST
 }
 
 // ==========================================
@@ -429,25 +446,46 @@ model UsageMetric {
 // 16. INTEGRATION
 // ==========================================
 model Integration {
-  id        String   @id @default(uuid())
-  name      String
-  provider  String
-  apiKey    String?
-  createdAt DateTime @default(now())
+  id          String          @id @default(uuid())
+  name        String
+  provider    String          // 'google_sheets' | 'excel' | 'looker_studio' | 'power_bi'
+  apiKey      String?         // Optional: encrypted at-rest (future improvement)
+  status      IntegrationStatus @default(ACTIVE)
+  teamId      String?         // Null = integrasi global (system-wide)
+  config      Json?           // Provider-specific config (sheetId, tabName, dll)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  team            Team?           @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  linkedDocuments LinkedDocument[]
+}
+
+enum IntegrationStatus {
+  ACTIVE
+  INACTIVE
+  ERROR
 }
 
 model LinkedDocument {
-  id            String   @id @default(uuid())
+  id            String      @id @default(uuid())
   integrationId String
   documentUrl   String
-  createdAt     DateTime @default(now())
+  documentName  String?     // Nama dokumen untuk display
+  documentType  String?     // 'spreadsheet' | 'workbook' | 'dashboard'
+  createdAt     DateTime    @default(now())
+
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
 }
 
 model Template {
-  id          String   @id @default(uuid())
-  name        String
-  content     Json
-  createdAt   DateTime @default(now())
+  id           String   @id @default(uuid())
+  name         String
+  provider     String?  // 'google_sheets' | 'excel' | 'power_bi' | null = generic
+  description  String?  // Deskripsi singkat template
+  content      Json     // Template config/query
+  configSchema Json?    // JSON Schema untuk validasi config saat apply
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 // ==========================================
