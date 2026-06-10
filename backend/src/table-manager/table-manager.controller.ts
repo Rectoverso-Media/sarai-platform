@@ -43,6 +43,12 @@ export class TableManagerController {
     return this.tableManagerService.getTableById(id);
   }
 
+  /** PATCH /tables/:id — Update nama / schema / retentionDays tabel */
+  @Patch(':id')
+  updateTable(@Param('id') id: string, @Body() body: any) {
+    return this.tableManagerService.updateTable(id, body);
+  }
+
   /** DELETE /tables/:id — Hapus tabel */
   @Delete(':id')
   removeTable(@Param('id') id: string) {
@@ -119,10 +125,11 @@ export class TableManagerController {
 
   /** GET /tables/:id/export — Download semua data sebagai CSV */
   @Get(':id/export')
-  @Header('Content-Type', 'text/csv')
   async exportCsv(@Param('id') id: string, @Res() res: Response) {
-    const csvContent = await this.tableManagerService.exportCsv(id);
-    res.setHeader('Content-Disposition', `attachment; filename="table-${id}.csv"`);
-    res.send(csvContent);
+    const { csv, filename, rowCount } = await this.tableManagerService.exportCsv(id);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('X-Row-Count', String(rowCount));
+    res.send(csv);
   }
 }

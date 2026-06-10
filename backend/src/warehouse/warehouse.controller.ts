@@ -16,6 +16,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { WarehouseService } from './warehouse.service';
 import { AuthGuard } from '@nestjs/passport';
 
+/**
+ * WarehouseController — route /warehouse/tables
+ * Shares ManagedTable model with /tables (TableManagerController).
+ * Focuses on warehousing concerns: retentionDays, import from query/blend/CSV.
+ */
 @Controller('warehouse')
 @UseGuards(AuthGuard('jwt'))
 export class WarehouseController {
@@ -60,7 +65,7 @@ export class WarehouseController {
     );
   }
 
-  /** POST /warehouse/tables/:id/import/query — Import dari hasil query */
+  /** POST /warehouse/tables/:id/import/query — Import dari snapshot hasil query */
   @Post('tables/:id/import/query')
   @HttpCode(HttpStatus.OK)
   importFromQuery(

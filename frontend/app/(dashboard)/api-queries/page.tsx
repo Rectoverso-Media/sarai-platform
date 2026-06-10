@@ -120,7 +120,8 @@ export default function ApiQueriesPage() {
     finally { setExecutingId(null); }
   };
 
-  const handleDelete = async (qId: string) => {
+  const handleDelete = async (qId: string, name: string) => {
+    if (!confirm(`Hapus API Query "${name}"? Tindakan ini tidak dapat dibatalkan.`)) return;
     const id = toast.loading("Menghapus...");
     try {
       const res = await apiFetch(`/api-queries/${qId}`, { method: "DELETE" });
@@ -195,7 +196,7 @@ export default function ApiQueriesPage() {
                         {executingId === q.id ? "..." : "▶ Run"}
                       </button>
                       <button onClick={() => openEdit(q)} className="bg-slate-50 hover:bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Edit</button>
-                      <button onClick={() => handleDelete(q.id)} className="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">🗑</button>
+                      <button onClick={() => handleDelete(q.id, q.name)} className="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">🗑</button>
                     </div>
                   </td>
                 </tr>

@@ -19,6 +19,7 @@ export class TableManagerService {
   async createTable(data: {
     name: string;
     columns: { name: string; type: string; required?: boolean }[];
+    retentionDays?: number;
   }) {
     const existing = await this.prisma.managedTable.findUnique({
       where: { name: data.name },
@@ -33,6 +34,7 @@ export class TableManagerService {
       data: {
         name: data.name,
         columns: data.columns,
+        retentionDays: data.retentionDays ?? null,
       },
     });
   }
@@ -54,6 +56,37 @@ export class TableManagerService {
       throw new HttpException('Tabel tidak ditemukan', HttpStatus.NOT_FOUND);
     }
     return { ...table, rowCount: table._count.rows };
+  }
+
+  async updateTable(
+    id: string,
+    data: {
+      name?: string;
+      columns?: { name: string; type: string; required?: boolean }[];
+      retentionDays?: number | null;
+    },
+  ) {
+    const table = await this.prisma.managedTable.findUnique({ where: { id } });
+    if (!table) {
+      throw new HttpException('Tabel tidak ditemukan', HttpStatus.NOT_FOUND);
+    }
+    // Cek nama unik jika diubah
+    if (data.name && data.name !== table.name) {
+      const conflict = await this.prisma.managedTable.findUnique({
+        where: { name: data.name },
+      });
+      if (conflict) {
+        throw new HttpException(`Nama tabel "${data.name}" sudah dipakai`, HttpStatus.CONFLICT);
+      }
+    }
+    return this.prisma.managedTable.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.columns !== undefined && { columns: data.columns }),
+        ...(data.retentionDays !== undefined && { retentionDays: data.retentionDays }),
+      },
+    });
   }
 
   async deleteTable(id: string) {
@@ -98,6 +131,17 @@ export class TableManagerService {
     const table = await this.prisma.managedTable.findUnique({ where: { id: tableId } });
     if (!table) throw new HttpException('Tabel tidak ditemukan', HttpStatus.NOT_FOUND);
 
+    // Validasi field wajib terhadap schema kolom
+    const columns = (table.columns as { name: string; type: string; required?: boolean }[]) || [];
+    const requiredCols = columns.filter((c) => c.required).map((c) => c.name);
+    const missingFields = requiredCols.filter((col) => data[col] === undefined || data[col] === null || data[col] === '');
+    if (missingFields.length > 0) {
+      throw new HttpException(
+        `Field wajib tidak boleh kosong: ${missingFields.join(', ')}`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     return this.prisma.tableRow.create({
       data: { managedTableId: tableId, data },
     });
@@ -139,6 +183,10 @@ export class TableManagerService {
   ): Promise<{ inserted: number }> {
     const table = await this.prisma.managedTable.findUnique({ where: { id: tableId } });
     if (!table) throw new HttpException('Tabel tidak ditemukan', HttpStatus.NOT_FOUND);
+
+    if (!rows || rows.length === 0) {
+      throw new HttpException('Data rows tidak boleh kosong', HttpStatus.BAD_REQUEST);
+    }
 
     await this.prisma.tableRow.createMany({
       data: rows.map((row) => ({ managedTableId: tableId, data: row })),
@@ -190,24 +238,30 @@ export class TableManagerService {
 
   // ── EXPORT CSV ────────────────────────────────────────────────────────────
 
-  async exportCsv(tableId: string): Promise<string> {
+  async exportCsv(tableId: string): Promise<{ csv: string; filename: string; rowCount: number }> {
     const table = await this.prisma.managedTable.findUnique({
       where: { id: tableId },
       include: { rows: { orderBy: { createdAt: 'asc' } } },
     });
     if (!table) throw new HttpException('Tabel tidak ditemukan', HttpStatus.NOT_FOUND);
 
-    if (table.rows.length === 0) return '';
+    // Tentukan kolom dari schema atau dari baris pertama
+    let columns: string[] = [];
+    if (table.columns && (table.columns as any[]).length > 0) {
+      columns = (table.columns as { name: string }[]).map((c) => c.name);
+    } else if (table.rows.length > 0) {
+      columns = Object.keys(table.rows[0].data as Record<string, any>);
+    }
 
-    // Derive columns dari baris pertama
-    const firstRow = table.rows[0].data as Record<string, any>;
-    const columns = Object.keys(firstRow);
+    if (table.rows.length === 0) {
+      // Return header-only CSV jika tidak ada data
+      const headerCsv = columns.length > 0 ? columns.join(',') + '\n' : '';
+      return { csv: headerCsv, filename: `table-${table.name}.csv`, rowCount: 0 };
+    }
 
     const records = table.rows.map((r) => r.data as Record<string, any>);
+    const csv = csvStringify(records, { header: true, columns });
 
-    return csvStringify(records, {
-      header: true,
-      columns,
-    });
+    return { csv, filename: `table-${table.name}.csv`, rowCount: table.rows.length };
   }
 }

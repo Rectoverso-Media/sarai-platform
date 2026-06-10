@@ -8,6 +8,10 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { parse as csvParse } from 'csv-parse/sync';
 
+/**
+ * WarehouseService — wraps ManagedTable/TableRow (shared model dengan TableManagerService).
+ * Route /warehouse/tables → same DB model, adds retentionDays & import-from-query/blend support.
+ */
 @Injectable()
 export class WarehouseService {
   private readonly logger = new Logger(WarehouseService.name);
@@ -21,8 +25,8 @@ export class WarehouseService {
     schema: { name: string; type: string }[];
     retentionDays?: number;
   }) {
-    const existing = await this.prisma.warehouseTable.findUnique({
-      where: { tableName: data.tableName },
+    const existing = await this.prisma.managedTable.findUnique({
+      where: { name: data.tableName },
     });
     if (existing) {
       throw new HttpException(
@@ -30,48 +34,48 @@ export class WarehouseService {
         HttpStatus.CONFLICT,
       );
     }
-    return this.prisma.warehouseTable.create({
+    return this.prisma.managedTable.create({
       data: {
-        tableName: data.tableName,
-        schema: data.schema,
+        name: data.tableName,
+        columns: data.schema,
         retentionDays: data.retentionDays ?? null,
       },
     });
   }
 
   async getAllTables() {
-    const tables = await this.prisma.warehouseTable.findMany({
+    const tables = await this.prisma.managedTable.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
-        _count: { select: { data: true } },
+        _count: { select: { rows: true } },
       },
     });
     return tables.map((t) => ({
       ...t,
-      rowCount: t._count.data,
+      rowCount: t._count.rows,
     }));
   }
 
   async getTableById(id: string) {
-    const table = await this.prisma.warehouseTable.findUnique({
+    const table = await this.prisma.managedTable.findUnique({
       where: { id },
       include: {
-        _count: { select: { data: true } },
+        _count: { select: { rows: true } },
       },
     });
     if (!table) {
       throw new HttpException('Tabel tidak ditemukan', HttpStatus.NOT_FOUND);
     }
-    return { ...table, rowCount: table._count.data };
+    return { ...table, rowCount: table._count.rows };
   }
 
   async deleteTable(id: string) {
-    const table = await this.prisma.warehouseTable.findUnique({ where: { id } });
+    const table = await this.prisma.managedTable.findUnique({ where: { id } });
     if (!table) {
       throw new HttpException('Tabel tidak ditemukan', HttpStatus.NOT_FOUND);
     }
-    await this.prisma.warehouseTable.delete({ where: { id } });
-    return { message: `Tabel "${table.tableName}" berhasil dihapus` };
+    await this.prisma.managedTable.delete({ where: { id } });
+    return { message: `Tabel "${table.name}" berhasil dihapus` };
   }
 
   // ── DATA QUERY ────────────────────────────────────────────────────────────
@@ -81,7 +85,7 @@ export class WarehouseService {
     page = 1,
     limit = 50,
   ): Promise<{ data: any[]; total: number; page: number; totalPages: number }> {
-    const table = await this.prisma.warehouseTable.findUnique({
+    const table = await this.prisma.managedTable.findUnique({
       where: { id: tableId },
     });
     if (!table) {
@@ -90,17 +94,17 @@ export class WarehouseService {
 
     const skip = (page - 1) * limit;
     const [rows, total] = await Promise.all([
-      this.prisma.warehouseData.findMany({
-        where: { tableId },
+      this.prisma.tableRow.findMany({
+        where: { managedTableId: tableId },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.warehouseData.count({ where: { tableId } }),
+      this.prisma.tableRow.count({ where: { managedTableId: tableId } }),
     ]);
 
     return {
-      data: rows.map((r) => ({ id: r.id, ...((r.rowData as object) || {}) })),
+      data: rows.map((r) => ({ id: r.id, ...((r.data as object) || {}) })),
       total,
       page,
       totalPages: Math.ceil(total / limit),
@@ -110,93 +114,107 @@ export class WarehouseService {
   // ── IMPORT ────────────────────────────────────────────────────────────────
 
   async importFromQuery(tableId: string, queryId: string): Promise<{ inserted: number }> {
-    const table = await this.prisma.warehouseTable.findUnique({ where: { id: tableId } });
+    const table = await this.prisma.managedTable.findUnique({ where: { id: tableId } });
     if (!table) throw new HttpException('Tabel tidak ditemukan', HttpStatus.NOT_FOUND);
 
-    // Ambil execution terakhir yang sukses
+    // Baca resultSnapshot dari QueryExecution terakhir yang sukses
     const lastExec = await this.prisma.queryExecution.findFirst({
       where: { queryId, status: 'SUCCESS' },
       orderBy: { executedAt: 'desc' },
-      include: { query: true },
     });
 
-    if (!lastExec) {
+    if (!lastExec || !lastExec.resultSnapshot) {
       throw new HttpException(
-        'Belum ada hasil query yang sukses untuk diimport',
+        'Belum ada snapshot hasil query. Jalankan query terlebih dahulu agar snapshot tersimpan.',
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    // Untuk MVP: import sample data dari synced_data jika queryId cocok dengan streamName
-    const query = lastExec.query;
-    let rows: any[] = [];
-    if (query.streamName) {
-      const synced = await this.prisma.$queryRaw<any[]>`
-        SELECT "recordData" FROM synced_data
-        WHERE "streamName" = ${query.streamName}
-        LIMIT 1000
-      `;
-      rows = synced.map((r: any) => r.recordData);
-    }
+    const snapshot = lastExec.resultSnapshot as { columns: string[]; rows: any[][] };
+    const { columns, rows } = snapshot;
 
-    if (rows.length === 0) {
+    if (!rows || rows.length === 0) {
       return { inserted: 0 };
     }
 
-    await this.prisma.warehouseData.createMany({
-      data: rows.map((row) => ({ tableId, rowData: row })),
+    // Konversi dari array-of-arrays ke array-of-objects
+    const records = rows.map((row) =>
+      Object.fromEntries(columns.map((col, i) => [col, row[i]])),
+    );
+
+    // Update schema tabel jika masih kosong
+    if (!table.columns || (table.columns as any[]).length === 0) {
+      await this.prisma.managedTable.update({
+        where: { id: tableId },
+        data: {
+          columns: columns.map((c) => ({ name: c, type: 'string' })),
+        },
+      });
+    }
+
+    await this.prisma.tableRow.createMany({
+      data: records.map((row) => ({ managedTableId: tableId, data: row })),
     });
 
-    this.logger.log(`✅ Imported ${rows.length} rows from query ${queryId} to warehouse table ${tableId}`);
-    return { inserted: rows.length };
+    this.logger.log(`✅ Imported ${records.length} rows from query ${queryId} to table ${tableId}`);
+    return { inserted: records.length };
   }
 
   async importFromBlend(tableId: string, blendId: string): Promise<{ inserted: number }> {
-    const table = await this.prisma.warehouseTable.findUnique({ where: { id: tableId } });
+    const table = await this.prisma.managedTable.findUnique({ where: { id: tableId } });
     if (!table) throw new HttpException('Tabel tidak ditemukan', HttpStatus.NOT_FOUND);
 
     const blend = await this.prisma.blend.findUnique({
       where: { id: blendId },
-      include: { sources: { include: { dataSource: true } } },
+      include: { sources: { include: { dataSource: { include: { connections: true } } } } },
     });
     if (!blend) throw new HttpException('Blend tidak ditemukan', HttpStatus.NOT_FOUND);
 
-    // Ambil data dari source pertama untuk demo MVP
-    const firstSource = blend.sources[0];
-    if (!firstSource) return { inserted: 0 };
+    // Ambil data dari SyncedData untuk semua source
+    const allRecords: Record<string, any>[] = [];
+    const columnSet = new Set<string>();
 
-    // Ambil rows dari synced_data untuk source pertama
-    const connections = await this.prisma.connection.findMany({
-      where: { dataSourceId: firstSource.dataSourceId },
-    });
-    if (connections.length === 0) return { inserted: 0 };
-
-    const rows: any[] = [];
-    for (const conn of connections) {
-      const synced = await this.prisma.syncedData.findMany({
-        where: { connectionId: conn.id },
-        take: 500,
-      });
-      rows.push(...synced.map((s) => s.recordData));
+    for (const src of blend.sources) {
+      for (const conn of src.dataSource.connections) {
+        const synced = await this.prisma.syncedData.findMany({
+          where: { connectionId: conn.id },
+          take: 500,
+        });
+        for (const s of synced) {
+          const rec = s.recordData as Record<string, any>;
+          Object.keys(rec).forEach((k) => columnSet.add(k));
+          allRecords.push(rec);
+        }
+      }
     }
 
-    if (rows.length === 0) return { inserted: 0 };
+    if (allRecords.length === 0) return { inserted: 0 };
 
-    await this.prisma.warehouseData.createMany({
-      data: rows.map((row) => ({ tableId, rowData: row })),
+    // Update schema tabel jika masih kosong
+    if (!table.columns || (table.columns as any[]).length === 0) {
+      await this.prisma.managedTable.update({
+        where: { id: tableId },
+        data: {
+          columns: Array.from(columnSet).map((c) => ({ name: c, type: 'string' })),
+        },
+      });
+    }
+
+    await this.prisma.tableRow.createMany({
+      data: allRecords.map((row) => ({ managedTableId: tableId, data: row })),
     });
 
-    return { inserted: rows.length };
+    return { inserted: allRecords.length };
   }
 
   async importFromCsv(tableId: string, csvBuffer: Buffer): Promise<{ inserted: number }> {
-    const table = await this.prisma.warehouseTable.findUnique({ where: { id: tableId } });
+    const table = await this.prisma.managedTable.findUnique({ where: { id: tableId } });
     if (!table) throw new HttpException('Tabel tidak ditemukan', HttpStatus.NOT_FOUND);
 
     let records: any[];
     try {
       records = csvParse(csvBuffer.toString('utf-8'), {
-        columns: true,          // First row = header
+        columns: true,
         skip_empty_lines: true,
         trim: true,
       });
@@ -206,8 +224,19 @@ export class WarehouseService {
 
     if (records.length === 0) return { inserted: 0 };
 
-    await this.prisma.warehouseData.createMany({
-      data: records.map((row) => ({ tableId, rowData: row })),
+    // Update schema tabel jika masih kosong
+    if (!table.columns || (table.columns as any[]).length === 0) {
+      const detectedCols = Object.keys(records[0]);
+      await this.prisma.managedTable.update({
+        where: { id: tableId },
+        data: {
+          columns: detectedCols.map((c) => ({ name: c, type: 'string' })),
+        },
+      });
+    }
+
+    await this.prisma.tableRow.createMany({
+      data: records.map((row) => ({ managedTableId: tableId, data: row })),
     });
 
     return { inserted: records.length };
@@ -219,7 +248,7 @@ export class WarehouseService {
   async applyRetentionPolicy() {
     this.logger.log('🗑️ Menjalankan retention policy cleanup...');
 
-    const tables = await this.prisma.warehouseTable.findMany({
+    const tables = await this.prisma.managedTable.findMany({
       where: { retentionDays: { not: null } },
     });
 
@@ -230,16 +259,16 @@ export class WarehouseService {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - table.retentionDays);
 
-      const result = await this.prisma.warehouseData.deleteMany({
+      const result = await this.prisma.tableRow.deleteMany({
         where: {
-          tableId: table.id,
+          managedTableId: table.id,
           createdAt: { lt: cutoffDate },
         },
       });
 
       if (result.count > 0) {
         this.logger.log(
-          `  → "${table.tableName}": deleted ${result.count} rows older than ${table.retentionDays} days`,
+          `  → "${table.name}": deleted ${result.count} rows older than ${table.retentionDays} days`,
         );
         totalDeleted += result.count;
       }

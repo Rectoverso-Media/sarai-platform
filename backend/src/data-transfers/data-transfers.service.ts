@@ -9,6 +9,8 @@ import * as path from 'path';
 import * as ExcelJS from 'exceljs';
 import { PrismaService } from '../prisma/prisma.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import * as cronParser from 'cron-parser';
+const { CronExpressionParser } = cronParser;
 
 @Injectable()
 export class DataTransfersService {
@@ -43,38 +45,89 @@ export class DataTransfersService {
   }> {
     const sourceType: string = config.sourceType || 'datasource';
 
-    if (sourceType === 'query') {
-      // Ambil hasil eksekusi sukses terakhir dari QueryExecution
+    // ── SOURCE: QUERY RESULT ─────────────────────────────────────────────
+    if (sourceType === 'query' && config.queryId) {
       const lastExec = await this.prisma.queryExecution.findFirst({
         where: { queryId: config.queryId, status: 'SUCCESS' },
         orderBy: { executedAt: 'desc' },
       });
-      if (!lastExec) {
+
+      if (!lastExec || !lastExec.resultSnapshot) {
         throw new HttpException(
-          'Belum ada hasil query yang sukses untuk transfer ini',
+          'Belum ada snapshot hasil query. Jalankan query terlebih dahulu.',
           HttpStatus.BAD_REQUEST,
         );
       }
-      // Result tersimpan di Redis; untuk Transfer kita fallback ke data source
-      // Sementara kembalikan data dataSource sebagai demo
-      return this.fetchDataSourceRows();
+
+      const snapshot = lastExec.resultSnapshot as { columns: string[]; rows: any[][] };
+      return { columns: snapshot.columns || [], rows: snapshot.rows || [] };
     }
 
-    if (sourceType === 'blend') {
-      // Ambil blend config dari DB, lakukan in-memory join
+    // ── SOURCE: BLEND RESULT ─────────────────────────────────────────────
+    if (sourceType === 'blend' && config.blendId) {
       const blend = await this.prisma.blend.findUnique({
         where: { id: config.blendId },
-        include: { sources: { include: { dataSource: true } } },
+        include: { sources: { include: { dataSource: { include: { connections: true } } } } },
       });
       if (!blend) {
         throw new HttpException('Blend tidak ditemukan', HttpStatus.NOT_FOUND);
       }
-      // Ambil data dari synced_data untuk masing-masing source, lalu gabung
-      // Untuk MVP: kembalikan data source pertama
-      return this.fetchDataSourceRows();
+
+      // Ambil data dari SyncedData untuk setiap source, gabung baris secara sederhana
+      const allRows: Record<string, any>[] = [];
+      const columnSet = new Set<string>();
+
+      for (const src of blend.sources) {
+        for (const conn of src.dataSource.connections) {
+          const synced = await this.prisma.syncedData.findMany({
+            where: { connectionId: conn.id },
+            take: 500,
+          });
+          for (const s of synced) {
+            const rec = s.recordData as Record<string, any>;
+            Object.keys(rec).forEach((k) => columnSet.add(k));
+            allRows.push(rec);
+          }
+        }
+      }
+
+      const columns = Array.from(columnSet);
+      const rows = allRows.map((r) => columns.map((c) => r[c] ?? null));
+      return { columns, rows };
     }
 
-    // default: datasource → ambil semua data dari dataSource table
+    // ── SOURCE: DATASOURCE ───────────────────────────────────────────────
+    // Ambil dari SyncedData untuk data source yang dipilih
+    if (config.sourceId) {
+      const connections = await this.prisma.connection.findMany({
+        where: { dataSourceId: config.sourceId },
+      });
+
+      if (connections.length > 0) {
+        const allRows: Record<string, any>[] = [];
+        const columnSet = new Set<string>();
+
+        for (const conn of connections) {
+          const synced = await this.prisma.syncedData.findMany({
+            where: { connectionId: conn.id },
+            take: 1000,
+          });
+          for (const s of synced) {
+            const rec = s.recordData as Record<string, any>;
+            Object.keys(rec).forEach((k) => columnSet.add(k));
+            allRows.push(rec);
+          }
+        }
+
+        if (allRows.length > 0) {
+          const columns = Array.from(columnSet);
+          const rows = allRows.map((r) => columns.map((c) => r[c] ?? null));
+          return { columns, rows };
+        }
+      }
+    }
+
+    // Fallback: kembalikan metadata DataSource jika tidak ada data synced
     return this.fetchDataSourceRows();
   }
 
@@ -109,7 +162,6 @@ export class DataTransfersService {
     const range = `${sheetName}!A1`;
 
     if (writeMode === 'replace') {
-      // Kosongkan sheet dulu, lalu tulis ulang dari baris 1
       await sheets.spreadsheets.values.clear({
         spreadsheetId,
         range: sheetName,
@@ -124,7 +176,6 @@ export class DataTransfersService {
     }
 
     if (writeMode === 'update') {
-      // Ambil data yang ada, match baris berdasarkan kolom pertama (key)
       const existing = await sheets.spreadsheets.values.get({
         spreadsheetId,
         range: sheetName,
@@ -132,14 +183,13 @@ export class DataTransfersService {
       const existingRows = existing.data.values || [];
       const keyMap = new Map<string, number>();
       existingRows.forEach((row, idx) => {
-        if (idx > 0 && row[0]) keyMap.set(String(row[0]), idx + 1); // 1-indexed
+        if (idx > 0 && row[0]) keyMap.set(String(row[0]), idx + 1);
       });
 
       const newRowsToAppend: any[][] = [];
       for (const row of rows) {
         const key = String(row[0]);
         if (keyMap.has(key)) {
-          // Update baris yang sudah ada
           const rowNum = keyMap.get(key)!;
           await sheets.spreadsheets.values.update({
             spreadsheetId,
@@ -190,7 +240,6 @@ export class DataTransfersService {
 
     const sheet = workbook.addWorksheet(cfg.sheetName || 'Data');
 
-    // Header row dengan styling
     const headerRow = sheet.addRow(columns);
     headerRow.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
@@ -202,10 +251,8 @@ export class DataTransfersService {
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
     });
 
-    // Data rows
     rows.forEach((row) => sheet.addRow(row));
 
-    // Auto-fit columns
     sheet.columns.forEach((column) => {
       column.width = Math.max(
         ...(column.values || []).map((v) => String(v ?? '').length),
@@ -283,6 +330,43 @@ export class DataTransfersService {
     });
   }
 
+  async updateTransfer(
+    id: string,
+    data: {
+      name?: string;
+      spreadsheetId?: string;
+      sheetName?: string;
+      writeMode?: string;
+      scheduleExpression?: string;
+      sourceType?: string;
+      queryId?: string;
+      blendId?: string;
+    },
+  ) {
+    const transfer = await this.prisma.transfer.findUnique({ where: { id } });
+    if (!transfer) {
+      throw new HttpException('Transfer tidak ditemukan', HttpStatus.NOT_FOUND);
+    }
+    const currentConfig = transfer.configData as object;
+    const updated = await this.prisma.transfer.update({
+      where: { id },
+      data: {
+        ...(data.name ? { name: data.name } : {}),
+        configData: {
+          ...currentConfig,
+          ...(data.spreadsheetId !== undefined && { spreadsheetId: data.spreadsheetId }),
+          ...(data.sheetName !== undefined && { sheetName: data.sheetName }),
+          ...(data.writeMode !== undefined && { writeMode: data.writeMode }),
+          ...(data.scheduleExpression !== undefined && { scheduleExpression: data.scheduleExpression }),
+          ...(data.sourceType !== undefined && { sourceType: data.sourceType }),
+          ...(data.queryId !== undefined && { queryId: data.queryId }),
+          ...(data.blendId !== undefined && { blendId: data.blendId }),
+        },
+      },
+    });
+    return { message: 'Transfer berhasil diperbarui', data: updated };
+  }
+
   async deleteTransfer(id: string) {
     await this.prisma.transfer.delete({ where: { id } });
     return { message: 'Transfer berhasil dihapus' };
@@ -332,7 +416,6 @@ export class DataTransfersService {
         writeMode,
       );
 
-      // Log eksekusi sukses
       await this.prisma.transferExecution.create({
         data: {
           transferId,
@@ -372,20 +455,31 @@ export class DataTransfersService {
       const cfg = transfer.configData as any;
       if (!cfg?.scheduleExpression) continue;
 
-      // Simple check: kalau scheduleExpression adalah "@hourly" dsb, cek setiap jam
-      // Untuk MVP: jalankan jika scheduleExpression === '@every_minute' (testing)
-      // Production: pakai cron parser yang proper
-      if (cfg.scheduleExpression === '@every_minute') {
-        this.logger.log(
-          `⏰ Menjalankan scheduled transfer: ${transfer.name}`,
-        );
-        try {
-          await this.executeTransfer(transfer.id);
-        } catch (err: any) {
-          this.logger.error(
-            `Scheduled transfer ${transfer.id} gagal: ${err.message}`,
-          );
+      try {
+        // Parse cron expression dan cek apakah seharusnya berjalan dalam menit ini
+        const interval = CronExpressionParser.parse(cfg.scheduleExpression, {
+          currentDate: now,
+        });
+
+        // Ambil waktu run sebelumnya dari interval
+        const prevRun = interval.prev().toDate();
+
+        // Jika prevRun dalam 1 menit terakhir, jalankan transfer
+        const diffMs = now.getTime() - prevRun.getTime();
+        if (diffMs >= 0 && diffMs < 60000) {
+          this.logger.log(`⏰ Menjalankan scheduled transfer: ${transfer.name}`);
+          try {
+            await this.executeTransfer(transfer.id);
+          } catch (err: any) {
+            this.logger.error(
+              `Scheduled transfer ${transfer.id} gagal: ${err.message}`,
+            );
+          }
         }
+      } catch (parseError: any) {
+        this.logger.warn(
+          `Cron expression tidak valid untuk transfer ${transfer.id}: "${cfg.scheduleExpression}" — ${parseError.message}`,
+        );
       }
     }
   }

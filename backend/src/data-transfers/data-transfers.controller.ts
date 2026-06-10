@@ -44,6 +44,12 @@ export class DataTransfersController {
     return this.dataTransfersService.createTransfer(body);
   }
 
+  /** PATCH /data-transfers/:id — Update konfigurasi transfer */
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() body: any) {
+    return this.dataTransfersService.updateTransfer(id, body);
+  }
+
   /** POST /data-transfers/:id/run — Jalankan transfer ke Google Sheets */
   @Post(':id/run')
   @HttpCode(HttpStatus.OK)

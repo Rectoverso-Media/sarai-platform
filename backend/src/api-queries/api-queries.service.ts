@@ -136,9 +136,20 @@ export class ApiQueriesService {
         fetchOptions.body = JSON.stringify(query.bodyTemplate);
       }
 
-      // 3. Execute request
+      // 3. Execute request (dengan timeout 30 detik)
       this.logger.log(`🌐 Executing ${query.method} ${query.endpointUrl}`);
-      const response = await fetch(query.endpointUrl, fetchOptions);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+      let response: globalThis.Response;
+      try {
+        response = await fetch(query.endpointUrl, {
+          ...fetchOptions,
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       statusCode = response.status;
 
       let responseData: any;

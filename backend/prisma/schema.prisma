@@ -168,14 +168,15 @@ model Query {
 }
 
 model QueryExecution {
-  id           String   @id @default(uuid())
-  queryId      String
-  status       String
-  durationMs   Int?
-  rowsReturned Int?
-  errorMessage String?
-  executedAt   DateTime @default(now())
-  query        Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  id              String   @id @default(uuid())
+  queryId         String
+  status          String
+  durationMs      Int?
+  rowsReturned    Int?
+  errorMessage    String?
+  resultSnapshot  Json?    // Snapshot hasil query (max 1000 baris) untuk dipakai Transfer & Warehouse
+  executedAt      DateTime @default(now())
+  query           Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
 }
 
 model QuerySchedule {
@@ -284,32 +285,48 @@ model ApiQueryExecution {
 // 10. DASHBOARD
 // ==========================================
 model Dashboard {
-  id        String   @id @default(uuid())
-  teamId    String?
-  name      String
-  isPublic  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  team      Team?    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  widgetItems Widget[]
+  id                 String       @id @default(uuid())
+  teamId             String?
+  name               String
+  description        String?      // Deskripsi opsional
+  isPublic           Boolean      @default(false)
+  autoRefreshSeconds Int?         // null = auto-refresh off; angka = interval detik (30, 60, 300, dll)
+  theme              String       @default("light") // light, dark, midnight
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
-  widgets   Json?
-  layout    Json?
+  team               Team?        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  widgetItems        Widget[]
+  shareTokens        ShareToken[]
+
+  widgets            Json?        // Definisi widget (legacy / blob storage)
+  layout             Json?        // Layout grid (legacy / blob storage)
 }
 
 model Widget {
   id          String    @id @default(uuid())
   dashboardId String
   title       String
-  type        String    // bar, line, pie, kpi
+  type        String    // bar, line, pie, kpi, number, table, text, image
   x           Int
   y           Int
   w           Int
   h           Int
-  config      Json?     // Warna, metrik pilihan
+  config      Json?     // { dataSource, queryId, color, metric, imageUrl, text, ... }
   createdAt   DateTime  @default(now())
   dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+}
+
+// Token untuk public sharing dengan expiry
+model ShareToken {
+  id          String    @id @default(uuid())
+  dashboardId String
+  token       String    @unique @default(uuid())
+  expiresAt   DateTime  // Selalu ada expiry date
+  createdAt   DateTime  @default(now())
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@index([token])
 }
 
 // ==========================================
@@ -319,7 +336,10 @@ model ExplorerSession {
   id          String   @id @default(uuid())
   userId      String
   activeTable String
-  filters     Json?
+  tableSource String   @default("synced_data") // synced_data | managed_table | query_execution
+  filters     Json?    // [{ column, operator, value }]
+  sorts       Json?    // [{ column, direction }]
+  pageSize    Int      @default(50)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -361,31 +381,18 @@ model InsightResult {
 }
 
 // ==========================================
-// 13 & 14. WAREHOUSE & TABLE MANAGER
+// 13 & 14. WAREHOUSE & TABLE MANAGER (unified model)
 // ==========================================
-model WarehouseTable {
-  id            String        @id @default(uuid())
-  tableName     String        @unique
-  schema        Json          // [{name: string, type: string}]
-  retentionDays Int?          // null = simpan selamanya
-  createdAt     DateTime      @default(now())
-  data          WarehouseData[]
-}
-
-model WarehouseData {
-  id        String         @id @default(uuid())
-  tableId   String
-  rowData   Json
-  createdAt DateTime       @default(now())
-  table     WarehouseTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
-}
-
+// ManagedTable adalah model tunggal untuk keduanya.
+// Warehouse route (/warehouse/tables) dan Table Manager route (/tables) share model ini.
 model ManagedTable {
-  id        String     @id @default(uuid())
-  name      String     @unique
-  columns   Json?      // [{name: string, type: string, required?: boolean}]
-  createdAt DateTime   @default(now())
-  rows      TableRow[]
+  id            String     @id @default(uuid())
+  name          String     @unique
+  columns       Json?      // [{name: string, type: string, required?: boolean}]
+  retentionDays Int?       // null = simpan selamanya (fitur Warehouse)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  rows          TableRow[]
 }
 
 model TableRow {

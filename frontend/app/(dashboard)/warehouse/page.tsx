@@ -5,8 +5,8 @@ import toast from "react-hot-toast";
 
 type WTable = {
   id: string;
-  tableName: string;
-  schema: { name: string; type: string }[];
+  name: string;
+  columns: { name: string; type: string }[];
   retentionDays: number | null;
   rowCount: number;
   createdAt: string;
@@ -140,7 +140,7 @@ export default function WarehousePage() {
           { label: "Total Tables", value: tables.length, icon: "🗄️" },
           { label: "Total Rows", value: tables.reduce((sum, t) => sum + t.rowCount, 0).toLocaleString(), icon: "📊" },
           { label: "With Retention", value: tables.filter((t) => t.retentionDays).length, icon: "🔄" },
-          { label: "Kolom Terdefinisi", value: tables.reduce((sum, t) => sum + (t.schema?.length || 0), 0), icon: "📋" },
+          { label: "Kolom Terdefinisi", value: tables.reduce((sum, t) => sum + (t.columns?.length || 0), 0), icon: "📋" },
         ].map((s) => (
           <div key={s.label} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
             <span className="text-2xl">{s.icon}</span>
@@ -168,14 +168,14 @@ export default function WarehousePage() {
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-semibold text-slate-800 text-sm">{t.tableName}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{t.rowCount.toLocaleString()} rows · {t.schema?.length || 0} kolom</p>
+                      <p className="font-semibold text-slate-800 text-sm">{t.name}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{t.rowCount.toLocaleString()} rows · {t.columns?.length || 0} kolom</p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       {t.retentionDays && (
                         <span className="text-[10px] font-bold bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded">{t.retentionDays}d</span>
                       )}
-                      <button onClick={(e) => { e.stopPropagation(); handleDelete(t.id, t.tableName); }}
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(t.id, t.name); }}
                         className="text-red-400 hover:text-red-600 text-xs transition-colors">🗑</button>
                     </div>
                   </div>
@@ -199,7 +199,7 @@ export default function WarehousePage() {
             <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm h-full flex flex-col">
               <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center">
                 <div>
-                  <p className="font-bold text-slate-800">{selectedTable.tableName}</p>
+                  <p className="font-bold text-slate-800">{selectedTable.name}</p>
                   <p className="text-xs text-slate-400">{tableData?.total.toLocaleString() || 0} total rows</p>
                 </div>
                 <div className="flex gap-2">

@@ -27,6 +27,7 @@ import { BlendsModule } from './blends/blends.module';
 import { ApiQueriesModule } from './api-queries/api-queries.module';
 import { WarehouseModule } from './warehouse/warehouse.module';
 import { TableManagerModule } from './table-manager/table-manager.module';
+import { DataExplorerModule } from './data-explorer/data-explorer.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { TableManagerModule } from './table-manager/table-manager.module';
     ApiQueriesModule,
     WarehouseModule,
     TableManagerModule,
+    DataExplorerModule,
   ],
   controllers: [AppController],
   providers: [

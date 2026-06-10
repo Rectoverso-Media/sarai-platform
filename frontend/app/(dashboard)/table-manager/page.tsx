@@ -76,6 +76,7 @@ export default function TableManagerPage() {
   };
 
   const handleDeleteTable = async (tableId: string, tableName: string) => {
+    if (!confirm(`Hapus tabel "${tableName}" beserta semua datanya? Tindakan ini tidak dapat dibatalkan.`)) return;
     const id = toast.loading(`Menghapus "${tableName}"...`);
     try {
       const res = await apiFetch(`/tables/${tableId}`, { method: "DELETE" });
@@ -112,6 +113,7 @@ export default function TableManagerPage() {
   };
 
   const handleDeleteRow = async (rowId: string) => {
+    if (!confirm("Hapus baris ini?")) return;
     if (!selectedTable) return;
     const id = toast.loading("Menghapus baris...");
     try {
@@ -177,13 +179,17 @@ export default function TableManagerPage() {
     try {
       const res = await apiFetch(`/tables/${selectedTable.id}/export`);
       if (res.ok) {
-        const text = await res.text();
-        const blob = new Blob([text], { type: "text/csv" });
+        const data = await res.json();
+        const csv: string = data.csv || "";
+        const rowCount: number = data.rowCount || 0;
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = url; a.download = `${selectedTable.name}.csv`; a.click();
+        a.href = url;
+        a.download = data.filename || `${selectedTable.name}.csv`;
+        a.click();
         URL.revokeObjectURL(url);
-        toast.success("CSV berhasil diunduh!", { id });
+        toast.success(rowCount > 0 ? `CSV berhasil diunduh! (${rowCount} baris)` : "CSV diunduh (tabel kosong — header saja)", { id });
       } else toast.error("Gagal export CSV", { id });
     } catch { toast.error("Koneksi gagal", { id }); }
   };

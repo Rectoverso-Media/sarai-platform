@@ -48,14 +48,17 @@ export class QueryProcessor extends WorkerHost {
         durationMs,
       };
 
-      // ── UPDATE QueryExecution DI DB ──────────────────────────────────
+      // ── UPDATE QueryExecution DI DB (+ simpan snapshot untuk Transfer & Warehouse) ──
       if (executionId) {
+        // Simpan max 1000 baris pertama sebagai snapshot permanen di DB
+        const snapshotRows = rows.slice(0, 1000);
         await this.prisma.queryExecution.update({
           where: { id: executionId },
           data: {
             status: 'SUCCESS',
             durationMs,
             rowsReturned: rawResult.length,
+            resultSnapshot: { columns, rows: snapshotRows },
           },
         });
       }
