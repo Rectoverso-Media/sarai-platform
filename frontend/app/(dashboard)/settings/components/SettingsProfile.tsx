@@ -1,128 +1,182 @@
-﻿"use client";
+"use client";
 import { apiFetch } from '../../../../lib/api';
-import React, { useState, useEffect } from 'react';
+import { getCurrentUser, logout } from '../../../../lib/auth';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 export default function SettingsProfile() {
   const router = useRouter();
-  
-  // State form profil
-  const [profileForm, setProfileForm] = useState({
-    name: 'Loading...',
-    password: '',
-    confirmPassword: ''
-  });
+
+  // ─── Ambil user dari JWT — BUKAN localStorage('userData') ──────────────────
+  const [currentUser, setCurrentUser] = useState<{ sub: string; name: string; email: string; role: string } | null>(null);
+  const [nameInput, setNameInput] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [toast_, setToast_] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
-  // Ambil data nama dari localStorage saat pertama kali load
+  // Decode JWT saat mount — tidak bergantung pada localStorage userData
   useEffect(() => {
-    const savedData = JSON.parse(localStorage.getItem('userData') || '{}');
-    if (savedData.name) {
-      setProfileForm(prev => ({ ...prev, name: savedData.name }));
+    const user = getCurrentUser();
+    if (!user) {
+      // Token tidak ada atau expired → tendang ke login
+      router.replace('/login');
+      return;
     }
-  }, []);
+    setCurrentUser(user);
+    setNameInput(user.name);
+  }, [router]);
 
-  // FUNGSI LOGOUT (Aman & Langsung Tendang ke Halaman Login)
-  const handleLogout = () => {
-    localStorage.removeItem('userData'); 
-    document.cookie = "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"; 
+  // Auto-dismiss toast
+  useEffect(() => {
+    if (toast_) {
+      const t = setTimeout(() => setToast_(null), 3500);
+      return () => clearTimeout(t);
+    }
+  }, [toast_]);
+
+  // ─── Logout ─────────────────────────────────────────────────────────────────
+  const handleLogout = useCallback(() => {
+    logout(); // Hapus access_token + cleanup
     router.push('/login');
-  };
+  }, [router]);
 
-  // FUNGSI SIMPAN PERUBAHAN KE BACKEND
+  // ─── Update profil ───────────────────────────────────────────────────────────
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validasi kalau user mau ganti password
-    if (profileForm.password && profileForm.password !== profileForm.confirmPassword) {
-      alert("Password dan Konfirmasi Password tidak cocok!");
+
+    if (!nameInput.trim()) {
+      setToast_({ type: 'error', msg: 'Nama tidak boleh kosong.' });
+      return;
+    }
+
+    if (password && password.length < 8) {
+      setToast_({ type: 'error', msg: 'Password minimal 8 karakter.' });
+      return;
+    }
+
+    if (password && password !== confirmPassword) {
+      setToast_({ type: 'error', msg: 'Password dan konfirmasi tidak cocok.' });
       return;
     }
 
     setIsUpdating(true);
     try {
-      const savedData = JSON.parse(localStorage.getItem('userData') || '{}');
-      const currentUserId = savedData.id;
+      // userId di-extract dari JWT di BACKEND via req.user.sub
+      // Frontend TIDAK perlu kirim userId di body — ini yang menyebabkan bug lama
+      const body: Record<string, string> = { name: nameInput.trim() };
+      if (password) body.password = password;
 
-      if (!currentUserId) {
-        alert("Sesi tidak valid, silakan login ulang.");
-        return;
-      }
-
-      // Pastikan port NestJS kamu (misal 3001)
       const res = await apiFetch('/users/profile', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: currentUserId,
-          name: profileForm.name,
-          // Kirim password HANYA jika field-nya diisi
-          ...(profileForm.password && { password: profileForm.password }) 
-        })
+        body: JSON.stringify(body),
       });
 
-      if (!res.ok) throw new Error('Gagal update profil');
-      
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || 'Gagal update profil');
+      }
+
       const updatedUser = await res.json();
-      alert("Profil berhasil diperbarui!");
-      
-      // Update local storage biar nama di pojok kanan atas Header ikutan ganti
-      localStorage.setItem('userData', JSON.stringify({ ...savedData, name: updatedUser.name }));
-      
-      // Kosongkan form password setelah berhasil
-      setProfileForm({ ...profileForm, password: '', confirmPassword: '' });
-      
-      // Refresh UI
-      window.location.reload(); 
-    } catch (error) {
+
+      setToast_({ type: 'success', msg: 'Profil berhasil diperbarui!' });
+
+      // Update local state — TIDAK perlu localStorage.setItem('userData')
+      // Header akan mendapat data fresh saat next token refresh atau re-mount
+      setCurrentUser(prev => prev ? { ...prev, name: updatedUser.name } : null);
+      setPassword('');
+      setConfirmPassword('');
+
+      // Dispatch custom event agar Header bisa update nama tanpa reload
+      window.dispatchEvent(new CustomEvent('profile-updated', { detail: { name: updatedUser.name } }));
+
+    } catch (error: any) {
       console.error(error);
-      alert("Terjadi kesalahan saat menyimpan profil.");
+      setToast_({ type: 'error', msg: error.message || 'Terjadi kesalahan saat menyimpan.' });
     } finally {
       setIsUpdating(false);
     }
   };
 
+  if (!currentUser) {
+    return (
+      <div className="flex items-center justify-center h-40">
+        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const avatarInitials = currentUser.name
+    .split(' ')
+    .slice(0, 2)
+    .map(w => w[0])
+    .join('')
+    .toUpperCase() || '??';
+
   return (
     <div className="max-w-3xl">
       <h2 className="text-2xl font-bold text-slate-800 mb-6">Profil Pengguna</h2>
-      
+
+      {/* Toast Notification */}
+      {toast_ && (
+        <div
+          className={`mb-5 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold animate-fade-in ${
+            toast_.type === 'success'
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              : 'bg-red-50 text-red-700 border border-red-200'
+          }`}
+        >
+          <span>{toast_.type === 'success' ? '✅' : '⚠️'}</span>
+          {toast_.msg}
+        </div>
+      )}
+
       <form onSubmit={handleUpdateProfile} className="space-y-6">
-        
+
         {/* AVATAR SECTION */}
         <div className="flex items-center gap-6 pb-6 border-b border-slate-100">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 p-1 shadow-lg">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 p-1 shadow-lg flex-shrink-0">
             <div className="w-full h-full bg-white rounded-xl flex items-center justify-center font-bold text-blue-600 text-2xl">
-              {profileForm.name !== 'Loading...' ? profileForm.name.substring(0, 2).toUpperCase() : '??'}
+              {avatarInitials}
             </div>
           </div>
           <div>
-            <h3 className="font-semibold text-slate-800">Foto Profil</h3>
-            <p className="text-xs text-slate-500 mb-3">Format JPG atau PNG, maksimal 2MB.</p>
-            <div className="flex gap-2">
-              <button type="button" className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-                Ubah Foto
-              </button>
-            </div>
+            <h3 className="font-semibold text-slate-800">{currentUser.name}</h3>
+            <p className="text-xs text-slate-500 mt-0.5">{currentUser.email}</p>
+            <span className="inline-block mt-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold border border-blue-200">
+              {currentUser.role}
+            </span>
           </div>
         </div>
 
         {/* DATA DIRI SECTION */}
         <div className="grid grid-cols-2 gap-6 pb-6 border-b border-slate-100">
           <div className="col-span-2 sm:col-span-1 flex flex-col gap-2">
-            <label className="font-semibold text-slate-700 text-sm">Nama Lengkap</label>
-            <input 
-              type="text" 
-              value={profileForm.name || ''}
-              onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
-              className="border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            <label className="font-semibold text-slate-700 text-sm" htmlFor="profile-name">
+              Nama Lengkap
+            </label>
+            <input
+              id="profile-name"
+              type="text"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              className="border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
             />
           </div>
           <div className="col-span-2 sm:col-span-1 flex flex-col gap-2">
-            <label className="font-semibold text-slate-700 text-sm">Alamat Email</label>
-            <input 
-              type="email" 
-              defaultValue="arif@rectoverso.com" 
+            <label className="font-semibold text-slate-700 text-sm">
+              Alamat Email
+            </label>
+            {/* 
+              Email dari JWT — read-only, BUKAN hardcoded.
+              Email tidak bisa diubah karena terikat akun tim.
+            */}
+            <input
+              type="email"
+              value={currentUser.email}
               disabled
+              readOnly
               className="border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm text-slate-500 cursor-not-allowed"
             />
             <p className="text-[10px] text-slate-400">Email tidak dapat diubah karena terikat pada tim.</p>
@@ -136,42 +190,58 @@ export default function SettingsProfile() {
             <p className="text-xs text-slate-500 mb-4">Kosongkan jika tidak ingin mengubah password.</p>
           </div>
           <div className="col-span-2 sm:col-span-1 flex flex-col gap-2">
-            <label className="font-semibold text-slate-700 text-sm">Password Baru</label>
-            <input 
+            <label className="font-semibold text-slate-700 text-sm" htmlFor="profile-password">
+              Password Baru
+            </label>
+            <input
+              id="profile-password"
               type="password"
               placeholder="Min. 8 karakter"
-              value={profileForm.password || ''}
-              onChange={(e) => setProfileForm({...profileForm, password: e.target.value})}
-              className="border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:border-blue-500"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+              className="border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div className="col-span-2 sm:col-span-1 flex flex-col gap-2">
-            <label className="font-semibold text-slate-700 text-sm">Konfirmasi Password Baru</label>
-            <input 
+            <label className="font-semibold text-slate-700 text-sm" htmlFor="profile-confirm-password">
+              Konfirmasi Password Baru
+            </label>
+            <input
+              id="profile-confirm-password"
               type="password"
               placeholder="Ketik ulang password baru"
-              value={profileForm.confirmPassword || '' }
-              onChange={(e) => setProfileForm({...profileForm, confirmPassword: e.target.value})}
-              className="border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:border-blue-500"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              autoComplete="new-password"
+              className={`border rounded-lg px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-1 transition-colors ${
+                confirmPassword && password !== confirmPassword
+                  ? 'border-red-400 focus:border-red-500 focus:ring-red-500 bg-red-50'
+                  : 'border-slate-300 focus:border-blue-500 focus:ring-blue-500'
+              }`}
             />
+            {confirmPassword && password !== confirmPassword && (
+              <p className="text-[11px] text-red-500 font-medium">Password tidak cocok</p>
+            )}
           </div>
         </div>
 
-        {/* ACTION BUTTONS (LOGOUT & SAVE) */}
+        {/* ACTION BUTTONS */}
         <div className="mt-8 flex justify-between items-center pt-6 border-t border-slate-100">
-          <button 
+          <button
             type="button"
             onClick={handleLogout}
             className="bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-bold py-2.5 px-6 rounded-lg transition-colors text-sm shadow-sm"
           >
             Logout Akun
           </button>
-          
-          <button 
+
+          <button
             type="submit"
             disabled={isUpdating}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors text-sm shadow-sm disabled:opacity-50"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
+            {isUpdating && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
             {isUpdating ? 'Menyimpan...' : 'Simpan Perubahan'}
           </button>
         </div>

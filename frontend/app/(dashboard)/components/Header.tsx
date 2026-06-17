@@ -1,29 +1,52 @@
-"use client"; 
+"use client";
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getCurrentUser } from '../../../lib/auth';
 
 export default function Header() {
   const router = useRouter();
 
-  const [userFullName, setUserFullName] = useState<string>('Loading...');
+  const [userFullName, setUserFullName] = useState<string>('');
   const [userInitials, setUserInitials] = useState<string>('??');
-  const [notifCount] = useState<number>(0); // Placeholder — nanti bisa di-fetch dari API
+  const [notifCount] = useState<number>(0);
+
+  const loadUserFromToken = () => {
+    // Decode JWT — BUKAN localStorage('userData')
+    const user = getCurrentUser();
+    if (!user) return;
+
+    setUserFullName(user.name);
+
+    const nameParts = user.name.split(' ');
+    if (nameParts.length >= 2) {
+      setUserInitials((nameParts[0][0] + nameParts[1][0]).toUpperCase());
+    } else {
+      setUserInitials(nameParts[0].substring(0, 2).toUpperCase());
+    }
+  };
 
   useEffect(() => {
-    const savedData = localStorage.getItem('userData');
-    if (savedData) {
-      const user = JSON.parse(savedData);
-      setUserFullName(user.name);
-      
-      const nameParts = user.name.split(' ');
-      if (nameParts.length >= 2) {
-        setUserInitials((nameParts[0][0] + nameParts[1][0]).toUpperCase());
-      } else {
-        setUserInitials(nameParts[0].substring(0, 2).toUpperCase());
+    loadUserFromToken();
+
+    // Listen for profile-updated event dari SettingsProfile
+    // agar nama di header ikut berubah tanpa page reload
+    const handleProfileUpdate = (e: Event) => {
+      const detail = (e as CustomEvent<{ name: string }>).detail;
+      if (detail?.name) {
+        setUserFullName(detail.name);
+        const nameParts = detail.name.split(' ');
+        if (nameParts.length >= 2) {
+          setUserInitials((nameParts[0][0] + nameParts[1][0]).toUpperCase());
+        } else {
+          setUserInitials(nameParts[0].substring(0, 2).toUpperCase());
+        }
       }
-    }
+    };
+
+    window.addEventListener('profile-updated', handleProfileUpdate);
+    return () => window.removeEventListener('profile-updated', handleProfileUpdate);
   }, []);
 
   const goToProfile = () => {
@@ -51,16 +74,18 @@ export default function Header() {
           )}
         </Link>
 
-        <div className="h-6 w-px bg-slate-200 mx-1"></div>
+        <div className="h-6 w-px bg-slate-200 mx-1" />
 
         {/* User Profile */}
-        <div 
-          className="flex items-center gap-3 pl-2 group relative cursor-pointer" 
-          onClick={goToProfile} 
+        <div
+          className="flex items-center gap-3 pl-2 group relative cursor-pointer"
+          onClick={goToProfile}
           title="Open Profile Settings"
         >
           <div className="text-right hidden sm:block">
-            <p className="text-xs font-bold text-slate-800 leading-tight">{userFullName}</p>
+            <p className="text-xs font-bold text-slate-800 leading-tight">
+              {userFullName || 'User'}
+            </p>
             <p className="text-[10px] text-blue-600 font-medium">Administrator</p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 p-0.5 shadow-md group-hover:shadow-lg transition-all">

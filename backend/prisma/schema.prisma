@@ -65,6 +65,8 @@ model Team {
   queriesUsed          Int       @default(0)
   rowsSynced           Int       @default(0) // Data dari Airbyte
   storageUsedMB        Int       @default(0) // Kapasitas penyimpanan
+  airbyteSyncsUsed     Int       @default(0) // Jumlah Airbyte sync jobs
+  currentPeriodEnd     DateTime?             // Akhir billing period saat ini
   
   members     TeamMember[]
   invitations TeamInvitation[]
@@ -423,13 +425,8 @@ model TableRow {
 // ==========================================
 // 15. SUBSCRIPTION & USAGE TRACKING
 // ==========================================
-model Subscription {
-  id          String             @id @default(uuid())
-  planName    String             // misal: "Pro Tier"
-  price       Decimal
-  features    Json
-  // Menghapus UserSubscription karena kita sekarang pakai data di dalam model Team
-}
+// Model Subscription dihapus — billing state sudah ada di model Team (stripeCustomerId, subscriptionPlan, dll)
+// Tidak ada UserSubscription karena billing per-Tim, bukan per-User
 
 // Model ini digunakan untuk mencatat log historis (Audit pemakaian harian)
 model UsageMetric {

@@ -4,6 +4,7 @@ import SettingsProfile from './components/SettingsProfile';
 import SettingsAudit from './components/SettingsAudit';
 import SettingsNotifications from './components/SettingsNotifications';
 import SettingsBilling from './components/SettingsBilling';
+import { UnderConstructionState } from '@/components/ui';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile'); // Default ke profile aja biar bagus
@@ -38,15 +39,11 @@ export default function SettingsPage() {
       case 'billing': 
         return <SettingsBilling />;
       default:
-        // Placeholder untuk tab yang belum dibuat (Tim, Billing)
         return (
-          <div className="flex h-full items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
-            <div className="text-center">
-              <span className="text-4xl">🚧</span>
-              <h3 className="mt-4 text-lg font-semibold text-slate-700">Modul Sedang Dibangun</h3>
-              <p className="text-sm text-slate-500 mt-1">Konfigurasi untuk {tabs.find(t => t.id === activeTab)?.label} akan segera tersedia.</p>
-            </div>
-          </div>
+          <UnderConstructionState
+            featureName={tabs.find(t => t.id === activeTab)?.label}
+            className="h-64"
+          />
         );
     }
   };

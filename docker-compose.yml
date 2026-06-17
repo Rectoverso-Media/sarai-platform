@@ -1,53 +1,138 @@
 version: '3.8'
 
+# ══════════════════════════════════════════════════════════════════
+# SARAI Platform — Docker Compose (Development)
+#
+# PENTING: Jangan gunakan file ini langsung untuk production!
+#          Gunakan docker-compose.prod.yml untuk production.
+#
+# Setup:
+# 1. cp backend/.env.example backend/.env
+# 2. Isi backend/.env dengan credentials nyata
+# 3. docker compose up --build
+# ══════════════════════════════════════════════════════════════════
+
 services:
-  # Kontainer Database PostgreSQL
+
+  # ────────────────────────────────────────────────────────────────
+  # PostgreSQL Database
+  # ────────────────────────────────────────────────────────────────
   postgres-db:
     image: postgres:15-alpine
     container_name: sarai-db
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: sarai_db
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD wajib diset di .env}
+      POSTGRES_DB: ${POSTGRES_DB:-sarai_db}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - sarai-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-sarai_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
 
-  # Kontainer Backend NestJS
+  # ────────────────────────────────────────────────────────────────
+  # Redis (Wajib untuk BullMQ queues dan caching)
+  # ────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: sarai-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_dev_password}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - sarai-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD:-redis_dev_password}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ────────────────────────────────────────────────────────────────
+  # Backend NestJS
+  # ────────────────────────────────────────────────────────────────
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
+      target: production
     container_name: sarai-backend
     ports:
       - "3001:3001"
     environment:
-      - DATABASE_URL=postgresql://admin:password123@postgres-db:5432/sarai_db?schema=public
-      - JWT_SECRET=SARAI_RAHASIA_SUPER_AMAN_123!
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL wajib diset di .env}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET wajib diset di .env}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_dev_password}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      # Kredensial lainnya dari .env
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - STRIPE_PRODUCT_PRO=${STRIPE_PRODUCT_PRO}
+      - STRIPE_PRODUCT_ENTERPRISE=${STRIPE_PRODUCT_ENTERPRISE}
+      - AIRBYTE_CLIENT_ID=${AIRBYTE_CLIENT_ID}
+      - AIRBYTE_CLIENT_SECRET=${AIRBYTE_CLIENT_SECRET}
+      - AIRBYTE_WORKSPACE_ID=${AIRBYTE_WORKSPACE_ID}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - GROQ_API_KEY=${GROQ_API_KEY}
     depends_on:
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - sarai-network
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3001/', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
 
-  # Kontainer Frontend Next.js
+  # ────────────────────────────────────────────────────────────────
+  # Frontend Next.js
+  # ────────────────────────────────────────────────────────────────
   frontend:
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: runner
     container_name: sarai-frontend
     ports:
       - "3000:3000"
+    environment:
+      - NODE_ENV=production
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - sarai-network
+    restart: unless-stopped
 
 volumes:
-  pgdata: # Biar data DB gak hilang pas container dimatikan
+  pgdata:
+    name: sarai_pgdata
+  redisdata:
+    name: sarai_redisdata
 
 networks:
   sarai-network:
     driver: bridge
+    name: sarai_network

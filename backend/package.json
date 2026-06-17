@@ -34,9 +34,11 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/platform-socket.io": "^11.1.26",
     "@nestjs/schedule": "^6.1.3",
+    "@nestjs/swagger": "^11.4.4",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/websockets": "^11.1.26",
     "@prisma/client": "^5.15.0",
+    "@types/stripe": "^8.0.416",
     "axios": "^1.15.2",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.76.2",
@@ -49,6 +51,7 @@
     "google-auth-library": "^10.6.2",
     "google-spreadsheet": "^5.2.0",
     "googleapis": "^171.4.0",
+    "helmet": "^8.2.0",
     "jsonpath-plus": "^10.4.0",
     "mathjs": "^15.2.0",
     "nodemailer": "^8.0.7",
@@ -62,6 +65,7 @@
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.3",
     "speakeasy": "^2.0.0",
+    "stripe": "^16.12.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
@@ -108,9 +112,27 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!**/*.module.(t|j)s",
+      "!**/main.(t|j)s",
+      "!**/prisma.service.(t|j)s",
+      "!**/*.processor.(t|j)s",
+      "!**/*.scheduler.(t|j)s",
+      "!**/*.strategy.(t|j)s",
+      "!**/*.decorator.(t|j)s",
+      "!**/source-catalog.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
+    "coverageThreshold": {
+      "global": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      }
+    },
     "testEnvironment": "node"
   }
+
+
 }

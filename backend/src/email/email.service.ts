@@ -98,4 +98,59 @@ export class EmailService {
     `;
     return this.sendEmail(email, subject, html);
   }
-}
+
+  // Fungsi kirim email terkait billing (payment_failed, subscription_canceled, trial_expiring)
+  async sendBillingEmail(
+    to: string,
+    event: 'payment_failed' | 'subscription_canceled' | 'trial_expiring',
+    details: { teamName?: string; daysLeft?: number },
+  ) {
+    let subject: string;
+    let html: string;
+    const billingUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/settings?tab=billing`;
+
+    switch (event) {
+      case 'payment_failed':
+        subject = '⚠️ Pembayaran SARAI Gagal — Tindakan Diperlukan';
+        html = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center; color: #333;">
+            <h2 style="color: #dc2626;">Pembayaran Gagal</h2>
+            <p>Halo! Sayangnya pembayaran langganan untuk tim <b>${details.teamName || 'kamu'}</b> di SARAI gagal diproses.</p>
+            <p>Akun kamu akan beralih ke Free Plan jika pembayaran tidak diperbarui dalam 3 hari.</p>
+            <a href="${billingUrl}" style="display: inline-block; margin: 20px 0; padding: 12px 24px; background-color: #dc2626; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Perbarui Metode Pembayaran</a>
+            <p style="font-size: 12px; color: #777;">Jika kamu memerlukan bantuan, hubungi support@sarai.io</p>
+          </div>
+        `;
+        break;
+
+      case 'subscription_canceled':
+        subject = '😢 Langganan SARAI Kamu Telah Dibatalkan';
+        html = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center; color: #333;">
+            <h2 style="color: #64748b;">Langganan Dibatalkan</h2>
+            <p>Langganan SARAI untuk tim <b>${details.teamName || 'kamu'}</b> telah dibatalkan.</p>
+            <p>Kamu masih bisa menggunakan akun dengan batasan Free Plan.</p>
+            <a href="${billingUrl}" style="display: inline-block; margin: 20px 0; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Aktifkan Kembali</a>
+          </div>
+        `;
+        break;
+
+      case 'trial_expiring':
+        subject = `⏰ Trial SARAI Kamu Akan Berakhir dalam ${details.daysLeft} Hari`;
+        html = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; text-align: center; color: #333;">
+            <h2 style="color: #d97706;">Trial Hampir Berakhir</h2>
+            <p>Trial SARAI untuk tim <b>${details.teamName || 'kamu'}</b> akan berakhir dalam <b>${details.daysLeft} hari</b>.</p>
+            <p>Upgrade sekarang untuk tetap menikmati semua fitur tanpa gangguan.</p>
+            <a href="${billingUrl}" style="display: inline-block; margin: 20px 0; padding: 12px 24px; background-color: #d97706; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Upgrade Sekarang</a>
+          </div>
+        `;
+        break;
+
+      default:
+        return;
+    }
+
+    return this.sendEmail(to, subject, html);
+  }
+}

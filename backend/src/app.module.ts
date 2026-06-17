@@ -32,6 +32,7 @@ import { InsightsModule } from './insights/insights.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { ExcelModule } from './integrations/excel/excel.module';
 import { ODataModule } from './odata/odata.module';
+import { BillingModule } from './billing/billing.module';
 
 @Module({
   imports: [
@@ -79,6 +80,7 @@ import { ODataModule } from './odata/odata.module';
     IntegrationsModule,
     ExcelModule,
     ODataModule,
+    BillingModule,
   ],
   controllers: [AppController],
   providers: [
