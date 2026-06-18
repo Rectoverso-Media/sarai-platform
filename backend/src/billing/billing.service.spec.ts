@@ -157,7 +157,7 @@ describe('BillingService', () => {
         airbyteSyncsUsed: 0,
       });
 
-      const result = await service.checkQuota('team-1', 'queries');
+      const result = await service.checkQuota('team-1', 'queries') as any;
 
       expect(result.allowed).toBe(true);
       expect(result.isUnlimited ?? true).toBe(true);

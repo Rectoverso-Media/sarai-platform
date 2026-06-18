@@ -1,15 +1,10 @@
-import {
-  Controller,
-  Get,
-  Query,
-  Res,
-  UseGuards,
-  Header,
-} from '@nestjs/common';
+import { Controller, Get, Query, Res, UseGuards, Header } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ODataService, ODataQueryParams } from './odata.service';
 
+@ApiTags('OData (BI Connector)')
 @Controller('odata')
 export class ODataController {
   constructor(private readonly odataService: ODataService) {}
@@ -17,6 +12,8 @@ export class ODataController {
   // GET /odata — Service document (daftar entity sets)
   // Tidak butuh auth agar Looker Studio & Power BI bisa discover endpoint
   @Get()
+  @ApiOperation({ summary: 'OData service document — daftar entity sets (no auth)' })
+  @ApiResponse({ status: 200, description: 'Service document berhasil diambil' })
   async getServiceDocument() {
     const doc = await this.odataService.getServiceDocument();
     return doc;
@@ -25,6 +22,8 @@ export class ODataController {
   // GET /odata/$metadata — OData metadata/schema XML
   @Get('\\$metadata')
   @Header('Content-Type', 'application/xml; charset=utf-8')
+  @ApiOperation({ summary: 'OData metadata schema dalam format XML' })
+  @ApiResponse({ status: 200, description: 'Metadata XML berhasil diambil' })
   async getMetadata(@Res() res: Response) {
     const xml = await this.odataService.generateMetadata();
     return res.send(xml);
@@ -33,6 +32,8 @@ export class ODataController {
   // GET /odata/SyncedData — Query data dengan OData params
   // Auth via query param token untuk kompatibilitas Power BI & Looker Studio
   @Get('SyncedData')
+  @ApiOperation({ summary: 'Query synced data dengan OData params ($filter, $select, $top, dll)' })
+  @ApiResponse({ status: 200, description: 'Data berhasil diambil dalam format OData' })
   async getSyncedData(
     @Query('$filter') $filter?: string,
     @Query('$select') $select?: string,
@@ -69,7 +70,10 @@ export class ODataController {
 
   // GET /odata/streams — List stream yang tersedia (helper endpoint)
   @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth('JWT-auth')
   @Get('streams')
+  @ApiOperation({ summary: 'List stream synced data yang tersedia (butuh auth)' })
+  @ApiResponse({ status: 200, description: 'Daftar stream berhasil diambil' })
   async getAvailableStreams() {
     const streams = await this.odataService.getAvailableStreams();
     return { streams };

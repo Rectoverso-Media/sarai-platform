@@ -1,25 +1,15 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Body,
-  Param,
-  Query,
-  Res,
-  UseGuards,
-  UseInterceptors,
-  UploadedFile,
-  HttpCode,
-  HttpStatus,
-  Header,
+  Controller, Get, Post, Patch, Delete, Body, Param, Query, Res,
+  UseGuards, UseInterceptors, UploadedFile, HttpCode, HttpStatus, Header,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TableManagerService } from './table-manager.service';
 import { AuthGuard } from '@nestjs/passport';
 
+@ApiTags('Table Manager')
+@ApiBearerAuth('JWT-auth')
 @Controller('tables')
 @UseGuards(AuthGuard('jwt'))
 export class TableManagerController {
@@ -27,30 +17,41 @@ export class TableManagerController {
 
   /** POST /tables — Buat tabel baru */
   @Post()
+  @ApiOperation({ summary: 'Buat managed table baru dengan schema kustom' })
+  @ApiResponse({ status: 201, description: 'Tabel berhasil dibuat' })
   createTable(@Body() body: any) {
     return this.tableManagerService.createTable(body);
   }
 
   /** GET /tables — List semua tabel */
   @Get()
+  @ApiOperation({ summary: 'List semua managed table' })
+  @ApiResponse({ status: 200, description: 'Daftar tabel berhasil diambil' })
   findAllTables() {
     return this.tableManagerService.getAllTables();
   }
 
   /** GET /tables/:id — Detail tabel */
   @Get(':id')
+  @ApiOperation({ summary: 'Detail managed table beserta schema' })
+  @ApiResponse({ status: 200, description: 'Detail tabel berhasil diambil' })
+  @ApiResponse({ status: 404, description: 'Tabel tidak ditemukan' })
   findOneTable(@Param('id') id: string) {
     return this.tableManagerService.getTableById(id);
   }
 
   /** PATCH /tables/:id — Update nama / schema / retentionDays tabel */
   @Patch(':id')
+  @ApiOperation({ summary: 'Update konfigurasi tabel (nama, schema, retention)' })
+  @ApiResponse({ status: 200, description: 'Tabel berhasil diupdate' })
   updateTable(@Param('id') id: string, @Body() body: any) {
     return this.tableManagerService.updateTable(id, body);
   }
 
   /** DELETE /tables/:id — Hapus tabel */
   @Delete(':id')
+  @ApiOperation({ summary: 'Hapus managed table beserta semua data' })
+  @ApiResponse({ status: 200, description: 'Tabel berhasil dihapus' })
   removeTable(@Param('id') id: string) {
     return this.tableManagerService.deleteTable(id);
   }
@@ -59,6 +60,8 @@ export class TableManagerController {
 
   /** GET /tables/:id/rows — Ambil baris dengan paginasi */
   @Get(':id/rows')
+  @ApiOperation({ summary: 'Ambil data baris tabel dengan paginasi' })
+  @ApiResponse({ status: 200, description: 'Data baris berhasil diambil' })
   getRows(
     @Param('id') id: string,
     @Query('page') page?: string,
@@ -73,12 +76,16 @@ export class TableManagerController {
 
   /** POST /tables/:id/rows — Tambah satu baris */
   @Post(':id/rows')
+  @ApiOperation({ summary: 'Tambah satu baris data ke tabel' })
+  @ApiResponse({ status: 201, description: 'Baris berhasil ditambahkan' })
   createRow(@Param('id') id: string, @Body() body: Record<string, any>) {
     return this.tableManagerService.createRow(id, body);
   }
 
   /** PATCH /tables/:id/rows/:rowId — Update satu baris */
   @Patch(':id/rows/:rowId')
+  @ApiOperation({ summary: 'Update data satu baris' })
+  @ApiResponse({ status: 200, description: 'Baris berhasil diupdate' })
   updateRow(
     @Param('id') _id: string,
     @Param('rowId') rowId: string,
@@ -89,6 +96,8 @@ export class TableManagerController {
 
   /** DELETE /tables/:id/rows/:rowId — Hapus satu baris */
   @Delete(':id/rows/:rowId')
+  @ApiOperation({ summary: 'Hapus satu baris data' })
+  @ApiResponse({ status: 200, description: 'Baris berhasil dihapus' })
   deleteRow(@Param('id') _id: string, @Param('rowId') rowId: string) {
     return this.tableManagerService.deleteRow(rowId);
   }
@@ -98,6 +107,8 @@ export class TableManagerController {
   /** POST /tables/:id/rows/batch-delete — Hapus multiple baris */
   @Post(':id/rows/batch-delete')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Batch delete — hapus multiple baris sekaligus' })
+  @ApiResponse({ status: 200, description: 'Baris berhasil dihapus secara batch' })
   batchDelete(@Param('id') _id: string, @Body('ids') ids: string[]) {
     return this.tableManagerService.batchDeleteRows(ids);
   }
@@ -105,6 +116,8 @@ export class TableManagerController {
   /** POST /tables/:id/rows/batch-create — Insert multiple baris */
   @Post(':id/rows/batch-create')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Batch create — insert multiple baris sekaligus' })
+  @ApiResponse({ status: 200, description: 'Baris berhasil ditambahkan secara batch' })
   batchCreate(@Param('id') id: string, @Body('rows') rows: any[]) {
     return this.tableManagerService.batchCreateRows(id, rows);
   }
@@ -115,6 +128,9 @@ export class TableManagerController {
   @Post(':id/import')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Import data dari file CSV ke tabel' })
+  @ApiResponse({ status: 200, description: 'Data CSV berhasil diimport' })
   importCsv(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
@@ -125,6 +141,8 @@ export class TableManagerController {
 
   /** GET /tables/:id/export — Download semua data sebagai CSV */
   @Get(':id/export')
+  @ApiOperation({ summary: 'Export semua data tabel sebagai file CSV' })
+  @ApiResponse({ status: 200, description: 'File CSV berhasil di-generate' })
   async exportCsv(@Param('id') id: string, @Res() res: Response) {
     const { csv, filename, rowCount } = await this.tableManagerService.exportCsv(id);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');

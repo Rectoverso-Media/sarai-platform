@@ -1,14 +1,7 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Req,
-  UseGuards,
-  Headers,
-  HttpCode,
-  Logger,
+  Controller, Get, Post, Body, Req, UseGuards, Headers, HttpCode, Logger,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiExcludeEndpoint } from '@nestjs/swagger';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
@@ -16,6 +9,7 @@ import { BillingService } from './billing.service';
 import { CreateCheckoutDto } from './dto/billing.dto';
 import { PrismaService } from '../prisma/prisma.service';
 
+@ApiTags('Billing')
 @Controller('billing')
 export class BillingController {
   private readonly logger = new Logger(BillingController.name);
@@ -25,24 +19,21 @@ export class BillingController {
     private readonly prisma: PrismaService,
   ) {}
 
-  // ──────────────────────────────────────────
-  // GET /billing/subscription
-  // Ambil status plan + usage saat ini
-  // ──────────────────────────────────────────
   @Get('subscription')
   @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Ambil status subscription dan usage saat ini' })
+  @ApiResponse({ status: 200, description: 'Info subscription berhasil diambil' })
   async getSubscription(@Req() req: any) {
     const teamId = await this.getTeamIdFromUser(req.user.sub || req.user.id);
     return this.billingService.getSubscription(teamId);
   }
 
-  // ──────────────────────────────────────────
-  // POST /billing/checkout
-  // Buat Stripe Checkout Session → return URL redirect
-  // Body: { planName: 'PRO' | 'ENTERPRISE' }
-  // ──────────────────────────────────────────
   @Post('checkout')
   @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Buat Stripe Checkout Session untuk upgrade plan' })
+  @ApiResponse({ status: 201, description: 'Checkout session URL berhasil dibuat' })
   async createCheckoutSession(@Req() req: any, @Body() body: CreateCheckoutDto) {
     const userId = req.user.sub || req.user.id;
     const userEmail = req.user.email;
@@ -50,25 +41,19 @@ export class BillingController {
     return this.billingService.createCheckoutSession(teamId, body.planName, userEmail);
   }
 
-  // ──────────────────────────────────────────
-  // POST /billing/portal
-  // Buka Stripe Customer Portal → return URL redirect
-  // ──────────────────────────────────────────
   @Post('portal')
   @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Buka Stripe Customer Portal untuk manage subscription' })
+  @ApiResponse({ status: 200, description: 'Portal URL berhasil dibuat' })
   async createPortalSession(@Req() req: any) {
     const teamId = await this.getTeamIdFromUser(req.user.sub || req.user.id);
     return this.billingService.createPortalSession(teamId);
   }
 
-  // ──────────────────────────────────────────
-  // POST /billing/webhook
-  // Stripe Webhook — TIDAK pakai JWT guard!
-  // Stripe verifikasi via signature header.
-  // PENTING: endpoint ini butuh raw body (set di main.ts)
-  // ──────────────────────────────────────────
   @Post('webhook')
   @HttpCode(200)
+  @ApiExcludeEndpoint()
   async handleWebhook(
     @Req() req: RawBodyRequest<Request>,
     @Headers('stripe-signature') signature: string,
@@ -81,12 +66,11 @@ export class BillingController {
     return this.billingService.handleWebhook(rawBody, signature);
   }
 
-  // ──────────────────────────────────────────
-  // GET /billing/quota-status
-  // Cek status quota saat ini (untuk header banner)
-  // ──────────────────────────────────────────
   @Get('quota-status')
   @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Cek status quota saat ini (queries, AI tokens, syncs)' })
+  @ApiResponse({ status: 200, description: 'Status quota berhasil diambil' })
   async getQuotaStatus(@Req() req: any) {
     const teamId = await this.getTeamIdFromUser(req.user.sub || req.user.id);
     const [queries, aiTokens, airbyteSyncs] = await Promise.all([
@@ -97,9 +81,6 @@ export class BillingController {
     return { queries, aiTokens, airbyteSyncs };
   }
 
-  // ──────────────────────────────────────────
-  // PRIVATE HELPER
-  // ──────────────────────────────────────────
   private async getTeamIdFromUser(userId: string): Promise<string> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -107,7 +88,6 @@ export class BillingController {
     });
 
     if (!user?.teamId) {
-      // Kalau user belum punya tim, buat tim default otomatis
       const team = await this.prisma.team.create({
         data: {
           name: 'My Team',

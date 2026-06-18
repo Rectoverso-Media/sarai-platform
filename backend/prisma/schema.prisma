@@ -74,6 +74,9 @@ model Team {
   legacyUsers User[]
   usageLogs   UsageMetric[]  // Relasi ke riwayat pemakaian
   integrations Integration[] // Relasi ke integrasi platform output
+
+  // --- NOTIFICATION PREFERENCES ---
+  notificationChannels Json? // { inApp, email, slack, webhook, slackWebhookUrl, webhookUrl }
 }
 
 model TeamMember {

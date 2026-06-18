@@ -172,7 +172,7 @@ describe('AuthService', () => {
       });
       mockPrismaService.user.update.mockResolvedValue({});
 
-      const result = await service.login(loginDto);
+      const result = await service.login(loginDto) as any;
 
       expect(result.requires2FA).toBe(true);
       expect(result.tempToken).toBe('mock-jwt-token');
@@ -195,7 +195,7 @@ describe('AuthService', () => {
       });
       mockPrismaService.userSession.create.mockResolvedValue({ id: 'session-1' });
 
-      const result = await service.login(loginDto);
+      const result = await service.login(loginDto) as any;
 
       expect(result).toHaveProperty('access_token');
       expect(result).toHaveProperty('refresh_token');

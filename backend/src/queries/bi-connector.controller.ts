@@ -1,12 +1,18 @@
 import { Controller, Get, Param, Query, HttpException, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { QueriesService } from './queries.service';
 
+@ApiTags('BI Connector')
 @Controller('bi-connector')
 export class BiConnectorController {
   constructor(private readonly queriesService: QueriesService) {}
 
   // ENDPOINT: GET /bi-connector/export/:queryId?apiKey=RAHASIA
   @Get('export/:queryId')
+  @ApiOperation({ summary: 'Export data query untuk Power BI / Looker Studio (auth via API key)' })
+  @ApiResponse({ status: 200, description: 'Data berhasil diexport dalam format Array of Objects' })
+  @ApiResponse({ status: 401, description: 'API key tidak valid' })
+  @ApiResponse({ status: 500, description: 'Eksekusi query gagal' })
   async exportToBi(
     @Param('queryId') queryId: string,
     @Query('apiKey') apiKey: string,

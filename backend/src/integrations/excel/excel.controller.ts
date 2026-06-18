@@ -1,11 +1,5 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Res,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Res, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ExcelService } from './excel.service';
@@ -18,6 +12,8 @@ class ExportToExcelDto {
   filename?: string;     // Nama file download (opsional)
 }
 
+@ApiTags('Integrations / Excel')
+@ApiBearerAuth('JWT-auth')
 @Controller('integrations/excel')
 @UseGuards(AuthGuard('jwt'))
 export class ExcelController {
@@ -28,6 +24,9 @@ export class ExcelController {
 
   // POST /integrations/excel/export — Generate & download .xlsx
   @Post('export')
+  @ApiOperation({ summary: 'Generate dan download file Excel (.xlsx) dari data query' })
+  @ApiResponse({ status: 200, description: 'File Excel berhasil di-generate' })
+  @ApiResponse({ status: 400, description: 'Tidak ada data atau format tidak valid' })
   async exportToExcel(@Body() dto: ExportToExcelDto, @Res() res: Response) {
     let columns: string[] = [];
     let rows: any[] = [];

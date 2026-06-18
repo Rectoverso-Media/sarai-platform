@@ -1,11 +1,5 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Req,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { GoogleSheetsService, ExportMode } from './google-sheets.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -17,6 +11,8 @@ class ExportToSheetsDto {
   mode: ExportMode;      // 'append' | 'replace'
 }
 
+@ApiTags('Integrations / Google Sheets')
+@ApiBearerAuth('JWT-auth')
 @Controller('integrations/sheets')
 @UseGuards(AuthGuard('jwt'))
 export class GoogleSheetsController {
@@ -27,6 +23,9 @@ export class GoogleSheetsController {
 
   // POST /integrations/sheets/export
   @Post('export')
+  @ApiOperation({ summary: 'Export data ke Google Sheets (append atau replace mode)' })
+  @ApiResponse({ status: 200, description: 'Data berhasil diexport ke Google Sheets' })
+  @ApiResponse({ status: 400, description: 'Parameter tidak valid atau data kosong' })
   async exportToSheets(@Body() dto: ExportToSheetsDto, @Req() req: any) {
     if (!dto.sheetId?.trim()) {
       throw new BadRequestException('sheetId wajib diisi');

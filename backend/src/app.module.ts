@@ -33,6 +33,7 @@ import { IntegrationsModule } from './integrations/integrations.module';
 import { ExcelModule } from './integrations/excel/excel.module';
 import { ODataModule } from './odata/odata.module';
 import { BillingModule } from './billing/billing.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { BillingModule } from './billing/billing.module';
     ExcelModule,
     ODataModule,
     BillingModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [
