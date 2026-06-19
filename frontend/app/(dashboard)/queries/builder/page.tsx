@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { apiFetch } from '../../../../lib/api';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -147,7 +147,7 @@ export default function QueryBuilderPage() {
       });
 
       if (response.ok) {
-        alert('Query berhasil disimpan ke Database! 🚀');
+        alert('Query berhasil disimpan ke Database! ??');
         router.push('/queries'); 
       } else {
         alert('Gagal menyimpan query.');
@@ -220,13 +220,13 @@ export default function QueryBuilderPage() {
 
       const result = await response.json();
       if (response.ok) {
-        alert("🎉 YAY! Data Asli berhasil diekspor: " + result.message);
+        alert("?? YAY! Data Asli berhasil diekspor: " + result.message);
       } else {
-        alert("❌ Gagal: " + result.message);
+        alert("? Gagal: " + result.message);
       }
     } catch (error) {
       console.error(error);
-      alert("❌ Gagal menghubungi server.");
+      alert("? Gagal menghubungi server.");
     } finally {
       setIsExporting(false);
     }
@@ -249,10 +249,10 @@ export default function QueryBuilderPage() {
         setActiveMode('sql'); // Pindah ke tab SQL biar kelihatan
         setAiPrompt(''); // Kosongkan input
       } else {
-        alert("❌ AI Gagal: " + data.message);
+        alert("? AI Gagal: " + data.message);
       }
     } catch (error) {
-      alert("❌ Error menghubungi server AI.");
+      alert("? Error menghubungi server AI.");
     } finally {
       setIsGenerating(false);
     }
@@ -276,13 +276,13 @@ export default function QueryBuilderPage() {
             onClick={handleRunQuery}
             disabled={isExecuting}
             className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
-            {isExecuting ? `⏳ ${pollingStatus}` : '▶️ Run Query (Test)'}
+            {isExecuting ? `? ${pollingStatus}` : '?? Run Query (Test)'}
           </button>
           <button 
             onClick={handleSave}
             disabled={isLoading}
             className="px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 hover:bg-blue-700 disabled:bg-blue-400 transition-all">
-            {isLoading ? 'Menyimpan...' : '💾 Save Query'}
+            {isLoading ? 'Menyimpan...' : '?? Save Query'}
           </button>
         </div>
       </div>
@@ -295,7 +295,7 @@ export default function QueryBuilderPage() {
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-4">
             <div className="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex justify-between items-center">
               <h3 className="font-bold text-emerald-800 flex items-center gap-2">
-                <span>✅</span> Eksekusi Berhasil
+                <span>?</span> Eksekusi Berhasil
               </h3>
               <span className="text-xs font-mono text-emerald-600 bg-white px-3 py-1 rounded-full border border-emerald-200">
                 {queryResult.rows?.length || 0} rows returned
@@ -340,7 +340,7 @@ export default function QueryBuilderPage() {
               disabled={isExporting || !sheetId}
               className="py-2.5 px-6 font-bold text-white bg-emerald-600 rounded-xl shadow-md hover:bg-emerald-700 disabled:bg-emerald-300 transition-colors whitespace-nowrap"
             >
-              {isExporting ? '⏳ Mengirim...' : '🚀 Kirim ke Sheets'}
+              {isExporting ? '? Mengirim...' : '?? Kirim ke Sheets'}
             </button>
           </div>
 
@@ -352,7 +352,7 @@ export default function QueryBuilderPage() {
         <div className="bg-red-50 rounded-2xl border border-red-200 overflow-hidden mt-6 animate-in zoom-in-95">
            <div className="bg-red-100 px-6 py-4 border-b border-red-200">
             <h3 className="font-bold text-red-800 flex items-center gap-2">
-              <span>❌</span> Eksekusi Gagal
+              <span>?</span> Eksekusi Gagal
             </h3>
           </div>
           <div className="p-6">
@@ -374,12 +374,12 @@ export default function QueryBuilderPage() {
             <button 
               onClick={() => setActiveMode('sql')}
               className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${activeMode === 'sql' ? 'bg-white text-blue-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:bg-slate-100'}`}>
-              🧑‍💻 Raw SQL Editor
+              ????? Raw SQL Editor
             </button>
             <button 
               onClick={() => setActiveMode('visual')}
               className={`flex-1 py-2 rounded-lg font-bold text-sm transition-all ${activeMode === 'visual' ? 'bg-white text-emerald-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:bg-slate-100'}`}>
-              🪄 Visual Builder (No-Code)
+              ?? Visual Builder (No-Code)
             </button>
           </div>
 
@@ -389,7 +389,7 @@ export default function QueryBuilderPage() {
                {/* SECTION 1: DIMENSIONS */}
               <div className="bg-white p-5 rounded-xl border border-slate-200">
                 <h2 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2 uppercase tracking-wider">
-                  <span className="text-blue-500">🏷️</span> Group By (Dimensions)
+                  <span className="text-blue-500">???</span> Group By (Dimensions)
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {availableColumns.filter(c => c.type === 'dimension').map(col => {
@@ -399,7 +399,7 @@ export default function QueryBuilderPage() {
                         key={col.name}
                         onClick={() => toggleDimension(col.name)}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all border ${isSelected ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}>
-                        {col.name} {isSelected && '✓'}
+                        {col.name} {isSelected && '?'}
                       </button>
                     );
                   })}
@@ -409,7 +409,7 @@ export default function QueryBuilderPage() {
               {/* SECTION 2: METRICS */}
               <div className="bg-white p-5 rounded-xl border border-slate-200">
                 <h2 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2 uppercase tracking-wider">
-                  <span className="text-emerald-500">📊</span> Calculate (Metrics)
+                  <span className="text-emerald-500">??</span> Calculate (Metrics)
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {availableColumns.filter(c => c.type === 'metric').map(col => {
@@ -419,7 +419,7 @@ export default function QueryBuilderPage() {
                         key={col.name}
                         onClick={() => addMetric(col.name)}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all border ${isSelected ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}>
-                        SUM({col.name}) {isSelected && '✓'}
+                        SUM({col.name}) {isSelected && '?'}
                       </button>
                     );
                   })}
@@ -435,7 +435,7 @@ export default function QueryBuilderPage() {
           )}
 
           <div className="bg-blue-50/50 p-4 border-b border-slate-200 flex gap-2 items-center">
-              <span className="text-2xl">✨</span>
+              <span className="text-2xl">?</span>
               <input 
                 type="text" 
                 value={aiPrompt}
@@ -479,7 +479,7 @@ export default function QueryBuilderPage() {
         <div className="w-full lg:w-[350px] space-y-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <span>⚙️</span> Query Settings
+              <span>??</span> Query Settings
             </h3>
             
             <div className="space-y-4">
@@ -522,7 +522,7 @@ export default function QueryBuilderPage() {
                     type="button"
                     className="px-4 py-2 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-700 transition-colors disabled:opacity-50"
                   >
-                    {isFetchingSchema ? '⏳' : 'Load'}
+                    {isFetchingSchema ? '?' : 'Load'}
                   </button>
                 </div>
               </div>

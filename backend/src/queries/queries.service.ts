@@ -32,6 +32,51 @@ export class QueriesService {
     return `query-result:${queryId}`;
   }
 
+  private validateSql(sql: string): void {
+    const normalized = sql.trim().toLowerCase();
+    
+    // 1. Must start with select
+    if (!normalized.startsWith('select')) {
+      throw new HttpException('Hanya query SELECT yang diizinkan.', HttpStatus.BAD_REQUEST);
+    }
+    
+    // 2. Reject chained queries (multiple statements via semicolon)
+    if (normalized.includes(';')) {
+      const statements = normalized.split(';').map(s => s.trim()).filter(Boolean);
+      if (statements.length > 1 || (statements.length === 1 && normalized.indexOf(';') < normalized.length - 1)) {
+        throw new HttpException('Multiple SQL statements tidak diizinkan.', HttpStatus.BAD_REQUEST);
+      }
+    }
+    
+    // 3. Blacklist of modifying or schema-altering keywords
+    const forbiddenKeywords = [
+      'insert', 'update', 'delete', 'drop', 'alter', 'truncate', 
+      'create', 'grant', 'revoke', 'replace', 'upsert'
+    ];
+    
+    for (const keyword of forbiddenKeywords) {
+      const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+      if (regex.test(normalized)) {
+        throw new HttpException(`Aksi SQL '${keyword.toUpperCase()}' tidak diizinkan demi keamanan.`, HttpStatus.BAD_REQUEST);
+      }
+    }
+    
+    // 4. Ensure it doesn't query system tables or configuration tables
+    const forbiddenTables = [
+      'users', 'user_sessions', 'teams', 'team_members', 'team_invitations',
+      'subscriptions', 'usage_metrics', 'audit_logs', 'app_settings', 'rate_limit_configs',
+      'datasources', 'data_sources', 'connections', 'connection_auth_links', 'queries', 
+      'query_executions', 'query_schedules'
+    ];
+    
+    for (const table of forbiddenTables) {
+      const regex = new RegExp(`\\b${table}\\b`, 'i');
+      if (regex.test(normalized)) {
+        throw new HttpException(`Akses ke tabel sistem '${table}' tidak diizinkan.`, HttpStatus.BAD_REQUEST);
+      }
+    }
+  }
+
   // ── CRUD QUERY ───────────────────────────────────────────────────────────
 
   // 1. SIMPAN QUERY BARU
@@ -122,6 +167,9 @@ export class QueriesService {
     const query = await this.prisma.query.findUnique({ where: { id } });
     if (!query) throw new HttpException('Query tidak ditemukan', HttpStatus.NOT_FOUND);
     if (!query.rawSql) throw new HttpException('Query ini tidak punya SQL untuk dieksekusi', HttpStatus.BAD_REQUEST);
+
+    // Jalankan validasi SQL untuk mencegah SQL injection dan modifikasi database
+    this.validateSql(query.rawSql);
 
     // Invalidate cache lama agar eksekusi baru punya hasil fresh
     await this.redis.del(this.getCacheKey(id));

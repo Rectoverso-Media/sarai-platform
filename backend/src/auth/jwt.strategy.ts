@@ -16,8 +16,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   // Fungsi ini otomatis jalan kalau tokennya valid
   async validate(payload: any) {
     // Data yang di-return di sini akan otomatis nempel di `req.user` pada Controller
+    const id = payload.sub || payload.id;
     return { 
-      userId: payload.sub || payload.id, 
+      id,
+      sub: id,
+      userId: id, 
       email: payload.email, 
       teamId: payload.teamId, 
       role: payload.role 

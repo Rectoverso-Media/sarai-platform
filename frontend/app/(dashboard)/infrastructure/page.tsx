@@ -114,7 +114,7 @@ export default function InfrastructurePage() {
         </div>
         <div className="flex gap-3">
           <button className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-4 py-2 rounded-xl font-bold transition-all text-sm shadow-sm">
-            ⚙️ Cluster Settings
+            ?? Cluster Settings
           </button>
           {/* Tombol Deploy sekarang aktif */}
           <button 
@@ -129,12 +129,12 @@ export default function InfrastructurePage() {
       {/* Tampilan Loading */}
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center text-slate-500 font-bold">
-          ⏳ Memindai infrastruktur server...
+          ? Memindai infrastruktur server...
         </div>
       ) : nodes.length === 0 ? (
         /* Tampilan Kosong */
         <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl bg-white/50 text-slate-500 p-8 text-center">
-          <span className="text-4xl mb-4">🏗️</span>
+          <span className="text-4xl mb-4">???</span>
           <h3 className="font-bold text-slate-700 text-lg">Belum Ada Node yang Berjalan</h3>
           <p className="text-sm mt-1">Klik "Deploy Node" di kanan atas untuk menyalakan server AI pertamamu.</p>
         </div>

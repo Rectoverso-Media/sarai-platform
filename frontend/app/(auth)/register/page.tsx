@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Card from '../../../components/ui/Card'; 
 import { Button } from '../../../components/ui/button'; 
 import Link from 'next/link'; 
@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -188,5 +188,17 @@ export default function RegisterPage() {
         
       </div>
     </Card>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <Card className="w-full p-8 md:p-10 shadow-2xl shadow-blue-600/10 border border-slate-100 rounded-2xl bg-white/95 backdrop-blur-sm flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+      </Card>
+    }>
+      <RegisterForm />
+    </Suspense>
   );
 }

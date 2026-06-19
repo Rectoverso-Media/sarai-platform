@@ -1,3 +1,6 @@
+"use client";
+
+import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header'; 
 
@@ -6,14 +9,18 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <div className="flex min-h-screen">
-      <Sidebar /> 
+    <div className="flex min-h-screen relative overflow-x-hidden">
+      {/* Sidebar dengan toggle control */}
+      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} /> 
 
-      <div className="flex-1 flex flex-col bg-slate-50">
-        <Header />
+      <div className="flex-1 flex flex-col bg-slate-50 min-w-0">
+        {/* Header dengan tombol toggle */}
+        <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
-        {/* Konten tiap halaman (Data Sources, Team, dll) masuk ke sini */}
+        {/* Konten halaman */}
         <main className="flex-1">
           {children}
         </main>

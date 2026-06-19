@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUser } from '../../../lib/auth';
 
-export default function Header() {
+export default function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const router = useRouter();
 
   const [userFullName, setUserFullName] = useState<string>('');
@@ -13,7 +13,6 @@ export default function Header() {
   const [notifCount] = useState<number>(0);
 
   const loadUserFromToken = () => {
-    // Decode JWT — BUKAN localStorage('userData')
     const user = getCurrentUser();
     if (!user) return;
 
@@ -30,8 +29,6 @@ export default function Header() {
   useEffect(() => {
     loadUserFromToken();
 
-    // Listen for profile-updated event dari SettingsProfile
-    // agar nama di header ikut berubah tanpa page reload
     const handleProfileUpdate = (e: Event) => {
       const detail = (e as CustomEvent<{ name: string }>).detail;
       if (detail?.name) {
@@ -54,8 +51,19 @@ export default function Header() {
   };
 
   return (
-    <header className="h-16 border-b bg-white flex items-center px-8 justify-end sticky top-0 z-10 shadow-sm w-full">
-      <div className="flex items-center gap-5">
+    <header className="h-16 border-b bg-white flex items-center px-8 justify-between sticky top-0 z-10 shadow-sm w-full">
+      {/* Mobile Hamburger Button */}
+      <button 
+        onClick={onToggleSidebar}
+        className="lg:hidden p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all"
+        aria-label="Toggle Sidebar"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <div className="flex items-center gap-5 ml-auto">
 
         {/* Notification Bell */}
         <Link

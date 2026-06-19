@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { apiFetch } from '../../../lib/api';
 import React, { useState, useEffect } from 'react';
 
@@ -60,7 +60,7 @@ export default function SecurityPage() {
           onClick={handleSimulateLog}
           className="bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-slate-900 transition-all flex items-center gap-2"
         >
-          <span>🚨</span> Simulate Test Log
+          <span>??</span> Simulate Test Log
         </button>
       </div>
 
@@ -69,7 +69,7 @@ export default function SecurityPage() {
           <div className="text-center text-slate-400 py-10 font-bold">Memuat log sistem...</div>
         ) : logs.length === 0 ? (
           <div className="text-center text-slate-400 py-10">
-            <span className="text-4xl block mb-3">🛡️</span>
+            <span className="text-4xl block mb-3">???</span>
             <p className="font-bold">Belum ada aktivitas tercatat.</p>
             <p className="text-sm mt-1">Klik tombol Simulate Test Log di atas untuk mencoba.</p>
           </div>
@@ -98,7 +98,7 @@ export default function SecurityPage() {
                   </p>
                   <div className="flex justify-between items-center border-t border-slate-200 pt-3">
                     <span className="text-[10px] font-bold bg-white px-2 py-1 border border-slate-200 rounded text-slate-500 flex items-center gap-1.5">
-                      👤 {log.actor}
+                      ?? {log.actor}
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">
                       IP: {log.ipAddress}

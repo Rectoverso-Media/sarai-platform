@@ -151,13 +151,36 @@ function VirtualTable({
   const containerRef = useRef<HTMLDivElement>(null);
   const ROW_HEIGHT = 40;
   const VISIBLE_ROWS = 20;
+  
   const [scrollTop, setScrollTop] = useState(0);
+  const scrollRef = useRef(0);
+  const frameRef = useRef<number | null>(null);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    scrollRef.current = e.currentTarget.scrollTop;
+    if (frameRef.current) return;
+    
+    frameRef.current = requestAnimationFrame(() => {
+      setScrollTop(scrollRef.current);
+      frameRef.current = null;
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, []);
+
+  // Limit rendering to 10,000 rows max in virtual scrolling to save memory
+  const isTooLarge = data.length > 10000;
+  const activeData = isTooLarge ? data.slice(0, 10000) : data;
 
   const startIdx = Math.floor(scrollTop / ROW_HEIGHT);
-  const endIdx = Math.min(startIdx + VISIBLE_ROWS + 2, data.length);
-  const visibleRows = data.slice(startIdx, endIdx);
+  const endIdx = Math.min(startIdx + VISIBLE_ROWS + 2, activeData.length);
+  const visibleRows = activeData.slice(startIdx, endIdx);
   const paddingTop = startIdx * ROW_HEIGHT;
-  const paddingBottom = (data.length - endIdx) * ROW_HEIGHT;
+  const paddingBottom = (activeData.length - endIdx) * ROW_HEIGHT;
 
   const getSortIcon = (col: string) => {
     const sort = sorts.find((s) => s.column === col);
@@ -166,63 +189,70 @@ function VirtualTable({
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="overflow-auto"
-      style={{ maxHeight: `${VISIBLE_ROWS * ROW_HEIGHT + 44}px` }}
-      onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
-    >
-      <table className="w-full text-sm border-collapse" style={{ minWidth: `${columns.length * 140}px` }}>
-        <thead className="sticky top-0 z-10">
-          <tr className="bg-slate-100 border-b border-slate-200">
-            {columns.map((col) => (
-              <th
-                key={col}
-                onClick={() => onSort(col)}
-                className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-200 transition-colors whitespace-nowrap select-none"
+    <div className="flex flex-col h-full">
+      {isTooLarge && (
+        <div className="bg-amber-50 text-amber-800 border-b border-amber-100 px-4 py-2 text-xs font-semibold flex items-center justify-between">
+          <span>⚠️ Data melebihi 10,000 baris. Membatasi tampilan untuk mengamankan kinerja memori browser.</span>
+        </div>
+      )}
+      <div
+        ref={containerRef}
+        className="overflow-auto flex-1"
+        style={{ maxHeight: `${VISIBLE_ROWS * ROW_HEIGHT + 44}px` }}
+        onScroll={handleScroll}
+      >
+        <table className="w-full text-sm border-collapse" style={{ minWidth: `${columns.length * 140}px` }}>
+          <thead className="sticky top-0 z-10">
+            <tr className="bg-slate-100 border-b border-slate-200">
+              {columns.map((col) => (
+                <th
+                  key={col}
+                  onClick={() => onSort(col)}
+                  className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:bg-slate-200 transition-colors whitespace-nowrap select-none"
+                >
+                  <div className="flex items-center gap-1.5">
+                    {col}
+                    {getSortIcon(col)}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {paddingTop > 0 && (
+              <tr style={{ height: paddingTop }}>
+                <td colSpan={columns.length} />
+              </tr>
+            )}
+            {visibleRows.map((row, rowIdx) => (
+              <tr
+                key={startIdx + rowIdx}
+                className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                style={{ height: ROW_HEIGHT }}
               >
-                <div className="flex items-center gap-1.5">
-                  {col}
-                  {getSortIcon(col)}
-                </div>
-              </th>
+                {columns.map((col) => {
+                  const val = row[col];
+                  const display = val === null || val === undefined ? '' : typeof val === 'object' ? JSON.stringify(val) : String(val);
+                  return (
+                    <td
+                      key={col}
+                      className="px-4 py-2 text-slate-700 text-xs whitespace-nowrap max-w-[240px] overflow-hidden text-ellipsis"
+                      title={display}
+                    >
+                      {display || <span className="text-slate-300 italic">null</span>}
+                    </td>
+                  );
+                })}
+              </tr>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {paddingTop > 0 && (
-            <tr style={{ height: paddingTop }}>
-              <td colSpan={columns.length} />
-            </tr>
-          )}
-          {visibleRows.map((row, rowIdx) => (
-            <tr
-              key={startIdx + rowIdx}
-              className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
-              style={{ height: ROW_HEIGHT }}
-            >
-              {columns.map((col) => {
-                const val = row[col];
-                const display = val === null || val === undefined ? '' : typeof val === 'object' ? JSON.stringify(val) : String(val);
-                return (
-                  <td
-                    key={col}
-                    className="px-4 py-2 text-slate-700 text-xs whitespace-nowrap max-w-[240px] overflow-hidden text-ellipsis"
-                    title={display}
-                  >
-                    {display || <span className="text-slate-300 italic">null</span>}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-          {paddingBottom > 0 && (
-            <tr style={{ height: paddingBottom }}>
-              <td colSpan={columns.length} />
-            </tr>
-          )}
-        </tbody>
-      </table>
+            {paddingBottom > 0 && (
+              <tr style={{ height: paddingBottom }}>
+                <td colSpan={columns.length} />
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

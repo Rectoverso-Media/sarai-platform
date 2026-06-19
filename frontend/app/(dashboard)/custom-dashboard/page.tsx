@@ -621,6 +621,28 @@ export default function CustomDashboardBuilder() {
     await saveLayout(currentDashboard.id);
   };
 
+  const handleAutoRefreshChange = async (seconds: number | null) => {
+    if (!currentDashboard) return;
+    try {
+      const res = await apiFetch(`/dashboard/${currentDashboard.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ autoRefreshSeconds: seconds }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setCurrentDashboard(updated);
+        toast.success(`Auto-refresh set to ${seconds ? seconds + 's' : 'Off'}`);
+      } else {
+        setCurrentDashboard({ ...currentDashboard, autoRefreshSeconds: seconds });
+        toast.success(`Auto-refresh set to ${seconds ? seconds + 's' : 'Off'} (Local)`);
+      }
+    } catch {
+      setCurrentDashboard({ ...currentDashboard, autoRefreshSeconds: seconds });
+      toast.success(`Auto-refresh set to ${seconds ? seconds + 's' : 'Off'} (Local)`);
+    }
+  };
+
   const saveLayout = async (dashboardId: string) => {
     setIsSaving(true);
     try {
@@ -762,12 +784,28 @@ export default function CustomDashboardBuilder() {
               </div>
             )}
           </div>
-          {currentDashboard?.autoRefreshSeconds && (
-            <span className="flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-1 rounded-full">
-              <RefreshCw size={11} className="animate-spin" style={{ animationDuration: '3s' }} />
-              Auto-refresh {currentDashboard.autoRefreshSeconds}s
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Refresh:</span>
+            <select
+              value={currentDashboard?.autoRefreshSeconds ?? '0'}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                handleAutoRefreshChange(val === 0 ? null : val);
+              }}
+              className="border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-semibold bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-600 cursor-pointer"
+            >
+              <option value="0">Off</option>
+              <option value="30">30s</option>
+              <option value="60">1m</option>
+              <option value="300">5m</option>
+            </select>
+            {currentDashboard?.autoRefreshSeconds && (
+              <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-full shrink-0">
+                <RefreshCw size={10} className="animate-spin" style={{ animationDuration: '3s' }} />
+                Active
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Right actions */}
