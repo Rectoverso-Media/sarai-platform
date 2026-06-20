@@ -1,98 +1,100 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# Sarai Platform - Backend Architecture & Database Documentation
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Repositori ini berisi struktur backend dan dokumentasi skema database untuk **Sarai Platform**. Sistem ini dirancang dengan arsitektur multi-tenant (berbasis tim) yang berfungsi sebagai platform integrasi data, visualisasi, dan analitik berbasis AI.
 
-## Description
+## 🛠 Tech Stack (Backend)
+* **Framework:** NestJS
+* **Database:** PostgreSQL
+* **Authentication:** JWT (JSON Web Tokens) & OAuth
+* **Data Integration:** Airbyte (untuk *data syncing*)
+* **Billing/Payment:** Stripe
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## 🗄️ Database Domains & Architecture
 
-```bash
-$ npm install
+Skema database dibagi menjadi beberapa domain logis berdasarkan fungsionalitas fitur:
+
+### 1. Identity, Access & Team Management (IAM)
+Menangani autentikasi pengguna, otorisasi peran (RBAC), pengaturan sesi, dan manajemen *multi-tenancy* (Tim).
+* `User`: Data inti pengguna (termasuk status 2FA).
+* `UserSession`: Manajemen sesi JWT dan pelacakan login (IP, User Agent).
+* `Team`: Entitas *tenant* utama. Menyimpan data kuota penggunaan (AI tokens, queries) dan status langganan Stripe.
+* `TeamMember` & `TeamInvitation`: Relasi dan proses *onboarding* pengguna ke dalam tim.
+
+### 2. Data Sources & Integrations
+Mengelola koneksi ke sumber data eksternal, konfigurasi Airbyte, dan penyimpanan token OAuth.
+* `DataSource` & `Connection`: Kredensial dan metadata sumber data, termasuk integrasi dengan *host* Airbyte.
+* `ConnectionAuthLink` & `OAuthToken`: Penyimpanan token dan autentikasi pihak ketiga secara aman.
+* `Integration` & `LinkedDocument`: Konfigurasi layanan terintegrasi lainnya di luar sumber data inti.
+
+### 3. Query Engine & Data Pipeline
+Menangani logika pengambilan data, *scheduling*, operasi ETL ringan, dan *blending* data.
+* `Query`, `QueryExecution`, `QuerySchedule`: Menyimpan *raw SQL*, riwayat eksekusi, dan penjadwalan *cron*.
+* `ApiQuery` & `ApiQueryExecution`: Pengambilan data via HTTP/API (termasuk *header* dan *body template*).
+* `Blend` & `BlendSourceConfig`: Konfigurasi *JOIN* antar sumber data yang berbeda.
+* `Transfer` & `TransferExecution`: Ekspor data dari platform ke target eksternal (misal: Google Sheets).
+* `synced_data`: Tabel tujuan (*destination*) untuk data yang ditarik oleh Airbyte.
+
+### 4. Visualizations & Dashboards
+Sistem presentasi data dan antarmuka interaktif.
+* `Dashboard`: Penampung *widgets*, konfigurasi *layout*, dan tema.
+* `Widget`: Komponen visual individual (grafik, tabel) dengan koordinat tata letak (X, Y, W, H).
+* `ShareToken`: Mekanisme berbagi *dashboard* ke publik melalui tautan berbatas waktu.
+* `ExplorerSession`: Menyimpan sesi filter, *sort*, dan status halaman eksplorasi data secara *real-time*.
+
+### 5. AI capabilities & Automated Insights
+Fitur kecerdasan buatan untuk menganalisis anomali dan asisten *chat*.
+* `AiChatSession` & `AiChatMessage`: Logika *conversational AI* antara pengguna dan asisten data.
+* `InsightConfig` & `InsightResult`: Konfigurasi dan hasil analisis otomatis (seperti deteksi anomali pada metrik yang ditentukan).
+
+### 6. System & Infrastructure Operations
+Pemantauan kesehatan platform, batasan layanan (*rate limiting*), dan audit keamanan.
+* `AuditLog`: Rekam jejak aktivitas (*action, actor, IP*) untuk keamanan.
+* `UsageMetric`: Pencatatan metrik penggunaan tim (billing & kuota).
+* `AppSetting` & `RateLimitConfig`: Konfigurasi global dan perlindungan *endpoint*.
+* `AlertRule`, `AlertTrigger`, `Notification`: Sistem notifikasi dan peringatan berbasis ambang batas (*threshold*).
+* `InfrastructureNode`: Status dan *uptime* dari *worker* atau layanan mikro.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+* Node.js (v18+)
+* PostgreSQL
+* Stripe API Key
+* Airbyte Instance (Opsional untuk testing lokal)
+
+### Installation
+1. *Clone* repositori `sarai-platform`.
+2. Salin `.env.example` ke `.env` dan sesuaikan kredensial database PostgreSQL Anda.
+3. Instal semua dependensi:
+   ```bash
+   npm install
+
 ```
 
-## Compile and run the project
-
+4. Jalankan migrasi database atau sinkronisasi entitas:
 ```bash
-# development
-$ npm run start
+npm run typeorm migration:run
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
 ```
 
-## Run tests
 
+5. Mulai *development server*:
 ```bash
-# unit tests
-$ npm run test
+npm run start:dev
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
 ```
 
-## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+---
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+*Dokumentasi ini di-generate berdasarkan DDL schema PostgreSQL terbaru.*
+
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```
