@@ -16,8 +16,9 @@ test.describe('Authentication Flow', () => {
     // Mock successful login API call locally or proceed with click
     // We will navigate to dashboard directly for robustness in non-interactive CI env
     await page.evaluate(() => {
-      localStorage.setItem('access_token', 'mock-token');
+      localStorage.setItem('access_token', 'mockHeader.eyJuYW1lIjoiQWRtaW4gU2FyYWkiLCJlbWFpbCI6ImFkbWluQHNhcmFpLmFpIiwicm9sZSI6IkFETUlOIiwiZXhwIjo5OTk5OTk5OTk5fQ.mockSignature');
       localStorage.setItem('userData', JSON.stringify({ name: 'Admin Sarai', email: 'admin@sarai.ai', role: 'ADMIN' }));
+      document.cookie = "isLoggedIn=true; path=/";
     });
     
     await page.goto('/dashboard');
@@ -28,7 +29,7 @@ test.describe('Authentication Flow', () => {
 
   test('should render register page correctly', async ({ page }) => {
     await page.goto('/register');
-    await expect(page.locator('input[placeholder*="Nama"]')).toBeVisible();
+    await expect(page.locator('input[placeholder*="full name"]')).toBeVisible();
     await expect(page.locator('input[type="email"]')).toBeVisible();
   });
 
