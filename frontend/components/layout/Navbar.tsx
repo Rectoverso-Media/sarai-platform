@@ -1,138 +1,152 @@
 "use client";
-import React, { useState } from 'react';
-import { usePathname } from 'next/navigation'; 
-import Link from 'next/link'; 
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
-export default function Navbar() {
-  const pathname = usePathname(); 
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+interface NavbarProps {
+  transparent?: boolean;
+}
 
-  const isActive = (path: string) => pathname === path;
+export default function Navbar({ transparent = false }: NavbarProps) {
+  const pathname = usePathname();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navMenus = [
-    { name: 'Home', path: '/' },
-    { name: 'About', path: '/about' },
-    { name: 'Feature', path: '/feature' },
-    { name: 'Pricing', path: '/pricing' },
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const isLandingPage = pathname === '/';
+
+  const navLinks = [
+    { href: '/#fitur', label: 'Fitur' },
+    { href: '/#platform', label: 'Platform' },
+    { href: '/#harga', label: 'Harga' },
+    { href: '/#testimoni', label: 'Testimoni' },
   ];
+
+  const showSolidBg = isScrolled || !isLandingPage || !transparent;
 
   return (
     <>
-      <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-slate-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group cursor-pointer">
-            <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
-              <img 
-                src="/logo.png" 
-                alt="SARAI Logo" 
-                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            <span className="text-2xl font-extrabold text-[#4A627E] tracking-tight group-hover:text-blue-600 transition-colors">
-              SARAI
-            </span>
-          </Link>
-
-          {/* Menu Tengah (Desktop) */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
-            {navMenus.map((menu) => (
-              <Link 
-                key={menu.name}
-                href={menu.path} 
-                className={`transition-all duration-300 ${
-                  isActive(menu.path) 
-                    ? 'text-[#4A627E] font-bold drop-shadow-sm' 
-                    : 'text-slate-500 hover:text-[#4A627E] hover:-translate-y-0.5'
-                }`}
-              >
-                {menu.name}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Tombol Kanan (Desktop) */}
-          <div className="hidden md:flex items-center gap-4">
-            <Link 
-              href="/login" 
-              className="px-6 py-2.5 text-sm font-bold text-white bg-[#4A627E] hover:bg-[#384b61] rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
-            >
-              Login
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          showSolidBg
+            ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100'
+            : 'bg-transparent'
+        }`}
+      >
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-indigo-500/30 group-hover:shadow-xl group-hover:shadow-indigo-500/40 transition-all">
+                S
+              </div>
+              <span className={`text-2xl font-bold transition-colors ${
+                showSolidBg
+                  ? 'text-[#1E293B]'
+                  : 'text-white'
+              }`}>
+                SARAI
+              </span>
             </Link>
-            <Link
-              href="/register"
-              className="px-6 py-2.5 text-sm font-bold text-[#4A627E] border-2 border-[#4A627E]/20 hover:border-[#4A627E] hover:bg-slate-50 rounded-full transition-all duration-300"
-            >
-              Try Demo
-            </Link>
-          </div>
 
-          {/* Tombol Hamburger (Mobile) */}
-          <button 
-            id="mobile-menu-toggle"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-slate-500 hover:text-[#4A627E] transition-colors"
-            aria-label="Toggle mobile menu"
-            aria-expanded={isMobileMenuOpen}
-          >
-            {isMobileMenuOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
-          </button>
-
-        </div>
-      </header>
-
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm md:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          <div 
-            className="absolute top-20 left-0 right-0 bg-white shadow-xl border-b border-slate-100 p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <nav className="flex flex-col gap-2">
-              {navMenus.map((menu) => (
+            {/* Desktop Nav */}
+            <div className="hidden md:flex items-center gap-8">
+              {navLinks.map((link) => (
                 <Link
-                  key={menu.name}
-                  href={menu.path}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                    isActive(menu.path)
-                      ? 'bg-[#4A627E] text-white font-bold'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-[#4A627E]'
+                  key={link.href}
+                  href={link.href}
+                  className={`text-sm font-medium transition-colors ${
+                    showSolidBg
+                      ? 'text-[#64748B] hover:text-[#6366F1]'
+                      : 'text-white/80 hover:text-white'
                   }`}
                 >
-                  {menu.name}
+                  {link.label}
                 </Link>
               ))}
-              <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-3">
-                <Link
-                  href="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-full text-center px-6 py-3 text-sm font-bold text-white bg-[#4A627E] hover:bg-[#384b61] rounded-full transition-colors"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-full text-center px-6 py-3 text-sm font-bold text-[#4A627E] border-2 border-[#4A627E]/20 hover:border-[#4A627E] rounded-full transition-colors"
-                >
-                  Try Demo
-                </Link>
-              </div>
-            </nav>
+            </div>
+
+            {/* Auth Buttons */}
+            <div className="hidden md:flex items-center gap-4">
+              <Link
+                href="/login"
+                className={`text-sm font-medium transition-colors ${
+                  showSolidBg
+                    ? 'text-[#64748B] hover:text-[#6366F1]'
+                    : 'text-white/80 hover:text-white'
+                }`}
+              >
+                Masuk
+              </Link>
+              <Link
+                href="/register"
+                className="px-5 py-2.5 bg-[#6366F1] hover:bg-[#4F46E5] text-white text-sm font-semibold rounded-full shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 transition-all"
+              >
+                Daftar Gratis
+              </Link>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className={`md:hidden p-2 transition-colors ${
+                showSolidBg
+                  ? 'text-[#64748B] hover:text-[#6366F1]'
+                  : 'text-white'
+              }`}
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
           </div>
+        </nav>
+      </header>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-40 bg-white pt-20 md:hidden">
+          <nav className="flex flex-col p-6 gap-4">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-lg font-medium text-[#1E293B] py-3 border-b border-slate-100"
+              >
+                {link.label}
+              </Link>
+            ))}
+            <div className="flex flex-col gap-4 pt-6">
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-3 text-[#64748B] font-medium"
+              >
+                Masuk
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-3 bg-[#6366F1] text-white font-semibold rounded-xl"
+              >
+                Daftar Gratis
+              </Link>
+            </div>
+          </nav>
         </div>
       )}
     </>

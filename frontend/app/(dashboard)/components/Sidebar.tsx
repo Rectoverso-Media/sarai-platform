@@ -1,67 +1,116 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-// Daftar Menu Sidebar sesuai dengan fitur yang tersedia
+interface SidebarProps {
+  isOpen?: boolean;
+  setIsOpen?: (v: boolean) => void;
+}
+
 const menuItems = [
-  { name: 'Dashboard', icon: '📊', path: '/dashboard' },
-  { name: 'Data Sources', icon: '📂', path: '/data-sources' },
-  { name: 'Queries', icon: '🪄', path: '/queries' },
-  { name: 'Custom Dashboard', icon: '🖥️', path: '/custom-dashboard' },
-  { name: 'Data Explorer', icon: '🔍', path: '/data-explorer' },
-  { name: 'AI Chat', icon: '✨', path: '/ai-chat' },
-  { name: 'AI Insights', icon: '🧠', path: '/ai-insights' },
-  { name: 'Integrations', icon: '🔗', path: '/integrations' },
-  { name: 'Infrastructure', icon: '🏗️', path: '/infrastructure' },
-  { name: 'Team Management', icon: '👥', path: '/team' },
-  { name: 'Security & Logs', icon: '🛡️', path: '/security' },
-  { name: 'Billing', icon: '💳', path: '/billing' },
-  { name: 'Settings', icon: '⚙️', path: '/settings' },
+  { name: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
+  { name: 'Platform', icon: 'platform', path: '/platform' },
+  { name: 'Laporan', icon: 'report', path: '/reports' },
+  { name: 'AI Insights', icon: 'ai', path: '/ai-insights' },
+  { name: 'Integrasi', icon: 'integration', path: '/integrations' },
+  { divider: true },
+  { name: 'Pengaturan', icon: 'settings', path: '/settings' },
 ];
 
-export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean; setIsOpen?: (v: boolean) => void }) {
+// Icon components
+const Icons = {
+  dashboard: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+    </svg>
+  ),
+  platform: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+    </svg>
+  ),
+  report: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  ),
+  ai: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+    </svg>
+  ),
+  integration: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+    </svg>
+  ),
+  settings: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  ),
+  menu: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  ),
+  close: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  ),
+};
+
+export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const pathname = usePathname();
 
   return (
     <>
-      {/* Mobile Backdrop Overlay */}
+      {/* Mobile Backdrop */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setIsOpen?.(false)}
         />
       )}
 
-      <aside className={`
-        w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800
-        fixed inset-y-0 left-0 z-50 lg:relative lg:translate-x-0 transition-transform duration-300 shrink-0
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
-        {/* Logo Area */}
-        <div className="p-6 mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
+      {/* Sidebar */}
+      <aside
+        className={`
+          w-72 bg-white border-r border-slate-200 flex flex-col
+          fixed inset-y-0 left-0 z-50 lg:relative lg:translate-x-0
+          transition-transform duration-300 ease-in-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
+      >
+        {/* Header */}
+        <div className="h-16 px-6 flex items-center justify-between border-b border-slate-100">
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/30">
               S
             </div>
-            <span className="text-xl font-bold text-white tracking-tight">SARAI</span>
-          </div>
-          {/* Close button on mobile */}
-          <button 
+            <span className="text-xl font-bold text-[#1E293B]">SARAI</span>
+          </Link>
+
+          {/* Close Button (Mobile) */}
+          <button
             onClick={() => setIsOpen?.(false)}
-            className="lg:hidden p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white"
-            aria-label="Close Sidebar"
+            className="lg:hidden p-2 text-[#64748B] hover:text-[#1E293B] hover:bg-slate-100 rounded-lg transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            {Icons.close}
           </button>
         </div>
 
-        {/* Navigation Links */}
-        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-          {menuItems.map((item) => {
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+          {menuItems.map((item, index) => {
+            if ('divider' in item) {
+              return <div key={index} className="my-4 border-t border-slate-100" />;
+            }
+
             const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
 
             return (
@@ -70,35 +119,43 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean; setIs
                 href={item.path}
                 onClick={() => setIsOpen?.(false)}
                 className={`
-                  flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group
-                  ${isActive 
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
-                    : 'hover:bg-slate-800 hover:text-white'}
+                  flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+                  transition-all duration-200
+                  ${isActive
+                    ? 'bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white shadow-lg shadow-indigo-500/20'
+                    : 'text-[#64748B] hover:bg-slate-50 hover:text-[#1E293B]'
+                  }
                 `}
               >
-                <span className={`text-lg ${isActive ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`}>
-                  {item.icon}
+                <span className={isActive ? 'text-white' : 'text-[#94A3B8]'}>
+                  {Icons[item.icon as keyof typeof Icons]}
                 </span>
                 {item.name}
-                
-                {/* Indikator dot kalau aktif */}
                 {isActive && (
-                  <div className="ml-auto w-1.5 h-1.5 bg-blue-200 rounded-full"></div>
+                  <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full" />
                 )}
               </Link>
             );
           })}
         </nav>
 
-
-        {/* Footer Sidebar */}
-        <div className="p-6 border-t border-slate-800">
-          <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-            <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Plan</p>
-            <p className="text-xs font-semibold text-white mt-1">Enterprise Dev</p>
-            <div className="w-full bg-slate-700 h-1 rounded-full mt-2">
-              <div className="bg-blue-500 w-3/4 h-full rounded-full"></div>
+        {/* Footer - Plan Info */}
+        <div className="p-4 border-t border-slate-100">
+          <div className="bg-gradient-to-br from-indigo-50 to-violet-50 p-4 rounded-xl border border-indigo-100">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-[#6366F1]">Paket Aktif</span>
+              <span className="px-2 py-0.5 bg-[#6366F1] text-white text-xs font-bold rounded-full">
+                PRO
+              </span>
             </div>
+            <p className="text-sm font-semibold text-[#1E293B]">Trial 14 Hari</p>
+            <div className="w-full bg-white h-2 rounded-full mt-2 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-full transition-all"
+                style={{ width: '70%' }}
+              />
+            </div>
+            <p className="text-xs text-[#64748B] mt-2">10 hari tersisa</p>
           </div>
         </div>
       </aside>

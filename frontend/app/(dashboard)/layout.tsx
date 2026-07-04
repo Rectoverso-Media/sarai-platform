@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
-import Header from './components/Header'; 
+import Header from './components/Header';
 
 export default function DashboardLayout({
   children,
@@ -12,16 +12,17 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen relative overflow-x-hidden">
-      {/* Sidebar dengan toggle control */}
-      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} /> 
+    <div className="flex h-screen bg-[#F8FAFC]">
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
-      <div className="flex-1 flex flex-col bg-slate-50 min-w-0">
-        {/* Header dengan tombol toggle */}
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Header */}
         <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
-        {/* Konten halaman */}
-        <main className="flex-1">
+        {/* Page Content */}
+        <main className="flex-1 overflow-y-auto">
           {children}
         </main>
       </div>
